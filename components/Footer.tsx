@@ -1,111 +1,97 @@
+import Link from "next/link";
 import { Instagram, Music, Twitter, Mail } from "lucide-react";
+import { socialLinks } from "@/lib/data";
 
-const socialLinks = [
-  {
-    icon: Instagram,
-    href: "https://instagram.com/jluhvv",
-    label: "Instagram",
-  },
-  {
-    icon: Music,
-    href: "https://soundcloud.com/jadethegem888",
-    label: "SoundCloud",
-  },
-  {
-    icon: Twitter,
-    href: "https://twitter.com/jluhvv",
-    label: "Twitter",
-  },
-  {
-    icon: Mail,
-    href: "mailto:booking@djjadethegem.com",
-    label: "Email",
-  },
+const iconMap: Record<string, React.ElementType> = {
+  Instagram,
+  SoundCloud: Music,
+  X: Twitter,
+};
+
+const pages = [
+  { href: "/music", label: "Music" },
+  { href: "/events", label: "Events" },
+  { href: "/bookings", label: "Bookings" },
+  { href: "/about", label: "About" },
 ];
 
 export default function Footer() {
-  const currentYear = new Date().getFullYear();
-
   return (
-    <footer className="bg-surface border-t border-white/10">
-      <div className="max-w-7xl mx-auto px-4 py-12">
-        {/* Top Section */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
+    <footer className="bg-surface border-t border-white/10 pt-16 pb-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6">
+
+        {/* Top grid */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-10 mb-12">
+
           {/* Brand */}
-          <div>
-            <h3 className="text-3xl font-display text-neon-green mb-4">
-              DJ JADE THE GEM
-            </h3>
-            <p className="text-gray-400">
-              504 Creative | Fire Mixes & Live Energy
+          <div className="sm:col-span-1">
+            <p className="font-display text-4xl text-neon-green tracking-wide leading-none mb-2">
+              DJ JADE<br />THE GEM
             </p>
+            <p className="text-sm text-white/50 mt-3">
+              504 Creative · New Orleans, LA
+            </p>
+            <a
+              href="mailto:booking@djjadethegem.com"
+              className="inline-flex items-center gap-2 text-sm text-neon-green hover:underline mt-3"
+            >
+              <Mail size={14} />
+              booking@djjadethegem.com
+            </a>
           </div>
 
-          {/* Quick Links */}
+          {/* Quick links */}
           <div>
-            <h4 className="text-lg font-bold mb-4 text-white">Quick Links</h4>
+            <p className="text-xs font-bold uppercase tracking-widest text-white/40 mb-4">
+              Navigate
+            </p>
             <ul className="space-y-2">
-              <li>
-                <a
-                  href="/music"
-                  className="text-gray-400 hover:text-neon-green transition-colors"
-                >
-                  Music & Mixes
-                </a>
-              </li>
-              <li>
-                <a
-                  href="/events"
-                  className="text-gray-400 hover:text-neon-green transition-colors"
-                >
-                  Upcoming Events
-                </a>
-              </li>
-              <li>
-                <a
-                  href="/bookings"
-                  className="text-gray-400 hover:text-neon-green transition-colors"
-                >
-                  Book Me
-                </a>
-              </li>
-              <li>
-                <a
-                  href="/about"
-                  className="text-gray-400 hover:text-neon-green transition-colors"
-                >
-                  About
-                </a>
-              </li>
+              {pages.map(({ href, label }) => (
+                <li key={href}>
+                  <Link
+                    href={href}
+                    className="text-sm text-white/60 hover:text-neon-green transition-colors"
+                  >
+                    {label}
+                  </Link>
+                </li>
+              ))}
             </ul>
           </div>
 
-          {/* Social */}
+          {/* Socials */}
           <div>
-            <h4 className="text-lg font-bold mb-4 text-white">Connect</h4>
-            <div className="flex gap-4">
-              {socialLinks.map((social) => (
-                <a
-                  key={social.label}
-                  href={social.href}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="w-12 h-12 bg-surface border border-white/20 rounded-full flex items-center justify-center hover:bg-neon-green hover:border-neon-green hover:text-background transition-all hover:scale-110"
-                  aria-label={social.label}
-                >
-                  <social.icon size={20} />
-                </a>
-              ))}
-            </div>
+            <p className="text-xs font-bold uppercase tracking-widest text-white/40 mb-4">
+              Follow
+            </p>
+            <ul className="space-y-3">
+              {socialLinks.map((s) => {
+                const Icon = iconMap[s.platform] ?? Music;
+                return (
+                  <li key={s.platform}>
+                    <a
+                      href={s.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-3 text-sm text-white/60 hover:text-neon-green transition-colors group"
+                    >
+                      <Icon
+                        size={16}
+                        className="group-hover:scale-110 transition-transform"
+                      />
+                      {s.handle}
+                    </a>
+                  </li>
+                );
+              })}
+            </ul>
           </div>
         </div>
 
-        {/* Bottom Section */}
-        <div className="pt-8 border-t border-white/10 text-center text-gray-500">
-          <p>
-            © {currentYear} DJ Jade the Gem. All rights reserved. Made with 💚
-            in NOLA
-          </p>
+        {/* Bottom bar */}
+        <div className="border-t border-white/10 pt-6 text-center text-xs text-white/30">
+          © {new Date().getFullYear()} DJ Jade the Gem. All rights reserved.
+          Made with 💚 in New Orleans.
         </div>
       </div>
     </footer>

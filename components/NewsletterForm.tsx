@@ -1,87 +1,76 @@
 "use client";
 
 import { useState, FormEvent } from "react";
-import { Mail } from "lucide-react";
+import { Mail, Loader2 } from "lucide-react";
+import { FORMSPREE_NEWSLETTER } from "@/lib/data";
 
-export default function NewsletterForm() {
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isSuccess, setIsSuccess] = useState(false);
-  const [error, setError] = useState("");
+interface Props {
+  /** Button label override */
+  cta?: string;
+}
 
-  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
+export default function NewsletterForm({ cta = "Notify Me" }: Props) {
+  const [status, setStatus] = useState<"idle" | "loading" | "ok" | "error">("idle");
+
+  async function handleSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
-    setIsSubmitting(true);
-    setError("");
-
+    setStatus("loading");
     const form = e.currentTarget;
-    const formData = new FormData(form);
-
     try {
-      const response = await fetch(
-        process.env.NEXT_PUBLIC_FORMSPREE_NEWSLETTER_FORM ||
-          "https://formspree.io/f/YOUR_FORM_ID",
-        {
-          method: "POST",
-          body: formData,
-          headers: {
-            Accept: "application/json",
-          },
-        }
-      );
-
-      if (response.ok) {
-        setIsSuccess(true);
+      const res = await fetch(FORMSPREE_NEWSLETTER, {
+        method: "POST",
+        body: new FormData(form),
+        headers: { Accept: "application/json" },
+      });
+      if (res.ok) {
+        setStatus("ok");
         form.reset();
-        setTimeout(() => setIsSuccess(false), 5000);
       } else {
-        setError("Something went wrong. Please try again.");
+        setStatus("error");
       }
-    } catch (err) {
-      setError("Network error. Please try again.");
-    } finally {
-      setIsSubmitting(false);
+    } catch {
+      setStatus("error");
     }
-  };
+  }
 
-  if (isSuccess) {
+  if (status === "ok") {
     return (
-      <div className="p-6 bg-neon-green/20 border-2 border-neon-green rounded-lg text-center">
-        <p className="text-neon-green font-bold text-lg">
-          ✓ You're on the list! Check your email for confirmation.
-        </p>
+      <div className="rounded-xl bg-neon-green/10 border border-neon-green/30 px-6 py-5 text-center text-neon-green font-bold text-sm">
+        ✓ You're on the list! Watch your inbox. 🔥
       </div>
     );
   }
 
   return (
-    <form onSubmit={handleSubmit} className="w-full max-w-2xl mx-auto">
+    <form onSubmit={handleSubmit} className="w-full">
       <div className="flex flex-col sm:flex-row gap-3">
-        <div className="flex-1 relative">
-          <Mail className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-500 w-5 h-5" />
+        <div className="relative flex-1">
+          <Mail size={15} className="absolute left-4 top-1/2 -translate-y-1/2 text-white/30" />
           <input
             type="email"
             name="email"
             required
-            placeholder="Enter your email"
-            className="input-field pl-12 w-full"
-            disabled={isSubmitting}
+            placeholder="Your email address"
+            className="field pl-10"
+            disabled={status === "loading"}
           />
         </div>
         <button
           type="submit"
-          disabled={isSubmitting}
-          className="btn-primary whitespace-nowrap disabled:opacity-50 disabled:cursor-not-allowed"
+          disabled={status === "loading"}
+          className="btn-primary shrink-0 disabled:opacity-60 disabled:cursor-not-allowed"
         >
-          {isSubmitting ? (
-            <div className="w-5 h-5 border-2 border-background border-t-transparent rounded-full animate-spin"></div>
+          {status === "loading" ? (
+            <Loader2 size={16} className="animate-spin" />
           ) : (
-            "Subscribe"
+            cta
           )}
         </button>
       </div>
-
-      {error && (
-        <p className="mt-3 text-red-400 text-sm text-center">{error}</p>
+      {status === "error" && (
+        <p className="mt-2 text-xs text-red-400 text-center">
+          Something went wrong — try again or DM @jluhvv
+        </p>
       )}
     </form>
   );

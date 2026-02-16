@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://jade-the-gem-dj.vercel.app/sitemap.xml

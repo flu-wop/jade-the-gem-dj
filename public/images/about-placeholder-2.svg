@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="600" height="700" viewBox="0 0 600 700">
+  <rect width="600" height="700" fill="#111111"/>
+  <rect x="10" y="10" width="580" height="680" fill="none" stroke="#a855f7" stroke-opacity="0.2" stroke-width="1" rx="8"/>
+  <text x="300" y="340" font-size="64" text-anchor="middle" fill="#a855f7" fill-opacity="0.15" font-family="Arial">🎧</text>
+  <text x="300" y="400" font-size="14" text-anchor="middle" fill="#ffffff" fill-opacity="0.2" font-family="Arial, sans-serif">Photo Placeholder 2</text>
+</svg>

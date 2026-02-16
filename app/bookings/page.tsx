@@ -1,126 +1,151 @@
 import type { Metadata } from "next";
+import { Music2, Users, Star, Building } from "lucide-react";
 import BookingForm from "@/components/BookingForm";
-import { Music2, Calendar, DollarSign, MapPin } from "lucide-react";
 
 export const metadata: Metadata = {
-  title: "Book DJ Jade | DJ Jade the Gem",
+  title: "Book DJ Jade",
   description:
     "Book DJ Jade the Gem for your club night, festival, private party, or corporate event. Professional DJ services in New Orleans and beyond.",
 };
 
+const services = [
+  {
+    icon: Music2,
+    title: "Club Nights",
+    desc: "Residencies, guest sets, late-night headliners",
+    color: "text-neon-green",
+  },
+  {
+    icon: Star,
+    title: "Festivals",
+    desc: "Outdoor stages, multi-day events, brand activations",
+    color: "text-neon-purple",
+  },
+  {
+    icon: Users,
+    title: "Private Events",
+    desc: "Weddings, birthdays, milestone celebrations",
+    color: "text-neon-gold",
+  },
+  {
+    icon: Building,
+    title: "Corporate",
+    desc: "Launches, galas, team events, rooftop parties",
+    color: "text-neon-green",
+  },
+];
+
+const steps = [
+  { n: "01", title: "Submit Inquiry", desc: "Fill out the form below with your event details." },
+  { n: "02", title: "Receive a Quote", desc: "I'll reply with availability and pricing within 48 hrs." },
+  { n: "03", title: "Confirm & Deposit", desc: "Sign the agreement and lock in your date." },
+  { n: "04", title: "Experience the Heat", desc: "Show up and let the energy take over." },
+];
+
 export default function BookingsPage() {
   return (
-    <div className="min-h-screen pt-24 pb-20 px-4">
+    <div className="min-h-screen pt-24 pb-24 px-4">
       <div className="max-w-6xl mx-auto">
-        {/* Header */}
-        <div className="text-center mb-16">
-          <h1 className="section-title">Book DJ Jade</h1>
-          <p className="text-xl text-gray-300 max-w-3xl mx-auto">
-            Elevate your event with electrifying energy and fire mixes.
-            Available for clubs, festivals, private parties, and corporate
-            events.
+
+        {/* ── Header ── */}
+        <header className="text-center mb-16">
+          <p className="section-label">Let's Work Together</p>
+          <h1 className="section-title">
+            Book <span className="text-neon-green">DJ Jade</span>
+          </h1>
+          <p className="text-white/50 text-sm mt-4 max-w-xl mx-auto">
+            Bring the 504 energy to your event. Available for clubs, festivals,
+            private parties, and corporate bookings nationwide.
           </p>
+        </header>
+
+        {/* ── Services grid ── */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-20">
+          {services.map(({ icon: Icon, title, desc, color }) => (
+            <div key={title} className="card p-6 text-center hover:border-neon-green/20 transition-colors">
+              <Icon className={`${color} mx-auto mb-3`} size={28} />
+              <h3 className="font-bold text-sm mb-1">{title}</h3>
+              <p className="text-white/40 text-xs leading-relaxed">{desc}</p>
+            </div>
+          ))}
         </div>
 
-        {/* What I Offer */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-16">
-          <div className="glass-card text-center">
-            <Music2 className="w-12 h-12 text-neon-green mx-auto mb-4" />
-            <h3 className="font-bold text-lg mb-2">Club Events</h3>
-            <p className="text-gray-400 text-sm">
-              Nightclub residencies and guest sets
-            </p>
-          </div>
-          <div className="glass-card text-center">
-            <Calendar className="w-12 h-12 text-neon-purple mx-auto mb-4" />
-            <h3 className="font-bold text-lg mb-2">Festivals</h3>
-            <p className="text-gray-400 text-sm">
-              Music festivals and outdoor events
-            </p>
-          </div>
-          <div className="glass-card text-center">
-            <DollarSign className="w-12 h-12 text-neon-gold mx-auto mb-4" />
-            <h3 className="font-bold text-lg mb-2">Private Parties</h3>
-            <p className="text-gray-400 text-sm">
-              Weddings, birthdays, and celebrations
-            </p>
-          </div>
-          <div className="glass-card text-center">
-            <MapPin className="w-12 h-12 text-neon-green mx-auto mb-4" />
-            <h3 className="font-bold text-lg mb-2">Corporate Events</h3>
-            <p className="text-gray-400 text-sm">
-              Brand activations and company parties
-            </p>
-          </div>
-        </div>
+        <div className="grid grid-cols-1 lg:grid-cols-5 gap-12">
 
-        {/* Booking Form */}
-        <div className="glass-card p-8 md:p-12 max-w-4xl mx-auto">
-          <h2 className="text-3xl font-display text-neon-green mb-2">
-            Get a Quote
-          </h2>
-          <p className="text-gray-400 mb-8">
-            Fill out the form below and I'll get back to you within 24-48 hours
-          </p>
-          <BookingForm />
-        </div>
-
-        {/* Additional Info */}
-        <div className="mt-16 grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
-          <div className="glass-card">
-            <h3 className="text-2xl font-display text-neon-purple mb-4">
-              What's Included
-            </h3>
-            <ul className="space-y-3 text-gray-300">
-              <li className="flex items-start">
-                <span className="text-neon-green mr-2">✓</span>
-                Professional DJ equipment and setup
-              </li>
-              <li className="flex items-start">
-                <span className="text-neon-green mr-2">✓</span>
-                Custom playlist tailored to your event
-              </li>
-              <li className="flex items-start">
-                <span className="text-neon-green mr-2">✓</span>
-                MC services and announcements
-              </li>
-              <li className="flex items-start">
-                <span className="text-neon-green mr-2">✓</span>
-                Professional sound system
-              </li>
-              <li className="flex items-start">
-                <span className="text-neon-green mr-2">✓</span>
-                Pre-event consultation
-              </li>
-            </ul>
+          {/* ── Left: form ── */}
+          <div className="lg:col-span-3">
+            <div className="card p-7 sm:p-10">
+              <h2 className="font-display text-3xl text-neon-green mb-1">
+                Inquiry Form
+              </h2>
+              <p className="text-white/40 text-xs mb-8">
+                * required · typically replied within 24–48 hrs
+              </p>
+              <BookingForm />
+            </div>
           </div>
 
-          <div className="glass-card">
-            <h3 className="text-2xl font-display text-neon-purple mb-4">
-              Booking Process
-            </h3>
-            <ol className="space-y-3 text-gray-300">
-              <li className="flex items-start">
-                <span className="text-neon-green mr-3 font-bold">1.</span>
-                Submit the booking inquiry form
-              </li>
-              <li className="flex items-start">
-                <span className="text-neon-green mr-3 font-bold">2.</span>
-                Receive a custom quote within 48 hours
-              </li>
-              <li className="flex items-start">
-                <span className="text-neon-green mr-3 font-bold">3.</span>
-                Schedule a consultation call
-              </li>
-              <li className="flex items-start">
-                <span className="text-neon-green mr-3 font-bold">4.</span>
-                Sign contract and pay deposit
-              </li>
-              <li className="flex items-start">
-                <span className="text-neon-green mr-3 font-bold">5.</span>
-                Get ready to experience the energy!
-              </li>
-            </ol>
+          {/* ── Right: process + what's included ── */}
+          <div className="lg:col-span-2 space-y-6">
+
+            {/* Process */}
+            <div className="card p-6">
+              <h3 className="font-display text-2xl text-neon-purple mb-6">
+                How It Works
+              </h3>
+              <ol className="space-y-5">
+                {steps.map(({ n, title, desc }) => (
+                  <li key={n} className="flex gap-4">
+                    <span className="font-display text-2xl text-neon-green/60 leading-none w-8 shrink-0">
+                      {n}
+                    </span>
+                    <div>
+                      <p className="font-bold text-sm text-white">{title}</p>
+                      <p className="text-white/40 text-xs leading-relaxed mt-0.5">
+                        {desc}
+                      </p>
+                    </div>
+                  </li>
+                ))}
+              </ol>
+            </div>
+
+            {/* Included */}
+            <div className="card p-6">
+              <h3 className="font-display text-2xl text-neon-green mb-4">
+                What's Included
+              </h3>
+              <ul className="space-y-2 text-sm">
+                {[
+                  "Professional DJ gear & setup",
+                  "Custom curated playlist",
+                  "MC services & crowd hype",
+                  "Pre-event planning call",
+                  "Travel within NOLA region",
+                ].map((item) => (
+                  <li key={item} className="flex gap-3 text-white/60">
+                    <span className="text-neon-green mt-0.5">✓</span>
+                    {item}
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            {/* Direct DM note */}
+            <div className="rounded-xl bg-neon-purple/10 border border-neon-purple/20 p-5 text-center">
+              <p className="text-white/50 text-xs mb-2">
+                Prefer to chat first?
+              </p>
+              <a
+                href="https://instagram.com/jluhvv"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-neon-purple font-bold text-sm hover:underline"
+              >
+                DM @jluhvv on Instagram →
+              </a>
+            </div>
+
           </div>
         </div>
       </div>

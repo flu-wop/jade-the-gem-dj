@@ -5,99 +5,101 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Menu, X } from "lucide-react";
 
-const navLinks = [
+const links = [
   { href: "/", label: "Home" },
   { href: "/music", label: "Music" },
   { href: "/events", label: "Events" },
   { href: "/bookings", label: "Bookings" },
   { href: "/about", label: "About" },
-  { href: "/contact", label: "Contact" },
 ];
 
 export default function Navbar() {
-  const [isOpen, setIsOpen] = useState(false);
-  const [isScrolled, setIsScrolled] = useState(false);
+  const [open, setOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
   const pathname = usePathname();
 
   useEffect(() => {
-    const handleScroll = () => {
-      setIsScrolled(window.scrollY > 20);
-    };
-
-    window.addEventListener("scroll", handleScroll);
-    return () => window.removeEventListener("scroll", handleScroll);
+    const onScroll = () => setScrolled(window.scrollY > 24);
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
-  useEffect(() => {
-    setIsOpen(false);
-  }, [pathname]);
+  // close mobile menu on route change
+  useEffect(() => setOpen(false), [pathname]);
+
+  const isActive = (href: string) =>
+    href === "/" ? pathname === "/" : pathname.startsWith(href);
 
   return (
-    <nav
-      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
-        isScrolled
-          ? "bg-background/95 backdrop-blur-lg border-b border-white/10 shadow-lg"
+    <header
+      className={`fixed inset-x-0 top-0 z-50 transition-all duration-300 ${
+        scrolled
+          ? "bg-background/95 backdrop-blur-md border-b border-white/10 shadow-xl shadow-black/60"
           : "bg-transparent"
       }`}
     >
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-20">
-          {/* Logo */}
-          <Link
-            href="/"
-            className="text-2xl md:text-3xl font-display text-neon-green hover:text-neon-purple transition-colors"
-          >
-            DJ JADE 💎
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between h-16 md:h-20">
+        {/* Logo */}
+        <Link
+          href="/"
+          className="font-display text-2xl md:text-3xl tracking-wide text-neon-green hover:text-white transition-colors"
+        >
+          DJ JADE THE GEM
+        </Link>
+
+        {/* Desktop nav */}
+        <nav className="hidden md:flex items-center gap-8">
+          {links.map(({ href, label }) => (
+            <Link
+              key={href}
+              href={href}
+              className={`text-sm font-bold uppercase tracking-widest transition-colors ${
+                isActive(href)
+                  ? "text-neon-green"
+                  : "text-white/70 hover:text-white"
+              }`}
+            >
+              {label}
+            </Link>
+          ))}
+          <Link href="/bookings" className="btn-primary text-xs py-2 px-5">
+            Book Me
           </Link>
+        </nav>
 
-          {/* Desktop Navigation */}
-          <div className="hidden md:flex items-center space-x-8">
-            {navLinks.map((link) => (
-              <Link
-                key={link.href}
-                href={link.href}
-                className={`font-bold uppercase tracking-wider transition-all hover:text-neon-green ${
-                  pathname === link.href
-                    ? "text-neon-green"
-                    : "text-white hover:scale-105"
-                }`}
-              >
-                {link.label}
-              </Link>
-            ))}
-          </div>
-
-          {/* Mobile Menu Button */}
-          <button
-            onClick={() => setIsOpen(!isOpen)}
-            className="md:hidden text-white hover:text-neon-green transition-colors"
-            aria-label="Toggle menu"
-          >
-            {isOpen ? <X size={28} /> : <Menu size={28} />}
-          </button>
-        </div>
+        {/* Mobile toggle */}
+        <button
+          aria-label="Toggle navigation"
+          onClick={() => setOpen((v) => !v)}
+          className="md:hidden p-2 text-white hover:text-neon-green transition-colors"
+        >
+          {open ? <X size={26} /> : <Menu size={26} />}
+        </button>
       </div>
 
-      {/* Mobile Menu */}
-      {isOpen && (
-        <div className="md:hidden bg-surface/98 backdrop-blur-lg border-t border-white/10">
-          <div className="px-4 py-6 space-y-4">
-            {navLinks.map((link) => (
+      {/* Mobile drawer */}
+      {open && (
+        <div className="md:hidden bg-surface/95 backdrop-blur-md border-t border-white/10">
+          <nav className="flex flex-col px-4 py-6 gap-1">
+            {links.map(({ href, label }) => (
               <Link
-                key={link.href}
-                href={link.href}
-                className={`block py-3 px-4 rounded-lg font-bold uppercase tracking-wider transition-all ${
-                  pathname === link.href
-                    ? "bg-neon-green/20 text-neon-green border-l-4 border-neon-green"
-                    : "text-white hover:bg-white/5"
+                key={href}
+                href={href}
+                className={`py-3 px-4 rounded-lg text-sm font-bold uppercase tracking-widest transition-all ${
+                  isActive(href)
+                    ? "bg-neon-green/10 text-neon-green border-l-4 border-neon-green pl-3"
+                    : "text-white/70 hover:text-white hover:bg-white/5"
                 }`}
               >
-                {link.label}
+                {label}
               </Link>
             ))}
-          </div>
+            <Link href="/bookings" className="btn-primary mt-4 text-xs py-3">
+              Book Me
+            </Link>
+          </nav>
         </div>
       )}
-    </nav>
+    </header>
   );
 }

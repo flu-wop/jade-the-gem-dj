@@ -1,118 +1,116 @@
 import type { Metadata } from "next";
-import SoundCloudPlayer from "@/components/SoundCloudPlayer";
-import { Clock } from "lucide-react";
+import { Music } from "lucide-react";
+import SoundCloudEmbed from "@/components/SoundCloudEmbed";
+import NewsletterForm from "@/components/NewsletterForm";
+import { featuredTrack, tracks } from "@/lib/data";
 
 export const metadata: Metadata = {
-  title: "Music & Mixes | DJ Jade the Gem",
+  title: "Music & Mixes",
   description:
-    "Listen to the latest mixes and tracks from DJ Jade the Gem. Subscribe on SoundCloud for fresh releases.",
+    "Stream DJ Jade the Gem's fire mixes and club sets on SoundCloud. New drops dropping soon.",
 };
-
-const tracks = [
-  {
-    id: "1",
-    title: "Summer Vibes Mix 2024",
-    embedUrl:
-      "https://w.soundcloud.com/player/?url=https%3A//api.soundcloud.com/tracks/YOUR_TRACK_ID_1&color=%2300ff9d&auto_play=false&hide_related=false&show_comments=true&show_user=true&show_reposts=false&show_teaser=true",
-  },
-  {
-    id: "2",
-    title: "Club Heat Vol. 3",
-    embedUrl:
-      "https://w.soundcloud.com/player/?url=https%3A//api.soundcloud.com/tracks/YOUR_TRACK_ID_2&color=%2300ff9d&auto_play=false&hide_related=false&show_comments=true&show_user=true&show_reposts=false&show_teaser=true",
-  },
-  {
-    id: "3",
-    title: "504 Bounce Session",
-    embedUrl:
-      "https://w.soundcloud.com/player/?url=https%3A//api.soundcloud.com/tracks/YOUR_TRACK_ID_3&color=%2300ff9d&auto_play=false&hide_related=false&show_comments=true&show_user=true&show_reposts=false&show_teaser=true",
-  },
-];
 
 export default function MusicPage() {
   return (
-    <div className="min-h-screen pt-24 pb-20 px-4">
-      <div className="max-w-6xl mx-auto">
-        {/* Header */}
-        <div className="text-center mb-16">
-          <h1 className="section-title">Music & Mixes</h1>
-          <p className="text-xl text-gray-300 max-w-2xl mx-auto">
-            Explore my latest tracks, mixes, and live recordings. Hit that
-            follow button on SoundCloud to never miss a drop.
-          </p>
-        </div>
+    <div className="min-h-screen pt-24 pb-24 px-4">
+      <div className="max-w-5xl mx-auto">
 
-        {/* Featured/New Release Section */}
-        <div className="glass-card mb-16 text-center relative overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-to-br from-neon-purple/20 to-neon-green/20"></div>
-          <div className="relative z-10 p-8">
-            <div className="inline-block px-4 py-2 bg-neon-gold/20 border border-neon-gold rounded-full mb-4">
-              <span className="text-neon-gold font-bold flex items-center gap-2">
-                <Clock className="w-4 h-4" />
-                COMING SOON
+        {/* ── Header ── */}
+        <header className="text-center mb-16">
+          <p className="section-label">Discography</p>
+          <h1 className="section-title">
+            Music &amp; <span className="text-neon-green">Mixes</span>
+          </h1>
+          <p className="text-white/50 text-sm mt-4 max-w-xl mx-auto">
+            Fire sets, club mixes, and original edits. Follow on SoundCloud to
+            catch every drop.
+          </p>
+        </header>
+
+        {/* ── Featured track (big visual player) ── */}
+        <section className="mb-20">
+          <div className="card p-6 sm:p-8">
+            <div className="flex items-center gap-3 mb-5">
+              <span className="px-3 py-1 rounded-full bg-neon-green/10 border border-neon-green/30 text-neon-green text-xs font-bold uppercase tracking-widest">
+                ▶ Latest
               </span>
+              <h2 className="font-display text-2xl text-white">
+                {featuredTrack.title}
+              </h2>
             </div>
-            <h2 className="text-4xl md:text-5xl font-display text-neon-green mb-4">
-              NEW RELEASE
+            <SoundCloudEmbed
+              src={featuredTrack.embedSrc}
+              visual={true}
+              title={featuredTrack.title}
+            />
+          </div>
+        </section>
+
+        {/* ── New drop teaser ── */}
+        <section className="relative mb-20 overflow-hidden rounded-2xl border border-neon-purple/20 bg-gradient-to-br from-neon-purple/10 via-surface to-neon-green/10 p-8 sm:p-12 text-center">
+          <div className="relative z-10">
+            <span className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-neon-gold/10 border border-neon-gold/30 text-neon-gold text-xs font-bold uppercase tracking-widest mb-4">
+              🔥 Coming Soon
+            </span>
+            <h2 className="font-display text-4xl md:text-5xl text-white mb-3">
+              New Drop <span className="text-neon-green">Loading…</span>
             </h2>
-            <p className="text-xl text-gray-300 mb-6">
-              Exclusive new mix dropping this month
+            <p className="text-white/50 text-sm mb-8 max-w-md mx-auto">
+              Working on something exclusive. Sign up to be the very first to
+              hear it when it drops.
             </p>
-            <div className="max-w-md mx-auto">
-              <div
-                className="w-full h-64 bg-surface rounded-lg mb-6 flex items-center justify-center"
-                style={{
-                  backgroundImage: "url('/images/placeholder-album-art.jpg')",
-                  backgroundSize: "cover",
-                  backgroundPosition: "center",
-                }}
-              >
-                <div className="text-6xl">🎵</div>
-              </div>
-              <p className="text-gray-400 mb-4">
-                Be the first to know when it drops
-              </p>
-              <form className="flex gap-2">
-                <input
-                  type="email"
-                  placeholder="Your email"
-                  className="input-field flex-1"
-                  required
-                />
-                <button type="submit" className="btn-primary whitespace-nowrap">
-                  Notify Me
-                </button>
-              </form>
+            {/* Fake album art placeholder */}
+            <div className="w-44 h-44 mx-auto mb-8 rounded-2xl bg-surface-2 border border-white/10 flex items-center justify-center text-5xl">
+              💎
+            </div>
+            <div className="max-w-sm mx-auto">
+              <NewsletterForm cta="Alert Me First" />
             </div>
           </div>
-        </div>
+        </section>
 
-        {/* Mixes Grid */}
-        <h2 className="text-3xl md:text-4xl font-display text-white mb-8">
-          Recent Mixes
-        </h2>
-        <div className="grid grid-cols-1 gap-8">
-          {tracks.map((track) => (
-            <div key={track.id} className="glass-card">
-              <h3 className="text-2xl font-display text-neon-green mb-4">
-                {track.title}
-              </h3>
-              <SoundCloudPlayer embedUrl={track.embedUrl} />
-            </div>
-          ))}
-        </div>
+        {/* ── All mixes grid ── */}
+        <section>
+          <div className="flex items-center justify-between mb-8">
+            <h2 className="font-display text-3xl text-white">
+              Recent <span className="text-neon-purple">Mixes</span>
+            </h2>
+            <a
+              href="https://soundcloud.com/jadethegem888/albums"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="btn-ghost text-xs py-2"
+            >
+              <Music size={13} />
+              All Albums
+            </a>
+          </div>
 
-        {/* More on SoundCloud */}
-        <div className="text-center mt-16">
+          <div className="grid grid-cols-1 gap-6">
+            {tracks.map((track) => (
+              <div key={track.id} className="card p-5 sm:p-6">
+                <h3 className="font-display text-xl text-neon-green mb-4">
+                  {track.title}
+                </h3>
+                <SoundCloudEmbed src={track.embedSrc} title={track.title} />
+              </div>
+            ))}
+          </div>
+        </section>
+
+        {/* ── SC CTA ── */}
+        <div className="mt-16 text-center">
           <a
             href="https://soundcloud.com/jadethegem888"
             target="_blank"
             rel="noopener noreferrer"
-            className="btn-secondary inline-block"
+            className="btn-secondary"
           >
+            <Music size={16} />
             View All on SoundCloud →
           </a>
         </div>
+
       </div>
     </div>
   );
