@@ -4,7 +4,8 @@ import { Music, Calendar, Headphones, ArrowRight } from "lucide-react";
 import SoundCloudEmbed from "@/components/SoundCloudEmbed";
 import NewsletterForm from "@/components/NewsletterForm";
 import EventCard from "@/components/EventCard";
-import { featuredTrack, upcomingEvents } from "@/lib/data";
+import MerchCard from "@/components/MerchCard";
+import { featuredTrack, upcomingEvents, merchItems } from "@/lib/data";
 
 export const metadata: Metadata = {
   title: "DJ Jade the Gem | 504 Creative | Fire Mixes & Live Energy",
@@ -146,8 +147,8 @@ export default function HomePage() {
             <div className="neon-divider" />
             <p className="text-white/60 leading-relaxed mt-4 text-sm md:text-base max-w-lg">
               Born and raised in the 504, DJ Jade the Gem brings the raw energy
-              of New Orleans nightlife to every set. From bounce to hip-hop, EDM
-              to R&amp;B — the only rule is the crowd never stops moving.
+              of New Orleans nightlife to every set. From bounce to hip-hop, R&amp;B
+              to club bangers — the only rule is the crowd never stops moving.
             </p>
             <div className="mt-8 flex flex-wrap gap-6">
               <Link href="/about" className="btn-ghost text-xs py-2.5">
@@ -162,7 +163,7 @@ export default function HomePage() {
           {/* Stat cards */}
           <div className="grid grid-cols-2 gap-4">
             {[
-              { num: "100+", label: "Live Events" },
+              { num: "∞", label: "Live Sets" },
               { num: "504", label: "NOLA Roots", color: "text-neon-purple" },
               { num: "24/7", label: "Always Creating", color: "text-neon-gold" },
               { num: "∞", label: "Energy Delivered" },
@@ -201,9 +202,43 @@ export default function HomePage() {
       </section>
 
       {/* ══════════════════════════════════════════════════════
+          MERCH
+      ══════════════════════════════════════════════════════ */}
+      <section className="py-24 px-4 bg-background">
+        <div className="max-w-5xl mx-auto">
+          <div className="text-center mb-12">
+            <p className="section-label">504 Creative</p>
+            <h2 className="section-title">
+              <span className="text-neon-purple">Merch</span>
+            </h2>
+            <p className="text-white/50 text-sm mt-4">
+              Rep the brand. New drops coming soon.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+            {merchItems.map((item) => (
+              <MerchCard key={item.id} item={item} />
+            ))}
+          </div>
+
+          <div className="text-center">
+            <a
+              href="https://instagram.com/jluhvv"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="btn-ghost text-xs"
+            >
+              DM to Order
+            </a>
+          </div>
+        </div>
+      </section>
+
+      {/* ══════════════════════════════════════════════════════
           STAY CONNECTED (newsletter)
       ══════════════════════════════════════════════════════ */}
-      <section className="py-24 px-4 bg-gradient-to-b from-surface to-background">
+      <section className="py-24 px-4 bg-gradient-to-b from-background to-surface">
         <div className="max-w-xl mx-auto text-center">
           <p className="section-label">Mailing List</p>
           <h2 className="section-title mb-3">
