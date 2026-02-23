@@ -29,6 +29,14 @@ export interface SocialLink {
   url: string;
 }
 
+export interface MerchItem {
+  id: string;
+  name: string;
+  price: string;
+  image: string;
+  link?: string; // Optional purchase link
+}
+
 /* ── Upcoming events ─────────────────────────────────── */
 export const upcomingEvents: Event[] = [];
 
@@ -56,22 +64,22 @@ export const pastEvents: Event[] = [
 */
 export const featuredTrack: Track = {
   id: "featured",
-  title: "UNCUT VOL. 1",
+  title: "Sunset Playlist",
   embedSrc:
-    "https://w.soundcloud.com/player/?url=https%3A//api.soundcloud.com/playlists/soundcloud%253Aplaylists%253A1982508040&color=%2300ff9d&auto_play=false&hide_related=false&show_comments=true&show_user=true&show_reposts=false&show_teaser=true&visual=true",
+    "https://w.soundcloud.com/player/?url=https%3A//api.soundcloud.com/playlists/soundcloud%253Aplaylists%253A2192742440&color=%2300ff9d&auto_play=false&hide_related=false&show_comments=true&show_user=true&show_reposts=false&show_teaser=true&visual=true",
   visual: true,
 };
 
 export const tracks: Track[] = [
   {
     id: "t1",
-    title: "Fire Mix Vol. 1",
+    title: "UNCUT VOL. 1",
     embedSrc:
-      "https://w.soundcloud.com/player/?url=https%3A//api.soundcloud.com/users/jadethegem888&color=%2300ff9d&auto_play=false&hide_related=false&show_comments=false&show_user=true&show_reposts=false&show_teaser=false",
+      "https://w.soundcloud.com/player/?url=https%3A//api.soundcloud.com/playlists/1982508040&color=%2300ff9d&auto_play=false&hide_related=false&show_comments=true&show_user=true&show_reposts=false&show_teaser=true",
   },
   {
     id: "t2",
-    title: "Club Heat Vol. 2",
+    title: "Fire Mix Vol. 2",
     embedSrc:
       "https://w.soundcloud.com/player/?url=https%3A//api.soundcloud.com/users/jadethegem888&color=%2300ff9d&auto_play=false&hide_related=false&show_comments=false&show_user=true&show_reposts=false&show_teaser=false",
   },
@@ -80,6 +88,31 @@ export const tracks: Track[] = [
     title: "504 Bounce Session",
     embedSrc:
       "https://w.soundcloud.com/player/?url=https%3A//api.soundcloud.com/users/jadethegem888&color=%2300ff9d&auto_play=false&hide_related=false&show_comments=false&show_user=true&show_reposts=false&show_teaser=false",
+  },
+];
+
+/* ── Merch items ────────────────────────────────────── */
+export const merchItems: MerchItem[] = [
+  {
+    id: "m1",
+    name: "504 Creative Tee",
+    price: "$30",
+    image: "/images/merch-tee-1.jpg",
+    link: "", // Add Shopify/purchase link when ready
+  },
+  {
+    id: "m2",
+    name: "Jade The Gem Logo Tee",
+    price: "$30",
+    image: "/images/merch-tee-2.jpg",
+    link: "",
+  },
+  {
+    id: "m3",
+    name: "NOLA Energy Tee",
+    price: "$30",
+    image: "/images/merch-tee-3.jpg",
+    link: "",
   },
 ];
 
