@@ -165,11 +165,11 @@ function MerchCard({ product }: { product: Product }) {
         .merch-img-wrap {
           position: relative;
           aspect-ratio: 1 / 1;
-          background: #111;
+          background: #0e0b14;
           border-radius: 2px;
           overflow: hidden;
         }
-        .merch-img { width: 100%; height: 100%; object-fit: cover; display: block; }
+        .merch-img { width: 100%; height: 100%; object-fit: contain; display: block; }
         .merch-badge {
           position: absolute; top: 0.75rem; right: 0.75rem;
           background: #00ff88; color: #000;
