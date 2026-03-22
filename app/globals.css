@@ -24,13 +24,13 @@
            hover:brightness-110 hover:scale-105
            active:scale-95
            transition-all duration-200
-           shadow-[0_0_18px_rgba(0,255,157,0.35)];
+           shadow-[0_0_18px_rgba(184,167,217,0.35)];
   }
   .btn-secondary {
     @apply inline-flex items-center justify-center gap-2
            px-7 py-3 rounded-lg font-bold uppercase tracking-widest text-sm
            border-2 border-neon-purple text-neon-purple bg-transparent
-           hover:bg-neon-purple hover:text-background hover:scale-105
+           hover:bg-neon-purple hover:text-white hover:scale-105
            active:scale-95
            transition-all duration-200;
   }
@@ -47,7 +47,7 @@
     @apply w-full px-4 py-3 rounded-lg
            bg-surface-2 border border-white/10 text-white text-sm
            placeholder:text-gray-600
-           focus:outline-none focus:border-neon-green focus:ring-1 focus:ring-neon-green/40
+           focus:outline-none focus:border-neon-purple focus:ring-1 focus:ring-neon-purple/40
            transition-colors duration-200;
   }
 
@@ -61,7 +61,7 @@
 
   /* ── Section chrome ── */
   .section-label {
-    @apply text-xs font-bold uppercase tracking-[0.25em] text-neon-green mb-3;
+    @apply text-xs font-bold uppercase tracking-[0.25em] text-neon-gold mb-3;
   }
   .section-title {
     @apply text-4xl md:text-5xl lg:text-6xl font-display uppercase tracking-wide leading-none;
@@ -69,23 +69,25 @@
 
   /* ── Neon glow text ── */
   .glow-green {
-    text-shadow: 0 0 12px rgba(0,255,157,0.7), 0 0 28px rgba(0,255,157,0.3);
+    /* plum-lavender glow on hero title */
+    text-shadow: 0 0 12px rgba(184,167,217,0.65), 0 0 28px rgba(74,63,143,0.4);
   }
   .glow-purple {
-    text-shadow: 0 0 12px rgba(168,85,247,0.7), 0 0 28px rgba(168,85,247,0.3);
+    /* jade teal glow */
+    text-shadow: 0 0 12px rgba(42,122,111,0.7), 0 0 28px rgba(42,122,111,0.3);
   }
 
   /* ── Divider ── */
   .neon-divider {
-    @apply w-16 h-[3px] rounded-full bg-neon-green my-4;
+    @apply w-16 h-[3px] rounded-full bg-neon-purple my-4;
   }
 }
 
 /* ── Custom scrollbar ── */
 ::-webkit-scrollbar { width: 8px; }
-::-webkit-scrollbar-track { background: #0a0a0a; }
-::-webkit-scrollbar-thumb { background: #00ff9d44; border-radius: 9999px; }
-::-webkit-scrollbar-thumb:hover { background: #00ff9d88; }
+::-webkit-scrollbar-track { background: #0e0b14; }
+::-webkit-scrollbar-thumb { background: #4a3f8f66; border-radius: 9999px; }
+::-webkit-scrollbar-thumb:hover { background: #4a3f8faa; }
 
 /* ── SoundCloud iframe ── */
 .sc-iframe {

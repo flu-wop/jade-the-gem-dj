@@ -9,13 +9,17 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        background: "#0a0a0a",
-        surface: "#111111",
-        "surface-2": "#1a1a1a",
-        "neon-green": "#00ff9d",
-        "neon-purple": "#a855f7",
-        "neon-gold": "#ffd700",
-        "neon-green-dim": "#00cc7a",
+        // ── Deep Jewel Mystic ─────────────────────────────
+        background:   "#0e0b14", // obsidian black
+        surface:      "#151020", // deep charcoal-plum
+        "surface-2":  "#1e1830", // lifted surface
+        // primary accent — deep plum
+        "neon-green":     "#b8a7d9", // muted lavender-gold (replaces neon-green)
+        "neon-green-dim": "#9b8ec4", // dimmed variant
+        // secondary accent — smoky jade
+        "neon-purple":    "#2a7a6f", // smoky jade/teal (replaces purple)
+        // gold highlight
+        "neon-gold":      "#d4af37", // antique gold
       },
       fontFamily: {
         sans: ["var(--font-montserrat)", "sans-serif"],
@@ -23,7 +27,7 @@ const config: Config = {
       },
       backgroundImage: {
         "hero-gradient":
-          "linear-gradient(to bottom, rgba(10,10,10,0.7) 0%, rgba(10,10,10,0.85) 60%, #0a0a0a 100%)",
+          "linear-gradient(to bottom, rgba(14,11,20,0.6) 0%, rgba(14,11,20,0.88) 60%, #0e0b14 100%)",
       },
     },
   },

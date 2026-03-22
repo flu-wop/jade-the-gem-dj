@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Montserrat, Bebas_Neue } from "next/font/google";
+import Script from "next/script";
 import "./globals.css";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
@@ -76,10 +77,31 @@ export default function RootLayout({
       lang="en"
       className={`${montserrat.variable} ${bebas.variable}`}
     >
+      <head>
+        {/* Snipcart styles */}
+        <link
+          rel="stylesheet"
+          href="https://cdn.snipcart.com/themes/v3.7.3/default/snipcart.css"
+        />
+      </head>
       <body className="bg-background text-white antialiased">
         <Navbar />
         <main>{children}</main>
         <Footer />
+
+        {/* Snipcart cart widget
+            Replace YOUR_SNIPCART_PUBLIC_KEY below with the key from:
+            app.snipcart.com → Account → API Keys → Public API Key         */}
+        <div
+          hidden
+          id="snipcart"
+          data-api-key="ZjJjMjEwZTItNjE2Yy00MzJkLWI0MDQtOTYyYmI3MTEyYzgwNjM5MDk4MDA2OTM4MzczMzI4"
+          data-currency="usd"
+        />
+        <Script
+          src="https://cdn.snipcart.com/themes/v3.7.3/default/snipcart.js"
+          strategy="afterInteractive"
+        />
       </body>
     </html>
   );

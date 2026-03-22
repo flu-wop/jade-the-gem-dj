@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Menu, X } from "lucide-react";
+import { Menu, X, ShoppingCart } from "lucide-react";
 
 const links = [
   { href: "/", label: "Home" },
@@ -65,16 +65,36 @@ export default function Navbar() {
           <Link href="/bookings" className="btn-primary text-xs py-2 px-5">
             Book Me
           </Link>
+
+          {/* Snipcart cart button — desktop */}
+          <button
+            className="snipcart-checkout flex items-center gap-1.5 text-white/70 hover:text-neon-green transition-colors"
+            aria-label="Open cart"
+          >
+            <ShoppingCart size={18} />
+            <span className="text-xs font-bold uppercase tracking-widest">
+              (<span className="snipcart-items-count">0</span>)
+            </span>
+          </button>
         </nav>
 
-        {/* Mobile toggle */}
-        <button
-          aria-label="Toggle navigation"
-          onClick={() => setOpen((v) => !v)}
-          className="md:hidden p-2 text-white hover:text-neon-green transition-colors"
-        >
-          {open ? <X size={26} /> : <Menu size={26} />}
-        </button>
+        {/* Mobile: cart icon + hamburger */}
+        <div className="md:hidden flex items-center gap-3">
+          <button
+            className="snipcart-checkout text-white/70 hover:text-neon-green transition-colors"
+            aria-label="Open cart"
+          >
+            <ShoppingCart size={20} />
+            <span className="sr-only">Cart</span>
+          </button>
+          <button
+            aria-label="Toggle navigation"
+            onClick={() => setOpen((v) => !v)}
+            className="p-2 text-white hover:text-neon-green transition-colors"
+          >
+            {open ? <X size={26} /> : <Menu size={26} />}
+          </button>
+        </div>
       </div>
 
       {/* Mobile drawer */}

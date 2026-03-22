@@ -3,7 +3,7 @@ module.exports = [
 
 __turbopack_context__.v((parentImport) => {
     return Promise.all([
-  "chunks/741c2_76ba7c43._.js",
+  "chunks/e70fc_76ba7c43._.js",
   "chunks/[root-of-the-server]__4ff871c1._.js"
 ].map((chunk) => __turbopack_context__.l(chunk))).then(() => {
         return parentImport("[turbopack-node]/transforms/postcss.ts { CONFIG => \"[project]/Downloads/dj-jade-website/postcss.config.mjs [postcss] (ecmascript)\" } [postcss] (ecmascript)");

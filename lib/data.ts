@@ -38,7 +38,18 @@ export interface MerchItem {
 }
 
 /* ── Upcoming events ─────────────────────────────────── */
-export const upcomingEvents: Event[] = [];
+export const upcomingEvents: Event[] = [
+  {
+    id: "u1",
+    title: "French Quarter Fest Block Party Kickoff",
+    date: "2026-04-16",
+    venue: "Tattoo Bayou",
+    city: "New Orleans",
+    state: "LA",
+    flyerImage: "/images/tattoo-bayou.png",
+    isPast: false,
+  },
+];
 
 /* ── Past events ─────────────────────────────────────── */
 export const pastEvents: Event[] = [

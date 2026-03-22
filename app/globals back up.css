@@ -1,0 +1,95 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+  body {
+    @apply bg-background text-white;
+    font-family: var(--font-montserrat), sans-serif;
+  }
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-bebas), sans-serif;
+  }
+}
+
+@layer components {
+  /* ── Buttons ── */
+  .btn-primary {
+    @apply inline-flex items-center justify-center gap-2
+           px-7 py-3 rounded-lg font-bold uppercase tracking-widest text-sm
+           bg-neon-green text-background
+           hover:brightness-110 hover:scale-105
+           active:scale-95
+           transition-all duration-200
+           shadow-[0_0_18px_rgba(0,255,157,0.35)];
+  }
+  .btn-secondary {
+    @apply inline-flex items-center justify-center gap-2
+           px-7 py-3 rounded-lg font-bold uppercase tracking-widest text-sm
+           border-2 border-neon-purple text-neon-purple bg-transparent
+           hover:bg-neon-purple hover:text-background hover:scale-105
+           active:scale-95
+           transition-all duration-200;
+  }
+  .btn-ghost {
+    @apply inline-flex items-center justify-center gap-2
+           px-7 py-3 rounded-lg font-bold uppercase tracking-widest text-sm
+           border-2 border-white/20 text-white bg-transparent
+           hover:border-white/50 hover:bg-white/5
+           transition-all duration-200;
+  }
+
+  /* ── Form fields ── */
+  .field {
+    @apply w-full px-4 py-3 rounded-lg
+           bg-surface-2 border border-white/10 text-white text-sm
+           placeholder:text-gray-600
+           focus:outline-none focus:border-neon-green focus:ring-1 focus:ring-neon-green/40
+           transition-colors duration-200;
+  }
+
+  /* ── Cards ── */
+  .glass {
+    @apply bg-surface/60 backdrop-blur-sm border border-white/10 rounded-2xl;
+  }
+  .card {
+    @apply bg-surface-2 border border-white/10 rounded-2xl;
+  }
+
+  /* ── Section chrome ── */
+  .section-label {
+    @apply text-xs font-bold uppercase tracking-[0.25em] text-neon-green mb-3;
+  }
+  .section-title {
+    @apply text-4xl md:text-5xl lg:text-6xl font-display uppercase tracking-wide leading-none;
+  }
+
+  /* ── Neon glow text ── */
+  .glow-green {
+    text-shadow: 0 0 12px rgba(0,255,157,0.7), 0 0 28px rgba(0,255,157,0.3);
+  }
+  .glow-purple {
+    text-shadow: 0 0 12px rgba(168,85,247,0.7), 0 0 28px rgba(168,85,247,0.3);
+  }
+
+  /* ── Divider ── */
+  .neon-divider {
+    @apply w-16 h-[3px] rounded-full bg-neon-green my-4;
+  }
+}
+
+/* ── Custom scrollbar ── */
+::-webkit-scrollbar { width: 8px; }
+::-webkit-scrollbar-track { background: #0a0a0a; }
+::-webkit-scrollbar-thumb { background: #00ff9d44; border-radius: 9999px; }
+::-webkit-scrollbar-thumb:hover { background: #00ff9d88; }
+
+/* ── SoundCloud iframe ── */
+.sc-iframe {
+  border-radius: 0.75rem;
+  overflow: hidden;
+  width: 100%;
+}
