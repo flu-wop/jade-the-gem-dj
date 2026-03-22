@@ -5,138 +5,113 @@ import weeklyMixes, { type WeeklyMix } from "@/data/weeklyMixes";
 // ─── Single mix card ──────────────────────────────────────────────────────────
 
 function MixCard({ mix }: { mix: WeeklyMix }) {
-  // Format date: "2025-03-15" → "Mar 15 · 2025"
-  const formatted = new Date(mix.date + "T00:00:00").toLocaleDateString(
-    "en-US",
-    { month: "short", day: "numeric", year: "numeric" }
-  );
+  // "2025-03-15" → "March 15, 2025"
+  const formatted = new Date(mix.date + "T00:00:00").toLocaleDateString("en-US", {
+    month: "long", day: "numeric", year: "numeric",
+  });
 
   return (
-    <div className="mix-card">
-      <div className="mix-meta">
-        <span className="mix-date">{formatted}</span>
+    <div className="wm-card">
+      <div className="wm-meta">
+        <span className="wm-date">{formatted}</span>
       </div>
-      <h3 className="mix-title">{mix.title}</h3>
-      <p className="mix-desc">{mix.description}</p>
 
-      {/* SoundCloud embed — responsive height */}
-      <div className="mix-embed-wrap">
+      {/* Anton font on mix title */}
+      <h3 className="wm-title">{mix.title}</h3>
+      <p className="wm-desc">{mix.description}</p>
+
+      {/* Responsive SoundCloud embed */}
+      <div className="wm-embed-wrap">
         <iframe
-          className="mix-embed"
+          title={mix.title}
+          width="100%"
+          height="166"
           scrolling="no"
           frameBorder="no"
           allow="autoplay"
           src={mix.embedSrc}
-          title={mix.title}
+          className="wm-embed"
+          loading="lazy"
         />
       </div>
 
       <style jsx>{`
-        .mix-card {
-          background: #0a0a0a;
-          border: 1px solid #1a1a1a;
-          border-radius: 4px;
-          padding: 1.5rem;
+        .wm-card {
+          background: #151020;
+          border: 1px solid #2a1f4a;
+          border-radius: 6px;
+          padding: 1.25rem;
           display: flex;
           flex-direction: column;
-          gap: 0.6rem;
+          gap: 0.55rem;
           transition: border-color 0.2s;
         }
-        .mix-card:hover {
-          border-color: #2a2a2a;
+        .wm-card:hover { border-color: #4a3f8f; }
+        .wm-date {
+          font-size: 0.62rem; letter-spacing: 0.14em;
+          text-transform: uppercase; color: #d4af37;
         }
-        .mix-meta {
-          display: flex;
-          align-items: center;
-          gap: 0.5rem;
-        }
-        .mix-date {
-          font-size: 0.65rem;
-          letter-spacing: 0.12em;
+        /* Anton font + drip shadow on mix title */
+        .wm-title {
+          font-family: var(--font-anton, sans-serif);
+          font-size: 0.95rem;
+          letter-spacing: 0.06em;
           text-transform: uppercase;
-          color: #00ff88;
-        }
-        .mix-title {
-          font-size: 0.9rem;
-          font-weight: 600;
-          color: #e0e0e0;
+          color: #b8a7d9;
           margin: 0;
-          letter-spacing: 0.03em;
+          text-shadow: 1px 1px 0px #4a3f8f;
         }
-        .mix-desc {
-          font-size: 0.78rem;
-          color: #555;
-          line-height: 1.55;
-          margin: 0;
+        .wm-desc {
+          font-size: 0.76rem; color: #6a5a8a; line-height: 1.5; margin: 0;
         }
-        .mix-embed-wrap {
-          margin-top: 0.5rem;
-          border-radius: 2px;
-          overflow: hidden;
-          width: 100%;
+        .wm-embed-wrap {
+          margin-top: 0.4rem; border-radius: 4px; overflow: hidden; width: 100%;
         }
-        .mix-embed {
-          width: 100%;
-          height: 166px; /* SoundCloud standard single-track height */
-          display: block;
-        }
+        .wm-embed { display: block; width: 100%; }
       `}</style>
     </div>
   );
 }
 
-// ─── Main export ──────────────────────────────────────────────────────────────
+// ─── Section wrapper ──────────────────────────────────────────────────────────
 
 export default function WeeklyMixes() {
-  return (
-    <section id="weekly-mixes" className="mixes-section">
-      <h2 className="section-heading">## Weekly Lab Drops ∞</h2>
-      <p className="mixes-sub">Fresh heat every week · Straight from the lab</p>
+  const sorted = [...weeklyMixes].sort((a, b) => (a.date < b.date ? 1 : -1));
 
-      {weeklyMixes.length === 0 ? (
-        <p className="mixes-empty">No drops yet. Check back soon.</p>
+  return (
+    <section id="weekly-mixes" className="wm-section">
+      {/* Bungee font on section header */}
+      <h2 className="wm-heading">## Weekly Lab Drops ∞</h2>
+      <p className="wm-sub">Fresh heat every week · Straight from the lab</p>
+
+      {sorted.length === 0 ? (
+        <p className="wm-empty">No drops yet — check back soon.</p>
       ) : (
-        <div className="mixes-grid">
-          {/* Most recent first */}
-          {[...weeklyMixes]
-            .sort((a, b) => (a.date < b.date ? 1 : -1))
-            .map((mix) => (
-              <MixCard key={mix.id} mix={mix} />
-            ))}
+        <div className="wm-grid">
+          {sorted.map((mix) => <MixCard key={mix.id} mix={mix} />)}
         </div>
       )}
 
       <style jsx>{`
-        .mixes-section {
-          padding: 5rem 1.5rem;
-          max-width: 1100px;
-          margin: 0 auto;
+        .wm-section { padding: 5rem 1.5rem; max-width: 1100px; margin: 0 auto; }
+        .wm-heading {
+          font-family: var(--font-bungee, monospace);
+          font-size: clamp(1.2rem, 2.8vw, 1.8rem);
+          color: #d4af37;
+          letter-spacing: 0.04em;
+          margin-bottom: 0.3rem;
+          text-shadow: 2px 2px 0px #4a3f8f;
         }
-        .section-heading {
-          font-family: var(--font-mono, monospace);
-          font-size: clamp(1.1rem, 2.5vw, 1.5rem);
-          color: #00ff88;
-          letter-spacing: 0.05em;
-          margin-bottom: 0.4rem;
+        .wm-sub {
+          font-size: 0.7rem; color: #4a3f8f;
+          letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 2.5rem;
         }
-        .mixes-sub {
-          font-size: 0.72rem;
-          color: #444;
-          letter-spacing: 0.08em;
-          text-transform: uppercase;
-          margin-bottom: 2.5rem;
-        }
-        .mixes-grid {
+        .wm-grid {
           display: grid;
           grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
           gap: 1.5rem;
         }
-        .mixes-empty {
-          color: #333;
-          font-size: 0.8rem;
-          letter-spacing: 0.08em;
-          text-transform: uppercase;
-        }
+        .wm-empty { color: #2a1f4a; font-size: 0.78rem; letter-spacing: 0.08em; }
       `}</style>
     </section>
   );

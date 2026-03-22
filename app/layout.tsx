@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Montserrat, Bebas_Neue } from "next/font/google";
+import { Montserrat, Bebas_Neue, Bungee, Anton } from "next/font/google";
 import Script from "next/script";
 import "./globals.css";
 import Navbar from "@/components/Navbar";
@@ -19,6 +19,22 @@ const bebas = Bebas_Neue({
   display: "swap",
 });
 
+// Bold condensed — section headings, Weekly Mixes header, merch section title
+const bungee = Bungee({
+  weight: "400",
+  subsets: ["latin"],
+  variable: "--font-bungee",
+  display: "swap",
+});
+
+// Ultra-condensed bold — merch card titles, sub-labels
+const anton = Anton({
+  weight: "400",
+  subsets: ["latin"],
+  variable: "--font-anton",
+  display: "swap",
+});
+
 /* ── Metadata ────────────────────────────────────────── */
 export const metadata: Metadata = {
   metadataBase: new URL("https://jade-the-gem-dj.vercel.app"),
@@ -27,16 +43,19 @@ export const metadata: Metadata = {
     template: "%s | DJ Jade the Gem",
   },
   description:
-    "New Orleans DJ bringing fire mixes and electrifying live energy to clubs, festivals, and private events. Book DJ Jade the Gem for your next event.",
+    "DJ Jade The Gem — New Orleans merch, fire mixes, and live energy. 504 Creative. Book your event or shop the drop.",
   keywords: [
-    "DJ Jade the Gem",
+    "DJ Jade The Gem",
+    "New Orleans merch",
     "New Orleans DJ",
     "504 DJ",
+    "NOLA mixes",
     "NOLA nightlife",
     "club DJ",
     "festival DJ",
     "book a DJ",
     "504 creative",
+    "Hidden Gem tee",
   ],
   authors: [{ name: "DJ Jade the Gem" }],
   openGraph: {
@@ -75,7 +94,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${montserrat.variable} ${bebas.variable}`}
+      className={`${montserrat.variable} ${bebas.variable} ${bungee.variable} ${anton.variable}`}
     >
       <head>
         {/* Snipcart styles */}
@@ -89,9 +108,7 @@ export default function RootLayout({
         <main>{children}</main>
         <Footer />
 
-        {/* Snipcart cart widget
-            Replace YOUR_SNIPCART_PUBLIC_KEY below with the key from:
-            app.snipcart.com → Account → API Keys → Public API Key         */}
+        {/* Snipcart cart widget */}
         <div
           hidden
           id="snipcart"
