@@ -77,8 +77,7 @@ export const featuredTrack: Track = {
   id: "featured",
   title: "Sunset Playlist",
   embedSrc:
-    "https://w.soundcloud.com/player/?url=https%3A//api.soundcloud.com/playlists/soundcloud%253Aplaylists%253A2192742440&color=%2300ff9d&auto_play=false&hide_related=false&show_comments=true&show_user=true&show_reposts=false&show_teaser=true&visual=true",
-  visual: true,
+    "https://w.soundcloud.com/player/?url=https%3A//api.soundcloud.com/playlists/soundcloud%253Aplaylists%253A2210376233&color=%237c8c84&auto_play=true&hide_related=false&show_comments=true&show_user=true&show_reposts=false&show_teaser=true&visual=true
 };
 
 export const tracks: Track[] = [
