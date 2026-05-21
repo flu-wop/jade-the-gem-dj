@@ -1,337 +1,264 @@
 "use client";
 
+// ── MerchSection.tsx ─────────────────────────────────────────
+// Snipcart is already wired in layout.tsx — no extra setup needed.
+// Replace placeholder mockup paths with real Printify exports when ready.
+// Mockups go in: public/images/merch/
+
+import Image from "next/image";
 import { useState } from "react";
 
-// ─── Types ────────────────────────────────────────────────────────────────────
+type Gender     = "Unisex" | "Women's";
+type ShirtStyle = "Oversized Tee" | "Heavyweight Tee" | "Cropped Tee" | "Hoodie" | "Tote Bag";
+type Size       = "S" | "M" | "L" | "XL" | "2XL" | "3XL" | "OS";
 
-type Gender = "Male" | "Female" | "Unisex";
-type Style  = "Crew" | "V-Neck" | "Oversized" | "Tank" | "Unisex";
-type Size   = "XS" | "S" | "M" | "L" | "XL" | "2XL" | "3XL" | "4XL" | "5XL";
-
-interface Product {
-  id: string;
-  name: string;
-  price: number;
-  mockupSrc: string;
-  altText: string;
+interface StyleOption {
+  label:         ShirtStyle;
+  forGenders:    Gender[];
+  sizes:         Size[];
+  priceModifier: number;
 }
 
-// ─── Constants ────────────────────────────────────────────────────────────────
+interface MerchProduct {
+  id:          string;
+  name:        string;
+  description: string;
+  basePrice:   number;
+  mockups:     [string, string, string];
+  styles:      StyleOption[];
+  tag?:        string;
+}
 
-const STYLE_BY_GENDER: Record<Gender, Style[]> = {
-  Male:   ["Crew", "V-Neck", "Oversized", "Tank"],
-  Female: ["V-Neck", "Crew", "Tank"],
-  Unisex: ["Unisex", "Crew", "Oversized"],
-};
+const STYLES: StyleOption[] = [
+  { label: "Oversized Tee",   forGenders: ["Unisex"],            sizes: ["S","M","L","XL","2XL","3XL"], priceModifier: 0  },
+  { label: "Heavyweight Tee", forGenders: ["Unisex","Women's"],  sizes: ["S","M","L","XL","2XL"],       priceModifier: 0  },
+  { label: "Cropped Tee",     forGenders: ["Women's"],           sizes: ["S","M","L","XL"],             priceModifier: 0  },
+  { label: "Hoodie",          forGenders: ["Unisex","Women's"],  sizes: ["S","M","L","XL","2XL","3XL"], priceModifier: 20 },
+  { label: "Tote Bag",        forGenders: ["Unisex"],            sizes: ["OS"],                         priceModifier: -10},
+];
 
-const SIZES: Size[] = ["XS","S","M","L","XL","2XL","3XL","4XL","5XL"];
-
-const PRODUCTS: Product[] = [
+const PRODUCTS: MerchProduct[] = [
   {
-    id: "hidden-gem-gypsy",
-    name: "Hidden Gem Gypsy",
-    price: 30,
-    mockupSrc: "/images/merch/hidden-gem-gypsy.png",
-    altText:   "Hidden Gem Gypsy Tee",
+    id: "hidden-gem-globe", name: "Hidden Gem Globe", tag: "New Drop",
+    description: "Holographic chrome globe. Your drip, your era.",
+    basePrice: 40,
+    mockups: ["/images/merch/globe-model.jpg","/images/merch/globe-flat.jpg","/images/merch/globe-close.jpg"],
+    styles: STYLES,
   },
   {
-    id: "hidden-gem-bubble",
-    name: "Hidden Gem Bubble",
-    price: 30,
-    mockupSrc: "/images/merch/hidden-gem-bubble.png",
-    altText:   "Hidden Gem Bubble Tee",
+    id: "jade-wave", name: "Jade Wave",
+    description: "Teal smoke wave. Calm the room.",
+    basePrice: 38,
+    mockups: ["/images/merch/wave-model.jpg","/images/merch/wave-flat.jpg","/images/merch/wave-close.jpg"],
+    styles: STYLES,
   },
   {
-    id: "mash-ups-vol-1",
-    name: "Mash-Ups Vol. 1",
-    price: 30,
-    mockupSrc: "/images/merch/mash-ups-vol-1.png",
-    altText:   "Mash-Ups Vol. 1 Tee",
+    id: "504-crown", name: "504 Crown", tag: "Best Seller",
+    description: "NOLA born. Crown on every fit.",
+    basePrice: 38,
+    mockups: ["/images/merch/crown-model.jpg","/images/merch/crown-flat.jpg","/images/merch/crown-close.jpg"],
+    styles: STYLES,
+  },
+  {
+    id: "all-seeing-gem", name: "All Seeing Gem",
+    description: "Street-mystic energy. All eyes on you.",
+    basePrice: 40,
+    mockups: ["/images/merch/eye-model.jpg","/images/merch/eye-flat.jpg","/images/merch/eye-close.jpg"],
+    styles: STYLES,
   },
 ];
 
-// ─── SVG placeholder (shown if image 404s) ────────────────────────────────────
-const PLACEHOLDER =
-  "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='400'%3E%3Crect width='400' height='400' fill='%230e0b14'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' fill='%234a3f8f' font-size='16' font-family='monospace'%3EMOCKUP SOON%3C/text%3E%3C/svg%3E";
+// ── ProductCard ──────────────────────────────────────────────
+function ProductCard({ product }: { product: MerchProduct }) {
+  const [expanded,  setExpanded]  = useState(false);
+  const [activeImg, setActiveImg] = useState(0);
+  const [gender,    setGender]    = useState<Gender>("Unisex");
+  const [style,     setStyle]     = useState<ShirtStyle | "">("");
+  const [size,      setSize]      = useState<Size | "">("");
+  const [qty,       setQty]       = useState(1);
 
-// ─── Single product card ──────────────────────────────────────────────────────
+  const availableStyles = product.styles.filter((s) => s.forGenders.includes(gender));
+  const selectedStyle   = availableStyles.find((s) => s.label === style);
+  const finalPrice      = product.basePrice + (selectedStyle?.priceModifier ?? 0);
+  const canAddToCart    = !!(gender && style && size);
 
-function MerchCard({ product }: { product: Product }) {
-  const [gender,   setGender]   = useState<Gender | "">("");
-  const [style,    setStyle]    = useState<Style  | "">("");
-  const [size,     setSize]     = useState<Size   | "">("");
-  const [quantity, setQuantity] = useState(1);
-  const [alert,    setAlert]    = useState(false); // "select all" nudge
-
-  function handleGenderChange(val: Gender | "") {
-    setGender(val); setStyle(""); setSize("");
-  }
-
-  const availableStyles = gender ? STYLE_BY_GENDER[gender] : [];
-  const isComplete      = gender !== "" && style !== "" && size !== "";
-  const variantLabel    = isComplete ? `${gender} / ${style} / ${size}` : "";
-
-  function handleAddClick() {
-    if (!isComplete) { setAlert(true); setTimeout(() => setAlert(false), 2500); }
-  }
+  const snipcartId  = `${product.id}-${gender}-${style}-${size}`.toLowerCase().replace(/[\s']+/g, "-");
+  const snipcartUrl = `https://jade-the-gem-dj.vercel.app/api/products/${product.id}`;
 
   return (
-    <div className="mc-card">
-      {/* ── Mockup image ── */}
-      <div className="mc-img-wrap">
-        <img
-          src={product.mockupSrc}
-          alt={product.altText}
-          className="mc-img"
-          onError={(e) => { (e.currentTarget as HTMLImageElement).src = PLACEHOLDER; }}
+    <div className="card group flex flex-col">
+      {/* Mockup image */}
+      <div className="relative aspect-square overflow-hidden bg-surface-2">
+        {product.tag && (
+          <span className="absolute top-3 left-3 z-10 bg-gold text-background font-sub text-[10px] tracking-[0.2em] uppercase px-3 py-1">
+            {product.tag}
+          </span>
+        )}
+        <Image
+          src={product.mockups[activeImg]}
+          alt={`${product.name} mockup`}
+          fill
+          className="object-cover group-hover:scale-105 transition-transform duration-700"
         />
-        <span className="mc-badge">${product.price}</span>
-      </div>
-
-      {/* ── Title — Anton font + drip shadow ── */}
-      <h3 className="mc-title">{product.name}</h3>
-
-      {/* ── Gender ── */}
-      <div className="mc-field">
-        <label className="mc-label">Gender</label>
-        <select
-          className="mc-select"
-          value={gender}
-          onChange={(e) => handleGenderChange(e.target.value as Gender | "")}
-        >
-          <option value="">— Select —</option>
-          {(["Male","Female","Unisex"] as Gender[]).map((g) => (
-            <option key={g} value={g}>{g}</option>
+        <div className="absolute inset-0 opacity-0 group-hover:opacity-100 bg-gradient-to-t from-plum/20 to-transparent transition-opacity duration-300" />
+        {/* Thumbnail dots */}
+        <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-2 z-10">
+          {product.mockups.map((_, i) => (
+            <button
+              key={i}
+              onClick={() => setActiveImg(i)}
+              className={`w-2 h-2 rounded-full transition-all ${activeImg === i ? "bg-gold scale-125" : "bg-mist/40 hover:bg-mist/70"}`}
+              aria-label={`View mockup ${i + 1}`}
+            />
           ))}
-        </select>
-      </div>
-
-      {/* ── Style (filtered by gender) ── */}
-      <div className="mc-field">
-        <label className="mc-label">Style</label>
-        <select
-          className="mc-select"
-          value={style}
-          disabled={!gender}
-          onChange={(e) => { setStyle(e.target.value as Style | ""); setSize(""); }}
-        >
-          <option value="">— Select —</option>
-          {availableStyles.map((s) => (
-            <option key={s} value={s}>{s}</option>
-          ))}
-        </select>
-      </div>
-
-      {/* ── Size ── */}
-      <div className="mc-field">
-        <label className="mc-label">Size</label>
-        <select
-          className="mc-select"
-          value={size}
-          disabled={!style}
-          onChange={(e) => setSize(e.target.value as Size | "")}
-        >
-          <option value="">— Select —</option>
-          {SIZES.map((sz) => (
-            <option key={sz} value={sz}>{sz}</option>
-          ))}
-        </select>
-      </div>
-
-      {/* ── Quantity ── */}
-      <div className="mc-field mc-qty-row">
-        <label className="mc-label">Qty</label>
-        <div className="mc-qty-wrap">
-          <button
-            className="mc-qty-btn"
-            onClick={() => setQuantity((q) => Math.max(1, q - 1))}
-            aria-label="Decrease quantity"
-          >−</button>
-          <span className="mc-qty-num">{quantity}</span>
-          <button
-            className="mc-qty-btn"
-            onClick={() => setQuantity((q) => Math.min(10, q + 1))}
-            aria-label="Increase quantity"
-          >+</button>
         </div>
       </div>
 
-      {/* ── Alert nudge ── */}
-      {alert && (
-        <p className="mc-alert" role="alert">
-          ↑ Select gender, style &amp; size first
-        </p>
-      )}
+      {/* Info + variants */}
+      <div className="p-5 flex flex-col flex-1">
+        <div className="flex justify-between items-start mb-1">
+          <h3 className="font-sub text-base tracking-wider uppercase text-cream">{product.name}</h3>
+          <span className="font-sub text-gold text-sm">${finalPrice}</span>
+        </div>
+        <p className="font-body text-xs text-mist/50 mb-4 flex-1">{product.description}</p>
 
-      {/* ── Snipcart Add to Cart ──────────────────────────────────────────────
-           data-item-* attrs update reactively via React state.
-           data-item-url hits /api/products/[id] for Snipcart price validation.
-      ─────────────────────────────────────────────────────────────────────── */}
-      <button
-        onClick={handleAddClick}
-        className={`mc-btn snipcart-add-item ${!isComplete ? "mc-btn--off" : ""}`}
-        disabled={!isComplete}
-        data-item-id={`${product.id}__${variantLabel.replace(/[\s/]+/g,"-")}`}
-        data-item-name={`${product.name} (${variantLabel})`}
-        data-item-price={product.price}
-        data-item-url={`/api/products/${product.id}`}
-        data-item-description={variantLabel}
-        data-item-image={product.mockupSrc}
-        data-item-quantity={quantity}
-        data-item-custom1-name="Variant"
-        data-item-custom1-value={variantLabel}
-      >
-        {isComplete ? `Add ${quantity > 1 ? `×${quantity} ` : ""}to Cart →` : "Select Options"}
-      </button>
+        {!expanded ? (
+          <button
+            onClick={() => setExpanded(true)}
+            className="w-full py-3 font-sub text-xs tracking-[0.2em] uppercase border border-plum/40 text-gold-muted hover:bg-plum/20 hover:border-plum transition-all duration-200"
+          >
+            Select Options
+          </button>
+        ) : (
+          <div className="space-y-3">
+            {/* Gender */}
+            <div>
+              <label className="block font-sub text-[10px] tracking-[0.2em] uppercase text-mist/40 mb-1">Gender</label>
+              <select
+                value={gender}
+                onChange={(e) => { setGender(e.target.value as Gender); setStyle(""); setSize(""); }}
+                className="w-full bg-surface-2 border border-plum/30 text-cream font-body text-sm px-3 py-2 focus:outline-none focus:border-plum transition-colors"
+              >
+                {(["Unisex","Women's"] as Gender[]).map((g) => (
+                  <option key={g} value={g}>{g}</option>
+                ))}
+              </select>
+            </div>
 
-      {/* ── Trust badge ── */}
-      <p className="mc-trust">
-        ✦ Premium Shaka Wear blanks — Printed fresh, ships direct USA
-      </p>
+            {/* Style */}
+            <div>
+              <label className="block font-sub text-[10px] tracking-[0.2em] uppercase text-mist/40 mb-1">Style</label>
+              <select
+                value={style}
+                onChange={(e) => { setStyle(e.target.value as ShirtStyle); setSize(""); }}
+                className="w-full bg-surface-2 border border-plum/30 text-cream font-body text-sm px-3 py-2 focus:outline-none focus:border-plum transition-colors"
+              >
+                <option value="">Choose style</option>
+                {availableStyles.map((s) => (
+                  <option key={s.label} value={s.label}>
+                    {s.label}{s.priceModifier > 0 ? ` (+$${s.priceModifier})` : s.priceModifier < 0 ? ` (-$${Math.abs(s.priceModifier)})` : ""}
+                  </option>
+                ))}
+              </select>
+            </div>
 
-      {/* ── Scoped styles ── */}
-      <style jsx>{`
-        .mc-card {
-          background: #151020;
-          border: 1px solid #2a1f4a;
-          border-radius: 6px;
-          padding: 1.25rem;
-          display: flex;
-          flex-direction: column;
-          gap: 0.65rem;
-          transition: border-color 0.2s, box-shadow 0.2s;
-        }
-        .mc-card:hover {
-          border-color: #4a3f8f;
-          box-shadow: 0 0 20px rgba(74,63,143,0.15);
-        }
-        .mc-img-wrap {
-          position: relative;
-          aspect-ratio: 1 / 1;
-          background: #0e0b14;
-          border-radius: 4px;
-          overflow: hidden;
-        }
-        .mc-img {
-          width: 100%; height: 100%;
-          object-fit: contain;
-          display: block;
-          padding: 0.5rem;
-        }
-        .mc-badge {
-          position: absolute; top: 0.6rem; right: 0.6rem;
-          background: #d4af37; color: #0e0b14;
-          font-size: 0.68rem; font-weight: 700; letter-spacing: 0.08em;
-          padding: 0.18rem 0.45rem; border-radius: 3px;
-        }
-        /* Anton font + drip shadow on title */
-        .mc-title {
-          font-family: var(--font-anton, sans-serif);
-          font-size: 1rem;
-          letter-spacing: 0.08em;
-          text-transform: uppercase;
-          color: #b8a7d9;
-          margin: 0.2rem 0 0;
-          text-shadow: 2px 2px 0px #4a3f8f, 3px 3px 6px rgba(42,122,111,0.35);
-        }
-        .mc-field { display: flex; flex-direction: column; gap: 0.2rem; }
-        .mc-label {
-          font-size: 0.6rem; letter-spacing: 0.14em;
-          text-transform: uppercase; color: #4a3f8f;
-        }
-        .mc-select {
-          background: #1e1830; border: 1px solid #2a1f4a; color: #e0d8f0;
-          font-size: 0.78rem; padding: 0.4rem 0.55rem; border-radius: 3px;
-          outline: none; cursor: pointer; transition: border-color 0.15s;
-        }
-        .mc-select:focus  { border-color: #2a7a6f; }
-        .mc-select:disabled { opacity: 0.3; cursor: not-allowed; }
-        /* Qty row */
-        .mc-qty-row { flex-direction: row; align-items: center; gap: 0.6rem; }
-        .mc-qty-wrap { display: flex; align-items: center; gap: 0; }
-        .mc-qty-btn {
-          background: #1e1830; border: 1px solid #2a1f4a; color: #b8a7d9;
-          width: 28px; height: 28px; font-size: 1rem; cursor: pointer;
-          transition: background 0.15s;
-          border-radius: 3px;
-        }
-        .mc-qty-btn:hover { background: #2a1f4a; }
-        .mc-qty-num {
-          min-width: 32px; text-align: center;
-          font-size: 0.85rem; color: #f5f5f5;
-          border-top: 1px solid #2a1f4a; border-bottom: 1px solid #2a1f4a;
-          padding: 0.2rem 0.4rem;
-        }
-        /* Alert nudge */
-        .mc-alert {
-          font-size: 0.68rem; color: #d4af37;
-          letter-spacing: 0.06em; margin: 0;
-          animation: fade-in 0.2s ease;
-        }
-        @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
-        /* CTA button */
-        .mc-btn {
-          margin-top: 0.25rem;
-          background: linear-gradient(135deg, #4a3f8f, #2a7a6f);
-          color: #f5f5f5;
-          border: none; padding: 0.7rem 1rem;
-          font-family: var(--font-bungee, sans-serif);
-          font-size: 0.72rem; letter-spacing: 0.12em;
-          text-transform: uppercase; border-radius: 3px; cursor: pointer;
-          transition: opacity 0.15s, transform 0.1s;
-          box-shadow: 0 0 14px rgba(74,63,143,0.3);
-        }
-        .mc-btn:hover:not(:disabled) { opacity: 0.88; transform: translateY(-1px); }
-        .mc-btn--off {
-          background: #1e1830; color: #3a3050;
-          box-shadow: none; cursor: not-allowed;
-        }
-        /* Trust badge */
-        .mc-trust {
-          font-size: 0.6rem; color: #4a3f8f;
-          letter-spacing: 0.07em; text-align: center;
-          margin-top: 0.25rem; line-height: 1.4;
-        }
-      `}</style>
+            {/* Size */}
+            {selectedStyle && (
+              <div>
+                <label className="block font-sub text-[10px] tracking-[0.2em] uppercase text-mist/40 mb-1">Size</label>
+                <div className="flex flex-wrap gap-2">
+                  {selectedStyle.sizes.map((s) => (
+                    <button
+                      key={s}
+                      onClick={() => setSize(s)}
+                      className={`min-w-[40px] px-3 py-1.5 font-sub text-xs uppercase tracking-wider border transition-all duration-150 ${
+                        size === s ? "bg-plum border-plum text-cream" : "border-plum/30 text-mist/50 hover:border-plum/60 hover:text-mist"
+                      }`}
+                    >
+                      {s}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Quantity */}
+            {size && (
+              <div>
+                <label className="block font-sub text-[10px] tracking-[0.2em] uppercase text-mist/40 mb-1">Qty</label>
+                <div className="flex items-center gap-3">
+                  <button onClick={() => setQty(Math.max(1, qty - 1))} className="w-8 h-8 border border-plum/30 text-mist hover:border-plum hover:text-gold font-sub text-lg flex items-center justify-center transition-all">−</button>
+                  <span className="font-sub text-cream w-6 text-center">{qty}</span>
+                  <button onClick={() => setQty(qty + 1)} className="w-8 h-8 border border-plum/30 text-mist hover:border-plum hover:text-gold font-sub text-lg flex items-center justify-center transition-all">+</button>
+                </div>
+              </div>
+            )}
+
+            {/* Snipcart Add to Cart */}
+            <button
+              disabled={!canAddToCart}
+              className={`snipcart-add-item w-full py-3.5 font-sub text-xs tracking-[0.2em] uppercase transition-all duration-300 ${
+                canAddToCart
+                  ? "bg-plum hover:bg-plum-light text-cream cursor-pointer shadow-[0_0_20px_#4a3f8f55] hover:shadow-[0_0_30px_#4a3f8f88]"
+                  : "bg-plum/20 text-mist/30 cursor-not-allowed"
+              }`}
+              data-item-id={snipcartId}
+              data-item-price={finalPrice}
+              data-item-url={snipcartUrl}
+              data-item-description={`${product.name} · ${gender} · ${style} · Size ${size}`}
+              data-item-image={product.mockups[0]}
+              data-item-name={`${product.name} (${style})`}
+              data-item-quantity={qty}
+              data-item-custom1-name="Style"
+              data-item-custom1-value={style}
+              data-item-custom2-name="Size"
+              data-item-custom2-value={size}
+              data-item-custom3-name="Gender"
+              data-item-custom3-value={gender}
+            >
+              {canAddToCart ? `Add to Cart — $${finalPrice * qty}` : "Select options above"}
+            </button>
+
+            <button onClick={() => setExpanded(false)} className="w-full text-center font-body text-[10px] text-mist/30 hover:text-mist/60 transition-colors">
+              ← Collapse
+            </button>
+          </div>
+        )}
+      </div>
     </div>
   );
 }
 
-// ─── Section wrapper ──────────────────────────────────────────────────────────
-
+// ── MerchSection ─────────────────────────────────────────────
 export default function MerchSection() {
   return (
-    <section id="merch" className="ms-section">
-      {/* Bungee font on section header */}
-      <h2 className="ms-heading">## Drip ∞</h2>
-      <p className="ms-sub">
-        Shaka Wear blanks · Ships via Printify · Drop ships to your door
-      </p>
+    <section id="merch" className="relative bg-background py-24 px-6 overflow-hidden">
+      <div className="absolute inset-0 bg-jade-glow pointer-events-none opacity-60" />
 
-      <div className="ms-grid">
-        {PRODUCTS.map((p) => <MerchCard key={p.id} product={p} />)}
+      <div className="relative max-w-5xl mx-auto">
+        <div className="text-center mb-14">
+          <p className="section-label mb-3">Hidden Gem Collection</p>
+          <h2 className="section-title drop-shadow-[0_0_20px_#4a3f8f66]">THE DRIP</h2>
+          <p className="font-body text-sm text-mist/50 mt-4 max-w-sm mx-auto">
+            Premium Shaka Wear · Printed via Printify · Ships direct to you
+          </p>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-px bg-plum/10">
+          {PRODUCTS.map((p) => (
+            <ProductCard key={p.id} product={p} />
+          ))}
+        </div>
+
+        {/* Trust bar */}
+        <div className="mt-10 py-4 px-6 border border-plum/20 bg-surface flex flex-wrap justify-center gap-6 text-mist/40 font-sub text-[10px] tracking-[0.2em] uppercase">
+          {["Premium Shaka Wear","Printed via Printify","Ships 5–10 Days","Secure Checkout"].map((t) => (
+            <span key={t} className="flex items-center gap-2">
+              <span className="text-jade-light">✦</span>{t}
+            </span>
+          ))}
+        </div>
       </div>
-
-      <style jsx>{`
-        .ms-section { padding: 5rem 1.5rem; max-width: 1100px; margin: 0 auto; }
-        .ms-heading {
-          font-family: var(--font-bungee, monospace);
-          font-size: clamp(1.2rem, 2.8vw, 1.8rem);
-          color: #d4af37;
-          letter-spacing: 0.04em;
-          margin-bottom: 0.3rem;
-          text-shadow: 2px 2px 0px #4a3f8f;
-        }
-        .ms-sub {
-          font-size: 0.7rem; color: #4a3f8f;
-          letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 2.5rem;
-        }
-        .ms-grid {
-          display: grid;
-          grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-          gap: 1.5rem;
-        }
-      `}</style>
     </section>
   );
 }

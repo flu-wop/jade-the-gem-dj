@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { Music2, Users, Star, Building } from "lucide-react";
-import BookingForm from "@/components/BookingForm";
+import { BookingCTA as BookingForm } from "@/components/BookingForm";
 
 export const metadata: Metadata = {
   title: "Book DJ Jade",

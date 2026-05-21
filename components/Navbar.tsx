@@ -2,122 +2,123 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { Menu, X, ShoppingCart } from "lucide-react";
+import Image from "next/image";
 
 const links = [
-  { href: "/", label: "Home" },
-  { href: "/music", label: "Music" },
-  { href: "/events", label: "Events" },
-  { href: "/bookings", label: "Bookings" },
-  { href: "/about", label: "About" },
+  { label: "Music",    href: "/music" },
+  { label: "Events",   href: "/events" },
+  { label: "Merch",    href: "/music#merch" },
+  { label: "Bookings", href: "/bookings" },
+  { label: "About",    href: "/about" },
 ];
 
 export default function Navbar() {
-  const [open, setOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
-  const pathname = usePathname();
+  const [open, setOpen]         = useState(false);
 
   useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 24);
-    window.addEventListener("scroll", onScroll, { passive: true });
+    const onScroll = () => setScrolled(window.scrollY > 40);
+    window.addEventListener("scroll", onScroll);
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
-  // close mobile menu on route change
-  useEffect(() => setOpen(false), [pathname]);
-
-  const isActive = (href: string) =>
-    href === "/" ? pathname === "/" : pathname.startsWith(href);
-
   return (
     <header
-      className={`fixed inset-x-0 top-0 z-50 transition-all duration-300 ${
-        scrolled
-          ? "bg-background/95 backdrop-blur-md border-b border-white/10 shadow-xl shadow-black/60"
-          : "bg-transparent"
-      }`}
+      className={`
+        fixed top-0 inset-x-0 z-50 transition-all duration-300
+        ${scrolled
+          ? "bg-background/90 backdrop-blur-md border-b border-plum/20 py-3"
+          : "bg-transparent py-5"
+        }
+      `}
     >
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between h-16 md:h-20">
+      <nav className="max-w-7xl mx-auto px-6 flex items-center justify-between">
+
         {/* Logo */}
-        <Link
-          href="/"
-          className="font-display text-2xl md:text-3xl tracking-wide text-neon-green hover:text-white transition-colors"
-        >
-          DJ JADE THE GEM
+        <Link href="/" className="flex items-center gap-3 group">
+          {/* Swap src once you have the globe PNG */}
+          <div className="relative w-9 h-9 rounded-full overflow-hidden ring-1 ring-gold/30 animate-pulse-glow">
+            <Image
+              src="/images/logo-holo-globe.png"
+              alt="DJ Jade the Gem"
+              fill
+              className="object-contain"
+              onError={(e) => {
+                // fallback to text if image missing
+                (e.target as HTMLImageElement).style.display = "none";
+              }}
+            />
+          </div>
+          <span className="font-display text-xl text-holo hidden sm:block leading-none">
+            JADE THE GEM
+          </span>
         </Link>
 
-        {/* Desktop nav */}
-        <nav className="hidden md:flex items-center gap-8">
-          {links.map(({ href, label }) => (
-            <Link
-              key={href}
-              href={href}
-              className={`text-sm font-bold uppercase tracking-widest transition-colors ${
-                isActive(href)
-                  ? "text-neon-green"
-                  : "text-white/70 hover:text-white"
-              }`}
-            >
-              {label}
-            </Link>
+        {/* Desktop links */}
+        <ul className="hidden md:flex items-center gap-8">
+          {links.map((l) => (
+            <li key={l.href}>
+              <Link
+                href={l.href}
+                className="
+                  font-sub text-xs tracking-[0.2em] uppercase
+                  text-mist/60 hover:text-gold
+                  transition-colors duration-200
+                  relative
+                  after:absolute after:bottom-[-4px] after:left-0
+                  after:w-0 hover:after:w-full
+                  after:h-px after:bg-gold
+                  after:transition-all after:duration-300
+                "
+              >
+                {l.label}
+              </Link>
+            </li>
           ))}
-          <Link href="/bookings" className="btn-primary text-xs py-2 px-5">
-            Book Me
-          </Link>
+        </ul>
 
-          {/* Snipcart cart button — desktop */}
-          <button
-            className="snipcart-checkout flex items-center gap-1.5 text-white/70 hover:text-neon-green transition-colors"
-            aria-label="Open cart"
-          >
-            <ShoppingCart size={18} />
-            <span className="text-xs font-bold uppercase tracking-widest">
-              (<span className="snipcart-items-count">0</span>)
-            </span>
-          </button>
-        </nav>
+        {/* Book CTA */}
+        <Link href="/bookings" className="hidden md:inline-flex btn-primary py-2.5">
+          Book Me
+        </Link>
 
-        {/* Mobile: cart icon + hamburger */}
-        <div className="md:hidden flex items-center gap-3">
-          <button
-            className="snipcart-checkout text-white/70 hover:text-neon-green transition-colors"
-            aria-label="Open cart"
-          >
-            <ShoppingCart size={20} />
-            <span className="sr-only">Cart</span>
-          </button>
-          <button
-            aria-label="Toggle navigation"
-            onClick={() => setOpen((v) => !v)}
-            className="p-2 text-white hover:text-neon-green transition-colors"
-          >
-            {open ? <X size={26} /> : <Menu size={26} />}
-          </button>
-        </div>
-      </div>
+        {/* Mobile hamburger */}
+        <button
+          onClick={() => setOpen(!open)}
+          className="md:hidden text-mist/70 hover:text-gold transition-colors p-2"
+          aria-label="Toggle menu"
+        >
+          <div className={`w-5 h-0.5 bg-current mb-1.5 transition-all duration-300 ${open ? "rotate-45 translate-y-2" : ""}`} />
+          <div className={`w-5 h-0.5 bg-current mb-1.5 transition-all duration-300 ${open ? "opacity-0" : ""}`} />
+          <div className={`w-5 h-0.5 bg-current transition-all duration-300 ${open ? "-rotate-45 -translate-y-2" : ""}`} />
+        </button>
+      </nav>
 
       {/* Mobile drawer */}
       {open && (
-        <div className="md:hidden bg-surface/95 backdrop-blur-md border-t border-white/10">
-          <nav className="flex flex-col px-4 py-6 gap-1">
-            {links.map(({ href, label }) => (
-              <Link
-                key={href}
-                href={href}
-                className={`py-3 px-4 rounded-lg text-sm font-bold uppercase tracking-widest transition-all ${
-                  isActive(href)
-                    ? "bg-neon-green/10 text-neon-green border-l-4 border-neon-green pl-3"
-                    : "text-white/70 hover:text-white hover:bg-white/5"
-                }`}
-              >
-                {label}
-              </Link>
+        <div className="md:hidden bg-background/95 backdrop-blur-md border-t border-plum/20 px-6 py-6">
+          <ul className="flex flex-col gap-5">
+            {links.map((l) => (
+              <li key={l.href}>
+                <Link
+                  href={l.href}
+                  onClick={() => setOpen(false)}
+                  className="font-sub text-sm tracking-[0.2em] uppercase text-mist/70 hover:text-gold transition-colors"
+                >
+                  {l.label}
+                </Link>
+              </li>
             ))}
-            <Link href="/bookings" className="btn-primary mt-4 text-xs py-3">
-              Book Me
-            </Link>
-          </nav>
+            <li>
+              <Link
+                href="/bookings"
+                onClick={() => setOpen(false)}
+                className="btn-primary w-full justify-center"
+              >
+                Book Me
+              </Link>
+            </li>
+          </ul>
         </div>
       )}
     </header>

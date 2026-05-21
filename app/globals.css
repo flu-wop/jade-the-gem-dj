@@ -3,95 +3,75 @@
 @tailwind utilities;
 
 @layer base {
-  html {
-    scroll-behavior: smooth;
-  }
+  html { scroll-behavior: smooth; }
+
   body {
-    @apply bg-background text-white;
-    font-family: var(--font-montserrat), sans-serif;
+    background-color: #0e0b14;
+    color: #f0ebe8;
+    -webkit-font-smoothing: antialiased;
   }
-  h1, h2, h3, h4, h5, h6 {
-    font-family: var(--font-bebas), sans-serif;
+
+  /* Snipcart dark theme overrides */
+  :root {
+    --color-default:         #f0ebe8;
+    --color-alt:             #c4b8e0;
+    --bgColor-default:       #16121f;
+    --bgColor-input:         #1e1829;
+    --borderColor-default:   #4a3f8f55;
+    --color-buttonPrimary:   #f0ebe8;
+    --bgColor-buttonPrimary: #4a3f8f;
   }
 }
 
 @layer components {
   /* ── Buttons ── */
   .btn-primary {
-    @apply inline-flex items-center justify-center gap-2
-           px-7 py-3 rounded-lg font-bold uppercase tracking-widest text-sm
-           bg-neon-green text-background
-           hover:brightness-110 hover:scale-105
-           active:scale-95
+    @apply inline-flex items-center gap-2 px-6 py-3
+           font-sub text-xs tracking-[0.2em] uppercase
+           bg-plum hover:bg-plum-light text-cream
            transition-all duration-200
-           shadow-[0_0_18px_rgba(184,167,217,0.35)];
+           shadow-[0_0_20px_#4a3f8f55] hover:shadow-[0_0_30px_#4a3f8f88];
   }
   .btn-secondary {
-    @apply inline-flex items-center justify-center gap-2
-           px-7 py-3 rounded-lg font-bold uppercase tracking-widest text-sm
-           border-2 border-neon-purple text-neon-purple bg-transparent
-           hover:bg-neon-purple hover:text-white hover:scale-105
-           active:scale-95
+    @apply inline-flex items-center gap-2 px-6 py-3
+           font-sub text-xs tracking-[0.2em] uppercase
+           border border-gold/40 text-gold
+           hover:bg-gold/10 hover:border-gold
            transition-all duration-200;
   }
   .btn-ghost {
-    @apply inline-flex items-center justify-center gap-2
-           px-7 py-3 rounded-lg font-bold uppercase tracking-widest text-sm
-           border-2 border-white/20 text-white bg-transparent
-           hover:border-white/50 hover:bg-white/5
+    @apply inline-flex items-center gap-2 px-6 py-3
+           font-sub text-xs tracking-[0.2em] uppercase
+           border border-mist/20 text-mist/60
+           hover:border-mist/50 hover:text-mist
            transition-all duration-200;
   }
 
-  /* ── Form fields ── */
-  .field {
-    @apply w-full px-4 py-3 rounded-lg
-           bg-surface-2 border border-white/10 text-white text-sm
-           placeholder:text-gray-600
-           focus:outline-none focus:border-neon-purple focus:ring-1 focus:ring-neon-purple/40
-           transition-colors duration-200;
-  }
-
   /* ── Cards ── */
-  .glass {
-    @apply bg-surface/60 backdrop-blur-sm border border-white/10 rounded-2xl;
-  }
   .card {
-    @apply bg-surface-2 border border-white/10 rounded-2xl;
+    @apply bg-surface border border-plum/20
+           hover:border-plum/50
+           transition-all duration-300;
   }
 
-  /* ── Section chrome ── */
+  /* ── Typography helpers ── */
   .section-label {
-    @apply text-xs font-bold uppercase tracking-[0.25em] text-neon-gold mb-3;
+    @apply font-sub text-[10px] tracking-[0.35em] uppercase text-jade-light;
   }
   .section-title {
-    @apply text-4xl md:text-5xl lg:text-6xl font-display uppercase tracking-wide leading-none;
+    @apply font-display text-[clamp(2.5rem,7vw,5rem)] leading-none text-cream;
   }
-
-  /* ── Neon glow text ── */
-  .glow-green {
-    /* plum-lavender glow on hero title */
-    text-shadow: 0 0 12px rgba(184,167,217,0.65), 0 0 28px rgba(74,63,143,0.4);
-  }
-  .glow-purple {
-    /* jade teal glow */
-    text-shadow: 0 0 12px rgba(42,122,111,0.7), 0 0 28px rgba(42,122,111,0.3);
-  }
-
-  /* ── Divider ── */
   .neon-divider {
-    @apply w-16 h-[3px] rounded-full bg-neon-purple my-4;
+    @apply w-12 h-px bg-gradient-to-r from-plum to-jade my-6;
   }
-}
 
-/* ── Custom scrollbar ── */
-::-webkit-scrollbar { width: 8px; }
-::-webkit-scrollbar-track { background: #0e0b14; }
-::-webkit-scrollbar-thumb { background: #4a3f8f66; border-radius: 9999px; }
-::-webkit-scrollbar-thumb:hover { background: #4a3f8faa; }
-
-/* ── SoundCloud iframe ── */
-.sc-iframe {
-  border-radius: 0.75rem;
-  overflow: hidden;
-  width: 100%;
+  /* ── Holographic text ── */
+  .text-holo {
+    background: linear-gradient(135deg, #d4af37, #b8a7d9, #3aa898, #4a3f8f, #d4af37);
+    background-size: 300% 300%;
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    animation: holoShift 4s ease infinite;
+  }
 }
