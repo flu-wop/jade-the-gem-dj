@@ -1,5 +1,17 @@
 import { createClient } from "@libsql/client";
 
+let _db: ReturnType<typeof createClient> | null = null;
+export function getDb() {
+  if (!_db) _db = createClient({
+    url: process.env.TURSO_DATABASE_URL!,
+    authToken: process.env.TURSO_AUTH_TOKEN!,
+  });
+  return _db;
+}
+export const db = new Proxy({} as ReturnType<typeof createClient>, {
+  get: (_, prop) => getDb()[prop as keyof ReturnType<typeof createClient>],
+});
+
 export const db = createClient({
   url: process.env.TURSO_DATABASE_URL!,
   authToken: process.env.TURSO_AUTH_TOKEN!,
