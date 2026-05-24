@@ -6,6 +6,7 @@ import SoundCloudEmbed from "@/components/SoundCloudEmbed";
 import NewsletterForm from "@/components/NewsletterForm";
 import EventCard from "@/components/EventCard";
 import MerchSection from "@/components/MerchSection";
+import VideoSection from "@/components/VideoSection";
 import { featuredTrack, upcomingEvents } from "@/lib/data";
 
 export const metadata: Metadata = {
@@ -50,6 +51,12 @@ export default function HomePage() {
         </div>
       </section>
 
+      {/* ══════════════ MERCH ══════════════ */}
+      <MerchSection />
+
+      {/* ══════════════ VIDEO ══════════════ */}
+      <VideoSection />
+
       {/* ══════════════ UPCOMING EVENTS ══════════════ */}
       <section className="py-24 px-6 bg-surface">
         <div className="max-w-6xl mx-auto">
@@ -68,11 +75,26 @@ export default function HomePage() {
             </Link>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {nextThree.map((event) => (
-              <EventCard key={event.id} event={event} />
-            ))}
-          </div>
+          {nextThree.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {nextThree.map((event) => (
+                <EventCard key={event.id} event={event} />
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-20 border border-plum/20 bg-surface-2">
+              <div className="w-16 h-16 border border-jade/20 bg-jade/10 flex items-center justify-center mx-auto mb-6">
+                <svg className="w-7 h-7 text-jade-light" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
+              </div>
+              <p className="font-display text-2xl text-cream tracking-wider mb-2">More Dates Coming</p>
+              <p className="text-mist/30 text-sm font-body mb-6">Follow on Instagram for announcements</p>
+              <a href="https://instagram.com/jluhvv" target="_blank" rel="noopener noreferrer" className="btn-secondary text-xs py-2.5">
+                @jluhvv on Instagram
+              </a>
+            </div>
+          )}
         </div>
       </section>
 
@@ -128,9 +150,6 @@ export default function HomePage() {
           </div>
         </div>
       </section>
-
-      {/* ══════════════ MERCH ══════════════ */}
-      <MerchSection />
 
       {/* ══════════════ STAY CONNECTED ══════════════ */}
       <section className="py-24 px-6 bg-gradient-to-b from-background to-surface">

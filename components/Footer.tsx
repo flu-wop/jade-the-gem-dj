@@ -9,10 +9,10 @@ const iconMap: Record<string, React.ElementType> = {
 };
 
 const pages = [
-  { href: "/music",    label: "Music"    },
-  { href: "/events",   label: "Events"   },
-  { href: "/bookings", label: "Bookings" },
-  { href: "/about",    label: "About"    },
+  { href: "/music",    label: "Music"     },
+  { href: "/events",   label: "Events"    },
+  { href: "/bookings", label: "Bookings"  },
+  { href: "/press",    label: "Press Kit" },
 ];
 
 export default function Footer() {
@@ -29,14 +29,14 @@ export default function Footer() {
               DJ JADE<br />THE GEM
             </p>
             <p className="font-sub text-xs tracking-[0.2em] uppercase text-mist/40 mt-3">
-              504 Creative · New Orleans, LA
+              Hidden Gem · New Orleans, LA
             </p>
             <a
-              href="mailto:booking@djjadethegem.com"
+              href="mailto:jadedwheeler8@gmail.com"
               className="inline-flex items-center gap-2 text-sm text-jade-light hover:text-jade transition-colors mt-3"
             >
               <Mail size={14} />
-              booking@djjadethegem.com
+              jadedwheeler8@gmail.com
             </a>
           </div>
 

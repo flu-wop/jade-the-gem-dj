@@ -9,7 +9,7 @@ const links = [
   { label: "Events",   href: "/events" },
   { label: "Merch",    href: "/#merch" },
   { label: "Bookings", href: "/bookings" },
-  { label: "About",    href: "/about" },
+  { label: "Press",    href: "/press" },
 ];
 
 export default function Navbar() {
