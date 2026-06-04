@@ -10,7 +10,6 @@ export const metadata = {
 export default function PressPage() {
   return (
     <main className="min-h-screen bg-background text-cream">
-      {/* ── Hero ─────────────────────────────────────────── */}
       <section className="pt-32 pb-16 px-6 text-center border-b border-white/10">
         <p className="text-gold font-anton tracking-widest text-sm uppercase mb-3">
           Event Curator
@@ -25,7 +24,6 @@ export default function PressPage() {
 
       <div className="max-w-6xl mx-auto px-6 py-20 space-y-24">
 
-        {/* ── Bio ──────────────────────────────────────────── */}
         <section className="grid md:grid-cols-2 gap-12 items-start">
           <div>
             <h2 className="font-bebas text-4xl text-gold mb-6 tracking-wide">Bio</h2>
@@ -53,14 +51,13 @@ export default function PressPage() {
               </p>
             </div>
 
-            {/* Connect */}
             <div className="mt-10">
               <h3 className="font-bungee text-sm text-gold-muted tracking-widest uppercase mb-4">
                 Connect
               </h3>
               <div className="flex flex-col gap-3">
                 {socialLinks.map((link) => (
-                  
+                  <a
                     key={link.platform}
                     href={link.url}
                     target="_blank"
@@ -75,7 +72,7 @@ export default function PressPage() {
                     </span>
                   </a>
                 ))}
-                
+                <a
                   href="mailto:jadedwheeler8@gmail.com"
                   className="flex items-center gap-3 text-mist hover:text-jade-light transition-colors font-montserrat text-sm group"
                 >
@@ -88,7 +85,6 @@ export default function PressPage() {
             </div>
           </div>
 
-          {/* Side image */}
           <div className="rounded-2xl overflow-hidden aspect-[3/4] relative">
             <img
               src="/images/press-photo-3.jpg"
@@ -99,7 +95,6 @@ export default function PressPage() {
           </div>
         </section>
 
-        {/* ── Press Photos ─────────────────────────────────── */}
         <section>
           <h2 className="font-bebas text-4xl text-gold mb-8 tracking-wide">
             Press Photos
@@ -125,16 +120,12 @@ export default function PressPage() {
           </div>
           <p className="text-mist/60 font-montserrat text-sm mt-4">
             High-res versions available — contact{" "}
-            
-              href="mailto:jadedwheeler8@gmail.com"
-              className="text-jade-light hover:underline"
-            >
+            <a href="mailto:jadedwheeler8@gmail.com" className="text-jade-light hover:underline">
               jadedwheeler8@gmail.com
             </a>
           </p>
         </section>
 
-        {/* ── Genres ───────────────────────────────────────── */}
         <section className="grid md:grid-cols-2 gap-12">
           <div>
             <h2 className="font-bebas text-4xl text-gold mb-6 tracking-wide">Genres</h2>
@@ -176,7 +167,6 @@ export default function PressPage() {
           </div>
         </section>
 
-        {/* ── Booking ──────────────────────────────────────── */}
         <section className="bg-surface rounded-2xl p-10 flex flex-col md:flex-row md:items-center md:justify-between gap-8 border border-white/5">
           <div>
             <h2 className="font-bebas text-4xl text-gold mb-1 tracking-wide">Booking</h2>
@@ -186,7 +176,7 @@ export default function PressPage() {
             <p className="text-mist font-montserrat text-sm mt-1">2-hour minimum</p>
           </div>
           <div className="flex flex-col gap-3">
-            
+            <a
               href="mailto:jadedwheeler8@gmail.com"
               className="text-mist hover:text-cream font-montserrat text-sm transition-colors"
             >
@@ -201,7 +191,6 @@ export default function PressPage() {
           </div>
         </section>
 
-        {/* ── EPK ──────────────────────────────────────────── */}
         <section className="text-center py-8">
           <h2 className="font-bebas text-4xl text-gold mb-3 tracking-wide">EPK</h2>
           <p className="text-mist font-montserrat text-sm mb-4">Full press kit PDF</p>
@@ -209,6 +198,7 @@ export default function PressPage() {
             Coming Soon
           </span>
         </section>
+
       </div>
     </main>
   );
