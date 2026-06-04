@@ -101,10 +101,10 @@ export default function PressPage() {
           </h2>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             {[
-              { src: "/images/IMG_1065.HEIC", alt: "DJ Jade the Gem — street style" },
-              { src: "/images/47DEA448-4A89-4C03-9560-D759E58ECF6D.PNG", alt: "DJ Jade the Gem — at the booth" },
-              { src: "/images/3C357931-84F5-456B-97EB-CC2BDDDD0F0A.PNG", alt: "DJ Jade the Gem — studio session" },
-              { src: "/images/F5A6E175-8ED6-4898-AD11-DA55FC7C7A33.PNG", alt: "DJ Jade the Gem" },
+              { src: "/images/press-1.png", alt: "DJ Jade the Gem — street style" },
+              { src: "/images/press-2.png", alt: "DJ Jade the Gem — at the booth" },
+              { src: "/images/press-3.png", alt: "DJ Jade the Gem — studio session" },
+              { src: "/images/press-4.png", alt: "DJ Jade the Gem" },
             ].map((photo, i) => (
               <div
                 key={i}
