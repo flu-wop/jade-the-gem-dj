@@ -1,197 +1,215 @@
-import type { Metadata } from "next";
-import { Download, Mail, Instagram, Music, Twitter } from "lucide-react";
+import Link from "next/link";
 import { socialLinks } from "@/lib/data";
 
-export const metadata: Metadata = {
-  title: "Press Kit",
-  description: "DJ Jade the Gem press kit — bio, booking info, genres, and press photos for media and promoters.",
+export const metadata = {
+  title: "Press Kit | DJ Jade the Gem",
+  description:
+    "DJ Jade the Gem press kit — bio, booking info, genres, and press photos for media and promoters.",
 };
-
-const iconMap: Record<string, React.ElementType> = {
-  Instagram,
-  SoundCloud: Music,
-  X: Twitter,
-};
-
-const photos = [
-  { src: "/images/about-placeholder-1.svg", aspect: "aspect-[3/4]", row: "row-span-2" },
-  { src: "/images/about-placeholder-2.svg", aspect: "aspect-square", row: "" },
-  { src: "/images/about-placeholder-3.svg", aspect: "aspect-square", row: "" },
-  { src: "/images/about-placeholder-4.svg", aspect: "aspect-video",  row: "col-span-2" },
-];
 
 export default function PressPage() {
   return (
-    <div className="min-h-screen pt-24 pb-24 px-4">
-      <div className="max-w-6xl mx-auto">
+    <main className="min-h-screen bg-background text-cream">
+      {/* ── Hero ─────────────────────────────────────────── */}
+      <section className="pt-32 pb-16 px-6 text-center border-b border-white/10">
+        <p className="text-gold font-anton tracking-widest text-sm uppercase mb-3">
+          Event Curator
+        </p>
+        <h1 className="font-bebas text-6xl md:text-8xl text-cream mb-4 leading-none">
+          Press Kit
+        </h1>
+        <p className="text-mist font-montserrat text-lg max-w-xl mx-auto">
+          Everything you need to book and promote DJ Jade the Gem.
+        </p>
+      </section>
 
-        <header className="text-center mb-16">
-          <p className="section-label">Event Curator</p>
-          <h1 className="section-title">
-            Press <span className="text-gold">Kit</span>
-          </h1>
-          <p className="text-mist/40 font-body text-sm mt-4">
-            Everything you need to book and promote DJ Jade the Gem.
-          </p>
-        </header>
+      <div className="max-w-6xl mx-auto px-6 py-20 space-y-24">
 
-        {/* ── Bio + photos ── */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 mb-16">
-
-          <div className="space-y-6">
-            {/* Bio */}
-            <div className="card p-8">
-              <h2 className="font-display text-2xl text-jade-light tracking-wider uppercase mb-4">Bio</h2>
-              <div className="neon-divider" />
-              <div className="space-y-4 text-mist/60 font-body leading-relaxed text-sm mt-4">
-                <p>
-                  Jade has been setting dance floors on fire across the Gulf
-                  Coast and beyond. With a sound rooted in the 504 — bounce,
-                  hip-hop, R&amp;B, and club bangers — she creates an atmosphere
-                  where the music does the talking and the crowd never wants it
-                  to stop.
-                </p>
-                <p>
-                  Off the decks you&apos;ll find her in the studio crafting new
-                  mixes, hunting for the next new record to break on her
-                  playlist, or building Hidden Gem — her brand dedicated to
-                  celebrating New Orleans talent and culture on a world stage.
-                </p>
-              </div>
+        {/* ── Bio ──────────────────────────────────────────── */}
+        <section className="grid md:grid-cols-2 gap-12 items-start">
+          <div>
+            <h2 className="font-bebas text-4xl text-gold mb-6 tracking-wide">Bio</h2>
+            <div className="space-y-5 text-mist font-montserrat text-base leading-relaxed">
+              <p>
+                <span className="text-cream font-semibold">Jade the Gem</span> is a
+                New Orleans-based DJ and the visionary behind Hidden Gem events. A
+                true music lover with an intuitive ear, she approaches every set
+                differently — blending hip-hop, afrobeats, R&amp;B, house, and more
+                based on what she&apos;s feeling in the moment. Her timeless, soulful
+                selections create atmospheres where the music does the talking and
+                the energy stays high all night.
+              </p>
+              <p>
+                Through Hidden Gem, Jade curates experiences that organically bring
+                people together through timeless sound in carefree, soulful
+                environments. You can feel her genuine love for music in every
+                transition — it&apos;s what turns a regular night into something
+                special and unforgettable.
+              </p>
+              <p>
+                Off the decks, she&apos;s in the studio creating new mixes, searching
+                for fresh sounds, or expanding Hidden Gem — her brand dedicated to
+                bringing New Orleans talent and culture to new audiences.
+              </p>
             </div>
 
             {/* Connect */}
-            <div className="card p-6">
-              <h3 className="font-display text-2xl text-gold-muted mb-5">Connect</h3>
-              <div className="space-y-3">
-                {socialLinks.map((s) => {
-                  const Icon = iconMap[s.platform] ?? Music;
-                  return (
-                    <a key={s.platform} href={s.url} target="_blank" rel="noopener noreferrer"
-                      className="flex items-center gap-4 p-4 rounded-xl bg-surface-2 border border-white/5 hover:border-jade/30 transition-colors group">
-                      <Icon size={18} className="text-jade-light group-hover:scale-110 transition-transform" />
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-bold text-cream">{s.platform}</p>
-                        <p className="text-xs text-mist/40">{s.handle}</p>
-                      </div>
-                      <span className="text-jade-light opacity-0 group-hover:opacity-100 transition-opacity text-sm">→</span>
-                    </a>
-                  );
-                })}
-                <a href="mailto:jadedwheeler8@gmail.com"
-                  className="flex items-center gap-4 p-4 rounded-xl bg-surface-2 border border-white/5 hover:border-jade/30 transition-colors group">
-                  <Mail size={18} className="text-jade-light group-hover:scale-110 transition-transform" />
-                  <div className="flex-1">
-                    <p className="text-sm font-bold text-cream">Email</p>
-                    <p className="text-xs text-mist/40">jadedwheeler8@gmail.com</p>
-                  </div>
-                  <span className="text-jade-light opacity-0 group-hover:opacity-100 transition-opacity text-sm">→</span>
+            <div className="mt-10">
+              <h3 className="font-bungee text-sm text-gold-muted tracking-widest uppercase mb-4">
+                Connect
+              </h3>
+              <div className="flex flex-col gap-3">
+                {socialLinks.map((link) => (
+                  
+                    key={link.platform}
+                    href={link.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-3 text-mist hover:text-jade-light transition-colors font-montserrat text-sm group"
+                  >
+                    <span className="text-gold font-semibold w-24 shrink-0">
+                      {link.platform}
+                    </span>
+                    <span className="group-hover:translate-x-1 transition-transform">
+                      {link.handle} →
+                    </span>
+                  </a>
+                ))}
+                
+                  href="mailto:jadedwheeler8@gmail.com"
+                  className="flex items-center gap-3 text-mist hover:text-jade-light transition-colors font-montserrat text-sm group"
+                >
+                  <span className="text-gold font-semibold w-24 shrink-0">Email</span>
+                  <span className="group-hover:translate-x-1 transition-transform">
+                    jadedwheeler8@gmail.com →
+                  </span>
                 </a>
               </div>
             </div>
           </div>
 
-          {/* Photo grid */}
-          <div className="grid grid-cols-2 gap-4 auto-rows-min">
-            {photos.map(({ src, aspect, row }, i) => (
-              <div key={i}
-                className={`rounded-2xl overflow-hidden bg-surface-2 border border-white/5 ${aspect} ${row}`}
-                style={{ backgroundImage: `url(${src})`, backgroundSize: "cover", backgroundPosition: "center" }}
-              />
-            ))}
+          {/* Side image */}
+          <div className="rounded-2xl overflow-hidden aspect-[3/4] relative">
+            <img
+              src="/images/press-photo-3.jpg"
+              alt="DJ Jade the Gem at the decks"
+              className="w-full h-full object-cover object-top"
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-background/60 via-transparent to-transparent" />
           </div>
-        </div>
+        </section>
 
-        {/* ── Press info grid ── */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-16">
-
-          <div className="md:col-span-2 space-y-6">
-
-            {/* Genres */}
-            <div className="card p-8">
-              <h2 className="font-display text-2xl text-jade-light tracking-wider uppercase mb-4">Genres</h2>
-              <div className="flex flex-wrap gap-2">
-                {["Bounce", "Hip-Hop", "R&B", "Club", "New Orleans", "Top 40", "Afrobeats"].map((g) => (
-                  <span key={g} className="px-3 py-1 bg-surface-2 border border-plum/20 text-mist/60 text-xs font-sub tracking-wider uppercase">
-                    {g}
-                  </span>
-                ))}
-              </div>
-            </div>
-
-            {/* Available for */}
-            <div className="card p-8">
-              <h2 className="font-display text-2xl text-jade-light tracking-wider uppercase mb-4">Available For</h2>
-              <div className="grid grid-cols-2 gap-3">
-                {["Clubs & Nightlife", "Private Parties", "Festivals", "Corporate Events", "Birthdays & Celebrations", "Pop-Ups & Activations", "Weddings", "Brand Events"].map((t) => (
-                  <div key={t} className="flex items-center gap-2 text-sm font-body text-mist/50">
-                    <div className="w-1 h-1 bg-jade-light rounded-full shrink-0" />{t}
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-
-          {/* Sidebar */}
-          <div className="space-y-6">
-
-            {/* Booking */}
-            <div className="card p-6">
-              <h2 className="font-display text-xl text-cream tracking-wider uppercase mb-4">Booking</h2>
-              <div className="space-y-3">
-                <div>
-                  <p className="font-sub text-[10px] tracking-[0.2em] uppercase text-mist/30 mb-1">Rate</p>
-                  <p className="text-jade-light font-display text-3xl">$150/hr</p>
-                  <p className="text-mist/30 text-xs font-body">2 hour minimum</p>
-                </div>
-                <div className="border-t border-plum/20 pt-3">
-                  <p className="font-sub text-[10px] tracking-[0.2em] uppercase text-mist/30 mb-1">Contact</p>
-                  <a href="mailto:jadedwheeler8@gmail.com" className="text-jade-light hover:underline text-xs font-body">
-                    jadedwheeler8@gmail.com
-                  </a>
-                </div>
-              </div>
-              <a href="/bookings" className="btn-primary w-full justify-center mt-5 text-xs py-2.5">
-                Book Online
-              </a>
-            </div>
-
-            {/* EPK */}
-            <div className="card p-6">
-              <h2 className="font-display text-xl text-cream tracking-wider uppercase mb-2">EPK</h2>
-              <p className="text-mist/30 text-xs font-body mb-4">Full press kit PDF</p>
-              <button disabled className="btn-ghost w-full justify-center text-xs py-2.5 opacity-30 cursor-not-allowed">
-                <Download size={14} /> Coming Soon
-              </button>
-            </div>
-          </div>
-        </div>
-
-        {/* Press photos */}
-        <div>
-          <h2 className="font-display text-2xl text-cream tracking-wider uppercase mb-6">Press Photos</h2>
+        {/* ── Press Photos ─────────────────────────────────── */}
+        <section>
+          <h2 className="font-bebas text-4xl text-gold mb-8 tracking-wide">
+            Press Photos
+          </h2>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            {[1, 2, 3, 4].map((i) => (
-              <div key={i} className="relative aspect-square card flex flex-col items-center justify-center gap-2 group hover:border-jade/30 transition-all cursor-pointer">
-                <div className="w-10 h-10 bg-surface-2 flex items-center justify-center">
-                  <svg className="w-5 h-5 text-mist/20" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/>
-                  </svg>
-                </div>
-                <p className="text-mist/20 text-xs font-body">Photo {i}</p>
+            {[
+              { src: "/images/press-photo-1.jpg", alt: "DJ Jade the Gem — street style" },
+              { src: "/images/press-photo-2.jpg", alt: "DJ Jade the Gem — at the booth" },
+              { src: "/images/press-photo-3.jpg", alt: "DJ Jade the Gem — studio session" },
+              { src: "/images/press-photo-4.jpg", alt: "DJ Jade the Gem" },
+            ].map((photo, i) => (
+              <div
+                key={i}
+                className="rounded-xl overflow-hidden aspect-[3/4] bg-surface group cursor-pointer"
+              >
+                <img
+                  src={photo.src}
+                  alt={photo.alt}
+                  className="w-full h-full object-cover object-top group-hover:scale-105 transition-transform duration-500"
+                />
               </div>
             ))}
           </div>
-          <p className="text-mist/20 text-xs font-body mt-4">
-            Press photos coming soon. Contact{" "}
-            <a href="mailto:jadedwheeler8@gmail.com" className="text-jade-light hover:underline">
+          <p className="text-mist/60 font-montserrat text-sm mt-4">
+            High-res versions available — contact{" "}
+            
+              href="mailto:jadedwheeler8@gmail.com"
+              className="text-jade-light hover:underline"
+            >
               jadedwheeler8@gmail.com
-            </a>{" "}
-            for immediate access.
+            </a>
           </p>
-        </div>
+        </section>
 
+        {/* ── Genres ───────────────────────────────────────── */}
+        <section className="grid md:grid-cols-2 gap-12">
+          <div>
+            <h2 className="font-bebas text-4xl text-gold mb-6 tracking-wide">Genres</h2>
+            <div className="flex flex-wrap gap-3">
+              {["Bounce", "Hip-Hop", "R&B", "Club", "New Orleans", "Top 40", "Afrobeats", "House"].map(
+                (genre) => (
+                  <span
+                    key={genre}
+                    className="px-4 py-2 rounded-full border border-jade/40 text-jade-light font-montserrat text-sm bg-jade/5"
+                  >
+                    {genre}
+                  </span>
+                )
+              )}
+            </div>
+          </div>
+
+          <div>
+            <h2 className="font-bebas text-4xl text-gold mb-6 tracking-wide">
+              Available For
+            </h2>
+            <ul className="grid grid-cols-2 gap-2 text-mist font-montserrat text-sm">
+              {[
+                "Clubs & Nightlife",
+                "Private Parties",
+                "Festivals",
+                "Corporate Events",
+                "Birthdays & Celebrations",
+                "Pop-Ups & Activations",
+                "Weddings",
+                "Brand Events",
+              ].map((item) => (
+                <li key={item} className="flex items-center gap-2">
+                  <span className="w-1.5 h-1.5 rounded-full bg-jade-light shrink-0" />
+                  {item}
+                </li>
+              ))}
+            </ul>
+          </div>
+        </section>
+
+        {/* ── Booking ──────────────────────────────────────── */}
+        <section className="bg-surface rounded-2xl p-10 flex flex-col md:flex-row md:items-center md:justify-between gap-8 border border-white/5">
+          <div>
+            <h2 className="font-bebas text-4xl text-gold mb-1 tracking-wide">Booking</h2>
+            <p className="text-cream font-montserrat text-3xl font-bold mt-2">
+              $150<span className="text-mist text-base font-normal">/hr</span>
+            </p>
+            <p className="text-mist font-montserrat text-sm mt-1">2-hour minimum</p>
+          </div>
+          <div className="flex flex-col gap-3">
+            
+              href="mailto:jadedwheeler8@gmail.com"
+              className="text-mist hover:text-cream font-montserrat text-sm transition-colors"
+            >
+              jadedwheeler8@gmail.com
+            </a>
+            <Link
+              href="/bookings"
+              className="inline-block bg-jade hover:bg-jade-light text-cream font-bungee text-sm tracking-wide px-8 py-3 rounded-full transition-colors text-center"
+            >
+              Book Online
+            </Link>
+          </div>
+        </section>
+
+        {/* ── EPK ──────────────────────────────────────────── */}
+        <section className="text-center py-8">
+          <h2 className="font-bebas text-4xl text-gold mb-3 tracking-wide">EPK</h2>
+          <p className="text-mist font-montserrat text-sm mb-4">Full press kit PDF</p>
+          <span className="inline-block border border-white/20 text-mist font-montserrat text-sm px-6 py-3 rounded-full">
+            Coming Soon
+          </span>
+        </section>
       </div>
-    </div>
+    </main>
   );
 }
