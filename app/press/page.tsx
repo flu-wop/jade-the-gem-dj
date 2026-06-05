@@ -73,6 +73,7 @@ export default function PressPage() {
                   </a>
                 ))}
                 
+                <a
                   href="mailto:jadedwheeler8@gmail.com"
                   className="flex items-center gap-3 text-mist hover:text-jade-light transition-colors font-montserrat text-sm group"
                 >
@@ -176,6 +177,7 @@ export default function PressPage() {
           </div>
           <div className="flex flex-col gap-3">
             
+            <a
               href="mailto:jadedwheeler8@gmail.com"
               className="text-mist hover:text-cream font-montserrat text-sm transition-colors"
             >
