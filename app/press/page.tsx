@@ -57,7 +57,7 @@ export default function PressPage() {
               </h3>
               <div className="flex flex-col gap-3">
                 {socialLinks.map((link) => (
-                  
+                  <a
                     key={link.platform}
                     href={link.url}
                     target="_blank"
