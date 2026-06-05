@@ -57,7 +57,7 @@ export default function PressPage() {
               </h3>
               <div className="flex flex-col gap-3">
                 {socialLinks.map((link) => (
-                  <a
+                  
                     key={link.platform}
                     href={link.url}
                     target="_blank"
@@ -72,7 +72,7 @@ export default function PressPage() {
                     </span>
                   </a>
                 ))}
-                <a
+                
                   href="mailto:jadedwheeler8@gmail.com"
                   className="flex items-center gap-3 text-mist hover:text-jade-light transition-colors font-montserrat text-sm group"
                 >
@@ -99,9 +99,8 @@ export default function PressPage() {
           <h2 className="font-bebas text-4xl text-gold mb-8 tracking-wide">
             Press Photos
           </h2>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
             {[
-              { src: "/images/PRESS-1.PNG", alt: "DJ Jade the Gem — street style" },
               { src: "/images/PRESS-2.PNG", alt: "DJ Jade the Gem — at the booth" },
               { src: "/images/PRESS-3.PNG", alt: "DJ Jade the Gem — studio session" },
               { src: "/images/PRESS-4.PNG", alt: "DJ Jade the Gem" },
@@ -176,7 +175,7 @@ export default function PressPage() {
             <p className="text-mist font-montserrat text-sm mt-1">2-hour minimum</p>
           </div>
           <div className="flex flex-col gap-3">
-            <a
+            
               href="mailto:jadedwheeler8@gmail.com"
               className="text-mist hover:text-cream font-montserrat text-sm transition-colors"
             >
