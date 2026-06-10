@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
+import CartButton from "@/components/CartButton";
 
 const links = [
   { label: "Music",    href: "/music" },
@@ -77,12 +78,17 @@ export default function Navbar() {
           ))}
         </ul>
 
-        {/* Book CTA */}
-        <Link href="/bookings" className="hidden md:inline-flex btn-primary py-2.5">
-          Book Me
-        </Link>
+        {/* Book CTA + Cart */}
+        <div className="hidden md:flex items-center gap-5">
+          <CartButton />
+          <Link href="/bookings" className="inline-flex btn-primary py-2.5">
+            Book Me
+          </Link>
+        </div>
 
-        {/* Mobile hamburger */}
+        {/* Mobile cart + hamburger */}
+        <div className="md:hidden flex items-center gap-4">
+          <CartButton />
         <button
           onClick={() => setOpen(!open)}
           className="md:hidden text-mist/70 hover:text-gold transition-colors p-2"
@@ -92,6 +98,7 @@ export default function Navbar() {
           <div className={`w-5 h-0.5 bg-current mb-1.5 transition-all duration-300 ${open ? "opacity-0" : ""}`} />
           <div className={`w-5 h-0.5 bg-current transition-all duration-300 ${open ? "-rotate-45 -translate-y-2" : ""}`} />
         </button>
+        </div>
       </nav>
 
       {/* Mobile drawer */}

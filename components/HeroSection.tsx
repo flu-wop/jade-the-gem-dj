@@ -28,6 +28,23 @@ export default function HeroSection() {
   return (
     <section className="relative min-h-screen flex flex-col items-center justify-center overflow-hidden bg-background px-6 pt-24 pb-20">
 
+      {/* ── Hero background image ──
+          PLACEHOLDER: swap /images/hero-bg.jpg with a real photo of Jade
+          (1920×1080 or larger, landscape). Keep the same filename and it
+          drops straight in — no code change needed. */}
+      <div className="absolute inset-0 z-0">
+        <Image
+          src="/images/hero-bg.jpg"
+          alt=""
+          fill
+          priority
+          className="object-cover opacity-60"
+        />
+        {/* Dark overlays keep the logo + headline readable over any photo */}
+        <div className="absolute inset-0 bg-gradient-to-b from-background/70 via-background/40 to-background" />
+        <div className="absolute inset-0 bg-gradient-to-r from-background/60 via-transparent to-background/60" />
+      </div>
+
       {/* ── Background atmosphere ── */}
       <div className="absolute inset-0 bg-gem-glow pointer-events-none" />
       <div className="absolute inset-0 bg-jade-glow pointer-events-none" />

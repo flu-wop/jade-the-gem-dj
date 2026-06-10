@@ -38,4 +38,19 @@ export async function initDb() {
       created_at TEXT DEFAULT (datetime('now'))
     )
   `);
+  await db.execute(`
+    CREATE TABLE IF NOT EXISTS merch_orders (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      name TEXT,
+      email TEXT,
+      phone TEXT,
+      items TEXT NOT NULL,            -- JSON array of cart lines
+      amount_cents INTEGER NOT NULL,
+      stripe_session_id TEXT,
+      printify_order_id TEXT,
+      shipping_json TEXT,             -- JSON of the shipping address
+      status TEXT DEFAULT 'pending',  -- pending | paid | fulfilled | fulfill_failed
+      created_at TEXT DEFAULT (datetime('now'))
+    )
+  `);
 }

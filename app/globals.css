@@ -10,17 +10,6 @@
     color: #f0ebe8;
     -webkit-font-smoothing: antialiased;
   }
-
-  /* Snipcart dark theme overrides */
-  :root {
-    --color-default:         #f0ebe8;
-    --color-alt:             #c4b8e0;
-    --bgColor-default:       #16121f;
-    --bgColor-input:         #1e1829;
-    --borderColor-default:   #4a3f8f55;
-    --color-buttonPrimary:   #f0ebe8;
-    --bgColor-buttonPrimary: #4a3f8f;
-  }
 }
 
 @layer components {

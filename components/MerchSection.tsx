@@ -1,89 +1,55 @@
 "use client";
 
 // ── MerchSection.tsx ─────────────────────────────────────────
-// Snipcart is already wired in layout.tsx — no extra setup needed.
-// Replace placeholder mockup paths with real Printify exports when ready.
+// Catalog now lives in lib/merch.ts (shared with /api/merch/checkout
+// so prices can't be tampered with). "Add to Cart" uses the in-house
+// cart — Snipcart has been removed.
 // Mockups go in: public/images/merch/
 
 import Image from "next/image";
 import { useState } from "react";
-
-type Gender     = "Unisex" | "Women's";
-type ShirtStyle = "Oversized Tee" | "Heavyweight Tee" | "Cropped Tee" | "Hoodie" | "Tote Bag";
-type Size       = "S" | "M" | "L" | "XL" | "2XL" | "3XL" | "OS";
-
-interface StyleOption {
-  label:         ShirtStyle;
-  forGenders:    Gender[];
-  sizes:         Size[];
-  priceModifier: number;
-}
-
-interface MerchProduct {
-  id:          string;
-  name:        string;
-  description: string;
-  basePrice:   number;
-  mockups:     [string, string, string];
-  styles:      StyleOption[];
-  tag?:        string;
-}
-
-const STYLES: StyleOption[] = [
-  { label: "Oversized Tee",   forGenders: ["Unisex"],            sizes: ["S","M","L","XL","2XL","3XL"], priceModifier: 0  },
-  { label: "Heavyweight Tee", forGenders: ["Unisex","Women's"],  sizes: ["S","M","L","XL","2XL"],       priceModifier: 0  },
-  { label: "Cropped Tee",     forGenders: ["Women's"],           sizes: ["S","M","L","XL"],             priceModifier: 0  },
-  { label: "Hoodie",          forGenders: ["Unisex","Women's"],  sizes: ["S","M","L","XL","2XL","3XL"], priceModifier: 20 },
-  { label: "Tote Bag",        forGenders: ["Unisex"],            sizes: ["OS"],                         priceModifier: -10},
-];
-
-const PRODUCTS: MerchProduct[] = [
-  {
-    id: "hidden-gem-globe", name: "Hidden Gem Globe", tag: "New Drop",
-    description: "Holographic chrome globe. Your drip, your era.",
-    basePrice: 40,
-    mockups: ["/images/merch/globe-model.jpg","/images/merch/globe-flat.jpg","/images/merch/globe-close.jpg"],
-    styles: STYLES,
-  },
-  {
-    id: "jade-wave", name: "Jade Wave",
-    description: "Teal smoke wave. Calm the room.",
-    basePrice: 38,
-    mockups: ["/images/merch/wave-model.jpg","/images/merch/wave-flat.jpg","/images/merch/wave-close.jpg"],
-    styles: STYLES,
-  },
-  {
-    id: "504-crown", name: "504 Crown", tag: "Best Seller",
-    description: "NOLA born. Crown on every fit.",
-    basePrice: 38,
-    mockups: ["/images/merch/crown-model.jpg","/images/merch/crown-flat.jpg","/images/merch/crown-close.jpg"],
-    styles: STYLES,
-  },
-  {
-    id: "all-seeing-gem", name: "All Seeing Gem",
-    description: "Street-mystic energy. All eyes on you.",
-    basePrice: 40,
-    mockups: ["/images/merch/eye-model.jpg","/images/merch/eye-flat.jpg","/images/merch/eye-close.jpg"],
-    styles: STYLES,
-  },
-];
+import {
+  PRODUCTS,
+  MERCH_LIVE,
+  type MerchProduct,
+  type Gender,
+  type ShirtStyle,
+  type Size,
+} from "@/lib/merch";
+import { useCart } from "@/lib/cart";
 
 // ── ProductCard ──────────────────────────────────────────────
 function ProductCard({ product }: { product: MerchProduct }) {
-  const [expanded,  setExpanded]  = useState(false);
+  const { addItem } = useCart();
+  const [expanded, setExpanded] = useState(false);
   const [activeImg, setActiveImg] = useState(0);
-  const [gender,    setGender]    = useState<Gender>("Unisex");
-  const [style,     setStyle]     = useState<ShirtStyle | "">("");
-  const [size,      setSize]      = useState<Size | "">("");
-  const [qty,       setQty]       = useState(1);
+  const [gender, setGender] = useState<Gender>("Unisex");
+  const [style, setStyle] = useState<ShirtStyle | "">("");
+  const [size, setSize] = useState<Size | "">("");
+  const [qty, setQty] = useState(1);
 
   const availableStyles = product.styles.filter((s) => s.forGenders.includes(gender));
-  const selectedStyle   = availableStyles.find((s) => s.label === style);
-  const finalPrice      = product.basePrice + (selectedStyle?.priceModifier ?? 0);
-  const canAddToCart    = !!(gender && style && size);
+  const selectedStyle = availableStyles.find((s) => s.label === style);
+  const finalPrice = product.basePrice + (selectedStyle?.priceModifier ?? 0);
+  const canAddToCart = !!(gender && style && size);
 
-  const snipcartId  = `${product.id}-${gender}-${style}-${size}`.toLowerCase().replace(/[\s']+/g, "-");
-  const snipcartUrl = `https://jade-the-gem-dj.vercel.app/api/products/${product.id}`;
+  function handleAdd() {
+    if (!canAddToCart) return;
+    addItem({
+      productId: product.id,
+      name: product.name,
+      style: style as ShirtStyle,
+      size: size as Size,
+      gender,
+      qty,
+      price: finalPrice,
+      image: product.mockups[0],
+    });
+    setExpanded(false);
+    setStyle("");
+    setSize("");
+    setQty(1);
+  }
 
   return (
     <div className="card group flex flex-col">
@@ -139,7 +105,7 @@ function ProductCard({ product }: { product: MerchProduct }) {
                 onChange={(e) => { setGender(e.target.value as Gender); setStyle(""); setSize(""); }}
                 className="w-full bg-surface-2 border border-plum/30 text-cream font-body text-sm px-3 py-2 focus:outline-none focus:border-plum transition-colors"
               >
-                {(["Unisex","Women's"] as Gender[]).map((g) => (
+                {(["Unisex", "Women's"] as Gender[]).map((g) => (
                   <option key={g} value={g}>{g}</option>
                 ))}
               </select>
@@ -194,27 +160,15 @@ function ProductCard({ product }: { product: MerchProduct }) {
               </div>
             )}
 
-            {/* Snipcart Add to Cart */}
+            {/* Add to Cart */}
             <button
+              onClick={handleAdd}
               disabled={!canAddToCart}
-              className={`snipcart-add-item w-full py-3.5 font-sub text-xs tracking-[0.2em] uppercase transition-all duration-300 ${
+              className={`w-full py-3.5 font-sub text-xs tracking-[0.2em] uppercase transition-all duration-300 ${
                 canAddToCart
                   ? "bg-plum hover:bg-plum-light text-cream cursor-pointer shadow-[0_0_20px_#4a3f8f55] hover:shadow-[0_0_30px_#4a3f8f88]"
                   : "bg-plum/20 text-mist/30 cursor-not-allowed"
               }`}
-              data-item-id={snipcartId}
-              data-item-price={finalPrice}
-              data-item-url={snipcartUrl}
-              data-item-description={`${product.name} · ${gender} · ${style} · Size ${size}`}
-              data-item-image={product.mockups[0]}
-              data-item-name={`${product.name} (${style})`}
-              data-item-quantity={qty}
-              data-item-custom1-name="Style"
-              data-item-custom1-value={style}
-              data-item-custom2-name="Size"
-              data-item-custom2-value={size}
-              data-item-custom3-name="Gender"
-              data-item-custom3-value={gender}
             >
               {canAddToCart ? `Add to Cart — $${finalPrice * qty}` : "Select options above"}
             </button>
@@ -244,20 +198,35 @@ export default function MerchSection() {
           </p>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-px bg-plum/10">
-          {PRODUCTS.map((p) => (
-            <ProductCard key={p.id} product={p} />
-          ))}
-        </div>
+        {!MERCH_LIVE ? (
+          /* ── Store being rebuilt — hide stale products ── */
+          <div className="border border-plum/20 bg-surface py-20 px-6 text-center">
+            <p className="font-display text-4xl sm:text-5xl text-holo mb-4">
+              NEW COLLECTION DROPPING SOON
+            </p>
+            <p className="font-body text-sm text-mist/50 max-w-md mx-auto">
+              The new Hidden Gem store is on the way. Join the list below and
+              you&apos;ll be first to know when it goes live.
+            </p>
+          </div>
+        ) : (
+          <>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-px bg-plum/10">
+              {PRODUCTS.map((p) => (
+                <ProductCard key={p.id} product={p} />
+              ))}
+            </div>
 
-        {/* Trust bar */}
-        <div className="mt-10 py-4 px-6 border border-plum/20 bg-surface flex flex-wrap justify-center gap-6 text-mist/40 font-sub text-[10px] tracking-[0.2em] uppercase">
-          {["Premium Shaka Wear","Printed via Printify","Ships 5–10 Days","Secure Checkout"].map((t) => (
-            <span key={t} className="flex items-center gap-2">
-              <span className="text-jade-light">✦</span>{t}
-            </span>
-          ))}
-        </div>
+            {/* Trust bar */}
+            <div className="mt-10 py-4 px-6 border border-plum/20 bg-surface flex flex-wrap justify-center gap-6 text-mist/40 font-sub text-[10px] tracking-[0.2em] uppercase">
+              {["Premium Shaka Wear", "Printed via Printify", "Ships 5–10 Days", "Secure Checkout"].map((t) => (
+                <span key={t} className="flex items-center gap-2">
+                  <span className="text-jade-light">✦</span>{t}
+                </span>
+              ))}
+            </div>
+          </>
+        )}
       </div>
     </section>
   );

@@ -13,6 +13,7 @@ const pages = [
   { href: "/events",   label: "Events"    },
   { href: "/bookings", label: "Bookings"  },
   { href: "/press",    label: "Press Kit" },
+  { href: "/refund-shipping", label: "Shipping & Refunds" },
 ];
 
 export default function Footer() {

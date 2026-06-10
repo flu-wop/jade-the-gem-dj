@@ -54,6 +54,61 @@ export async function sendBookingConfirmation({
   });
 }
 
+export async function sendMerchEmails({
+  name, email, items, total, shippingLines, fulfilled,
+}: {
+  name: string;
+  email: string;
+  items: Array<{ name: string; style: string; size: string; gender: string; qty: number; price: number }>;
+  total: number;
+  shippingLines: string[];
+  fulfilled: boolean;
+}) {
+  const from = process.env.RESEND_FROM_EMAIL ?? "onboarding@resend.dev";
+  const to_jade = process.env.RESEND_TO_EMAIL ?? "jadedwheeler8@gmail.com";
+
+  const rows = items
+    .map(
+      (l) =>
+        `<tr><td style="padding:8px 0;border-bottom:1px solid #222;">${l.name} — ${l.style} · ${l.gender} · ${l.size} ×${l.qty}</td><td style="padding:8px 0;border-bottom:1px solid #222;text-align:right;color:#3aa898;">$${l.price * l.qty}</td></tr>`
+    )
+    .join("");
+
+  // Customer confirmation
+  await resend.emails.send({
+    from, to: email,
+    subject: "Order Confirmed — Hidden Gem 💎",
+    html: `<div style="font-family:sans-serif;background:#0e0b14;color:#f0ebe8;padding:40px;max-width:580px;margin:0 auto;">
+      <h1 style="color:#3aa898;font-size:26px;margin-bottom:4px;">Order confirmed 💎</h1>
+      <p style="color:#888;margin-bottom:24px;">Thanks for repping Hidden Gem.</p>
+      <table style="width:100%;border-collapse:collapse;">${rows}
+        <tr><td style="padding:12px 0;color:#888;">Total</td><td style="padding:12px 0;text-align:right;color:#3aa898;font-weight:bold;">$${total}</td></tr>
+      </table>
+      <p style="margin-top:24px;color:#888;">Shipping to:<br/>${shippingLines.join("<br/>")}</p>
+      <p style="margin-top:24px;color:#666;">Printed to order — ships in 5–10 days. Questions? <a href="mailto:${to_jade}" style="color:#3aa898;">${to_jade}</a></p>
+    </div>`,
+  });
+
+  // Owner notification
+  await resend.emails.send({
+    from, to: to_jade,
+    subject: `New merch order — ${name} ($${total})${fulfilled ? "" : " ⚠️ FULFILL MANUALLY"}`,
+    html: `<div style="font-family:sans-serif;background:#0e0b14;color:#f0ebe8;padding:40px;">
+      <h1 style="color:#3aa898;">New merch order 💎</h1>
+      <p><strong>${name}</strong> · ${email}</p>
+      <table style="width:100%;border-collapse:collapse;margin-top:12px;">${rows}
+        <tr><td style="padding:12px 0;">Total</td><td style="padding:12px 0;text-align:right;color:#3aa898;font-weight:bold;">$${total}</td></tr>
+      </table>
+      <p style="margin-top:16px;">Ship to:<br/>${shippingLines.join("<br/>")}</p>
+      ${
+        fulfilled
+          ? `<p style="color:#3aa898;margin-top:16px;">✓ Sent to Printify automatically.</p>`
+          : `<p style="color:#d4af37;margin-top:16px;">⚠️ Not auto-fulfilled — Printify isn't fully wired (token/shop id or variant mapping missing). Place this order in Printify manually.</p>`
+      }
+    </div>`,
+  });
+}
+
 export async function sendNewsletterWelcome(email: string) {
   await resend.emails.send({
     from: process.env.RESEND_FROM_EMAIL ?? "onboarding@resend.dev",
