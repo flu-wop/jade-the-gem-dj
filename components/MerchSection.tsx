@@ -186,7 +186,7 @@ function ProductCard({ product }: { product: MerchProduct }) {
 // ── MerchSection ─────────────────────────────────────────────
 export default function MerchSection() {
   return (
-    <section id="merch" className="relative bg-background py-24 px-6 overflow-hidden">
+    <section id="merch" className="relative bg-transparent py-24 px-6 overflow-hidden">
       <div className="absolute inset-0 bg-jade-glow pointer-events-none opacity-60" />
 
       <div className="relative max-w-5xl mx-auto">

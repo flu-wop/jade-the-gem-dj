@@ -49,6 +49,20 @@
   }
   .section-title {
     @apply font-display text-[clamp(2.5rem,7vw,5rem)] leading-none text-cream;
+    position: relative;
+  }
+  .section-title::before {
+    content: '';
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 130%;
+    height: 320%;
+    transform: translate(-50%, -50%);
+    background: radial-gradient(ellipse at center, rgba(74,63,143,0.22), rgba(42,122,111,0.10) 45%, transparent 70%);
+    filter: blur(22px);
+    z-index: -1;
+    pointer-events: none;
   }
   .neon-divider {
     @apply w-12 h-px bg-gradient-to-r from-plum to-jade my-6;

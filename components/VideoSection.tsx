@@ -5,7 +5,7 @@ export default function VideoSection() {
   const isPlaceholder = YOUTUBE_VIDEO_ID === "PLACEHOLDER_ID";
 
   return (
-    <section className="py-24 px-6 bg-surface border-y border-plum/10">
+    <section className="py-24 px-6 bg-surface/70 border-y border-plum/10">
       <div className="max-w-4xl mx-auto">
         <div className="text-center mb-12">
           <p className="section-label">Feel the Energy</p>

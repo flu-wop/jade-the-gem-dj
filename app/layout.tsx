@@ -4,6 +4,7 @@ import "./globals.css";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { CartProvider } from "@/lib/cart";
+import AmbientBackdrop from "@/components/AmbientBackdrop";
 import CartDrawer from "@/components/CartDrawer";
 
 /* ── Fonts ──────────────────────────────────────────── */
@@ -98,7 +99,8 @@ export default function RootLayout({
       className={`${montserrat.variable} ${bebas.variable} ${bungee.variable} ${anton.variable}`}
     >
       <head />
-      <body className="bg-background text-white antialiased">
+      <body className="text-white antialiased">
+        <AmbientBackdrop />
         <CartProvider>
           <Navbar />
           <main>{children}</main>
