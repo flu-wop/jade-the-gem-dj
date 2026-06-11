@@ -1,153 +1,191 @@
 'use client';
 import { useRef, useMemo } from 'react';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
-import { Stars } from '@react-three/drei';
 import * as THREE from 'three';
 
-const GEM_COLORS = [
-  '#4a3f8f', // plum
-  '#2a7a6f', // jade
-  '#d4af37', // gold
-  '#3aa898', // jade-light
-  '#6355b8', // plum-light
-  '#c4b8e0', // mist
-];
-
-interface GemProps {
-  position: [number, number, number];
-  rotSpeed: [number, number, number];
-  scale: number;
-  color: string;
+// ── Textures (canvas-generated; client-only via dynamic ssr:false) ──
+function softDot(): THREE.Texture {
+  const s = 64;
+  const c = document.createElement('canvas');
+  c.width = c.height = s;
+  const ctx = c.getContext('2d')!;
+  const g = ctx.createRadialGradient(s / 2, s / 2, 0, s / 2, s / 2, s / 2);
+  g.addColorStop(0, 'rgba(255,255,255,1)');
+  g.addColorStop(0.25, 'rgba(255,255,255,0.7)');
+  g.addColorStop(0.55, 'rgba(255,255,255,0.12)');
+  g.addColorStop(1, 'rgba(255,255,255,0)');
+  ctx.fillStyle = g;
+  ctx.fillRect(0, 0, s, s);
+  const t = new THREE.CanvasTexture(c);
+  t.colorSpace = THREE.SRGBColorSpace;
+  return t;
 }
 
-function Gem({ position, rotSpeed, scale, color }: GemProps) {
-  const ref = useRef<THREE.Mesh>(null!);
-  useFrame((_, delta) => {
-    ref.current.rotation.x += rotSpeed[0] * delta;
-    ref.current.rotation.y += rotSpeed[1] * delta;
-    ref.current.rotation.z += rotSpeed[2] * delta;
-  });
-  return (
-    <mesh ref={ref} position={position} scale={scale}>
-      <octahedronGeometry args={[1, 0]} />
-      <meshStandardMaterial
-        color={color}
-        roughness={0.05}
-        metalness={0.85}
-        transparent
-        opacity={0.72}
-      />
-    </mesh>
-  );
+function starFlare(): THREE.Texture {
+  const s = 128;
+  const c = document.createElement('canvas');
+  c.width = c.height = s;
+  const ctx = c.getContext('2d')!;
+  const g = ctx.createRadialGradient(s / 2, s / 2, 0, s / 2, s / 2, s / 2);
+  g.addColorStop(0, 'rgba(255,255,255,1)');
+  g.addColorStop(0.08, 'rgba(255,247,228,0.85)');
+  g.addColorStop(0.3, 'rgba(255,224,160,0.18)');
+  g.addColorStop(1, 'rgba(255,224,160,0)');
+  ctx.fillStyle = g;
+  ctx.fillRect(0, 0, s, s);
+  ctx.globalCompositeOperation = 'lighter';
+  ctx.translate(s / 2, s / 2);
+  const spike = (len: number, w: number) => {
+    const lg = ctx.createLinearGradient(0, 0, len, 0);
+    lg.addColorStop(0, 'rgba(255,250,235,0.9)');
+    lg.addColorStop(1, 'rgba(255,250,235,0)');
+    ctx.fillStyle = lg;
+    ctx.beginPath();
+    ctx.moveTo(0, -w);
+    ctx.lineTo(len, 0);
+    ctx.lineTo(0, w);
+    ctx.closePath();
+    ctx.fill();
+  };
+  for (let i = 0; i < 4; i++) {
+    ctx.rotate(Math.PI / 2);
+    spike(s / 2, 1.4);
+  }
+  const t = new THREE.CanvasTexture(c);
+  t.colorSpace = THREE.SRGBColorSpace;
+  return t;
 }
 
-function GemField() {
-  const gems = useMemo(
-    () =>
-      Array.from({ length: 24 }, () => ({
-        position: [
-          (Math.random() - 0.5) * 24,
-          (Math.random() - 0.5) * 16,
-          (Math.random() - 0.5) * 8 - 2,
-        ] as [number, number, number],
-        rotSpeed: [
-          (Math.random() - 0.5) * 0.8,
-          (Math.random() - 0.5) * 0.8,
-          (Math.random() - 0.5) * 0.4,
-        ] as [number, number, number],
-        scale: 0.08 + Math.random() * 0.18,
-        color: GEM_COLORS[Math.floor(Math.random() * GEM_COLORS.length)],
-      })),
-    []
-  );
+// approx gaussian
+const gauss = () => (Math.random() + Math.random() + Math.random() - 1.5) / 1.5;
 
-  return (
-    <>
-      {gems.map((g, i) => (
-        <Gem key={i} {...g} />
-      ))}
-    </>
-  );
+// Milky Way band direction (diagonal, like the reference photo)
+const BAND = THREE.MathUtils.degToRad(118);
+const DIR: [number, number] = [Math.cos(BAND), Math.sin(BAND)];
+const PERP: [number, number] = [-DIR[1], DIR[0]];
+
+const COOL = ['#ffffff', '#dfe6ff', '#c4d2ff', '#eaf0ff'];
+const WARM = ['#ffe9c6', '#ffd9a0', '#fff2da'];
+
+function pickColor(warmChance: number): THREE.Color {
+  const set = Math.random() < warmChance ? WARM : COOL;
+  return new THREE.Color(set[Math.floor(Math.random() * set.length)]);
 }
 
-// ── Spiral galaxy: bright core behind the logo, arms swirling around it ──
-// Tweakable knobs are the consts at the top of the useMemo.
-function Galaxy() {
-  const ref = useRef<THREE.Points>(null!);
+interface FieldOpts {
+  count: number;
+  spreadX: number;
+  spreadY: number;
+  band: boolean;
+  sigma: number;
+  warmChance: number;
+  bluen: number;
+}
 
-  const { geometry, material } = useMemo(() => {
-    const COUNT = 12000;
-    const RADIUS = 9;          // how far the arms reach
-    const BRANCHES = 5;        // number of spiral arms
-    const SPIN = 1.1;          // how tightly the arms wind
-    const RANDOMNESS = 0.4;    // scatter off the arms
-    const RAND_POWER = 3;      // higher = tighter to the arm centerline
-    const CORE = new THREE.Color('#f3d9a0');   // warm gold core (behind logo)
-    const EDGE = new THREE.Color('#4a3f8f');   // plum arms
-
-    const positions = new Float32Array(COUNT * 3);
-    const colors = new Float32Array(COUNT * 3);
-
-    for (let i = 0; i < COUNT; i++) {
-      const i3 = i * 3;
-      const r = Math.pow(Math.random(), 1.5) * RADIUS; // cluster toward center
-      const branchAngle = ((i % BRANCHES) / BRANCHES) * Math.PI * 2;
-      const spinAngle = r * SPIN;
-
-      const rand = () =>
-        Math.pow(Math.random(), RAND_POWER) *
-        (Math.random() < 0.5 ? 1 : -1) *
-        RANDOMNESS *
-        r;
-
-      positions[i3]     = Math.cos(branchAngle + spinAngle) * r + rand();
-      positions[i3 + 1] = Math.sin(branchAngle + spinAngle) * r + rand();
-      positions[i3 + 2] = rand() * 0.6; // thin disk depth (mostly face-on)
-
-      const c = CORE.clone().lerp(EDGE, r / RADIUS);
-      colors[i3] = c.r;
-      colors[i3 + 1] = c.g;
-      colors[i3 + 2] = c.b;
+function buildField({ count, spreadX, spreadY, band, sigma, warmChance, bluen }: FieldOpts) {
+  const positions = new Float32Array(count * 3);
+  const colors = new Float32Array(count * 3);
+  for (let i = 0; i < count; i++) {
+    const i3 = i * 3;
+    let x: number, y: number;
+    if (band) {
+      const u = (Math.random() * 2 - 1) * spreadX;
+      const v = gauss() * sigma;
+      x = DIR[0] * u + PERP[0] * v;
+      y = DIR[1] * u + PERP[1] * v;
+    } else {
+      x = (Math.random() * 2 - 1) * spreadX;
+      y = (Math.random() * 2 - 1) * spreadY;
     }
+    positions[i3] = x;
+    positions[i3 + 1] = y;
+    positions[i3 + 2] = -6 + (Math.random() - 0.5) * 4;
 
-    const geometry = new THREE.BufferGeometry();
-    geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
-    geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+    const col = pickColor(warmChance);
+    if (bluen > 0) col.lerp(new THREE.Color('#7d8cff'), bluen * Math.random());
+    colors[i3] = col.r;
+    colors[i3 + 1] = col.g;
+    colors[i3 + 2] = col.b;
+  }
+  const geo = new THREE.BufferGeometry();
+  geo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+  geo.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+  return geo;
+}
 
-    const material = new THREE.PointsMaterial({
-      size: 0.045,
-      sizeAttenuation: true,
-      depthWrite: false,
-      blending: THREE.AdditiveBlending,
-      vertexColors: true,
-      transparent: true,
-    });
+function Starfield() {
+  const dot = useMemo(softDot, []);
+  const flare = useMemo(starFlare, []);
 
-    return { geometry, material };
+  const fine = useMemo(() => buildField({ count: 2600, spreadX: 30, spreadY: 22, band: false, sigma: 0, warmChance: 0.12, bluen: 0 }), []);
+  const mid = useMemo(() => buildField({ count: 1400, spreadX: 30, spreadY: 22, band: false, sigma: 0, warmChance: 0.18, bluen: 0 }), []);
+  const bandStars = useMemo(() => buildField({ count: 2200, spreadX: 28, spreadY: 22, band: true, sigma: 3.4, warmChance: 0.06, bluen: 0.35 }), []);
+
+  const bright = useMemo(() => {
+    const n = 34;
+    const positions = new Float32Array(n * 3);
+    const colors = new Float32Array(n * 3);
+    for (let i = 0; i < n; i++) {
+      const i3 = i * 3;
+      positions[i3] = (Math.random() * 2 - 1) * 28;
+      positions[i3 + 1] = (Math.random() * 2 - 1) * 20;
+      positions[i3 + 2] = -5 + (Math.random() - 0.5) * 3;
+      const col = pickColor(0.5);
+      colors[i3] = col.r; colors[i3 + 1] = col.g; colors[i3 + 2] = col.b;
+    }
+    const geo = new THREE.BufferGeometry();
+    geo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+    geo.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+    return geo;
   }, []);
 
-  // Slow swirl around the logo
+  const haze = useMemo(() => {
+    const n = 5;
+    const positions = new Float32Array(n * 3);
+    for (let i = 0; i < n; i++) {
+      const i3 = i * 3;
+      const u = (Math.random() * 2 - 1) * 18;
+      const v = gauss() * 2;
+      positions[i3] = DIR[0] * u + PERP[0] * v;
+      positions[i3 + 1] = DIR[1] * u + PERP[1] * v;
+      positions[i3 + 2] = -8;
+    }
+    const geo = new THREE.BufferGeometry();
+    geo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+    return geo;
+  }, []);
+
+  const group = useRef<THREE.Group>(null!);
   useFrame((_, delta) => {
-    if (ref.current) ref.current.rotation.z += delta * 0.04;
+    if (group.current) group.current.rotation.z += delta * 0.004;
   });
 
-  // Slight tilt for a touch of 3D depth; sits behind the gems at z = -2
   return (
-    <points
-      ref={ref}
-      geometry={geometry}
-      material={material}
-      position={[0, 0, -2]}
-      rotation={[0.35, 0, 0]}
-    />
+    <group ref={group}>
+      <points geometry={haze}>
+        <pointsMaterial map={dot} color="#5566bb" size={9} sizeAttenuation transparent opacity={0.05} depthWrite={false} blending={THREE.AdditiveBlending} />
+      </points>
+      <points geometry={bandStars}>
+        <pointsMaterial map={dot} size={0.05} sizeAttenuation vertexColors transparent opacity={0.85} depthWrite={false} blending={THREE.AdditiveBlending} />
+      </points>
+      <points geometry={fine}>
+        <pointsMaterial map={dot} size={0.03} sizeAttenuation vertexColors transparent opacity={0.9} depthWrite={false} blending={THREE.AdditiveBlending} />
+      </points>
+      <points geometry={mid}>
+        <pointsMaterial map={dot} size={0.06} sizeAttenuation vertexColors transparent opacity={0.95} depthWrite={false} blending={THREE.AdditiveBlending} />
+      </points>
+      <points geometry={bright}>
+        <pointsMaterial map={flare} size={0.9} sizeAttenuation vertexColors transparent opacity={1} depthWrite={false} blending={THREE.AdditiveBlending} />
+      </points>
+    </group>
   );
 }
 
 function CameraDrift() {
   const { camera } = useThree();
   useFrame(({ clock }) => {
-    camera.position.x = Math.sin(clock.elapsedTime * 0.12) * 0.6;
-    camera.position.y = Math.cos(clock.elapsedTime * 0.08) * 0.4;
+    camera.position.x = Math.sin(clock.elapsedTime * 0.05) * 0.25;
+    camera.position.y = Math.cos(clock.elapsedTime * 0.04) * 0.18;
   });
   return null;
 }
@@ -160,14 +198,8 @@ export default function HeroCanvas() {
       dpr={[1, 1.5]}
       gl={{ antialias: true, alpha: false }}
     >
-      <color attach="background" args={['#0e0b14']} />
-      <ambientLight intensity={0.25} color="#2a1f3d" />
-      <pointLight position={[8, 8, 6]}   color="#4a3f8f" intensity={3}   />
-      <pointLight position={[-8, -6, 4]} color="#2a7a6f" intensity={2.5} />
-      <pointLight position={[0, 2, 8]}   color="#d4af37" intensity={1}   />
-      <Galaxy />
-      <Stars radius={120} depth={60} count={1500} factor={3.5} saturation={0.6} fade speed={0.8} />
-      <GemField />
+      <color attach="background" args={['#070a14']} />
+      <Starfield />
       <CameraDrift />
     </Canvas>
   );
