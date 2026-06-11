@@ -3,7 +3,12 @@ import { useRef, useMemo } from 'react';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import * as THREE from 'three';
 
-// ── Textures (canvas-generated; client-only via dynamic ssr:false) ──
+// ── depth volume the camera drifts through ──
+const NEAR = 8;     // recycle stars just before they reach the camera (z=9)
+const DEPTH = 46;   // far plane = NEAR - DEPTH = -38
+const FORWARD = 1.4; // units/sec drift through the field (set to 0 for a still sky)
+
+// ── canvas-generated textures (client-only via dynamic ssr:false) ──
 function softDot(): THREE.Texture {
   const s = 64;
   const c = document.createElement('canvas');
@@ -47,65 +52,65 @@ function starFlare(): THREE.Texture {
     ctx.closePath();
     ctx.fill();
   };
-  for (let i = 0; i < 4; i++) {
-    ctx.rotate(Math.PI / 2);
-    spike(s / 2, 1.4);
-  }
+  for (let i = 0; i < 4; i++) { ctx.rotate(Math.PI / 2); spike(s / 2, 1.4); }
   const t = new THREE.CanvasTexture(c);
   t.colorSpace = THREE.SRGBColorSpace;
   return t;
 }
 
-// approx gaussian
+function softCloud(hex: string): THREE.Texture {
+  const s = 128;
+  const c = document.createElement('canvas');
+  c.width = c.height = s;
+  const ctx = c.getContext('2d')!;
+  const g = ctx.createRadialGradient(s / 2, s / 2, 0, s / 2, s / 2, s / 2);
+  const col = new THREE.Color(hex);
+  const r = Math.round(col.r * 255), gg = Math.round(col.g * 255), b = Math.round(col.b * 255);
+  g.addColorStop(0, `rgba(${r},${gg},${b},0.5)`);
+  g.addColorStop(0.5, `rgba(${r},${gg},${b},0.12)`);
+  g.addColorStop(1, `rgba(${r},${gg},${b},0)`);
+  ctx.fillStyle = g;
+  ctx.fillRect(0, 0, s, s);
+  const t = new THREE.CanvasTexture(c);
+  t.colorSpace = THREE.SRGBColorSpace;
+  return t;
+}
+
 const gauss = () => (Math.random() + Math.random() + Math.random() - 1.5) / 1.5;
 
-// Milky Way band direction (diagonal, like the reference photo)
+// Milky Way band axis (diagonal, like the reference)
 const BAND = THREE.MathUtils.degToRad(118);
 const DIR: [number, number] = [Math.cos(BAND), Math.sin(BAND)];
 const PERP: [number, number] = [-DIR[1], DIR[0]];
 
 const COOL = ['#ffffff', '#dfe6ff', '#c4d2ff', '#eaf0ff'];
 const WARM = ['#ffe9c6', '#ffd9a0', '#fff2da'];
-
-function pickColor(warmChance: number): THREE.Color {
+const pickColor = (warmChance: number) => {
   const set = Math.random() < warmChance ? WARM : COOL;
   return new THREE.Color(set[Math.floor(Math.random() * set.length)]);
-}
+};
 
-interface FieldOpts {
-  count: number;
-  spreadX: number;
-  spreadY: number;
-  band: boolean;
-  sigma: number;
-  warmChance: number;
-  bluen: number;
-}
-
-function buildField({ count, spreadX, spreadY, band, sigma, warmChance, bluen }: FieldOpts) {
+function buildVolume(count: number, bandFrac: number, sigma: number, warmChance: number, bluen: number, rangeXY: number) {
   const positions = new Float32Array(count * 3);
   const colors = new Float32Array(count * 3);
   for (let i = 0; i < count; i++) {
     const i3 = i * 3;
     let x: number, y: number;
-    if (band) {
-      const u = (Math.random() * 2 - 1) * spreadX;
+    if (Math.random() < bandFrac) {
+      const u = (Math.random() * 2 - 1) * rangeXY;
       const v = gauss() * sigma;
       x = DIR[0] * u + PERP[0] * v;
       y = DIR[1] * u + PERP[1] * v;
     } else {
-      x = (Math.random() * 2 - 1) * spreadX;
-      y = (Math.random() * 2 - 1) * spreadY;
+      x = (Math.random() * 2 - 1) * rangeXY;
+      y = (Math.random() * 2 - 1) * rangeXY * 0.8;
     }
     positions[i3] = x;
     positions[i3 + 1] = y;
-    positions[i3 + 2] = -6 + (Math.random() - 0.5) * 4;
-
+    positions[i3 + 2] = NEAR - Math.random() * DEPTH;
     const col = pickColor(warmChance);
     if (bluen > 0) col.lerp(new THREE.Color('#7d8cff'), bluen * Math.random());
-    colors[i3] = col.r;
-    colors[i3 + 1] = col.g;
-    colors[i3 + 2] = col.b;
+    colors[i3] = col.r; colors[i3 + 1] = col.g; colors[i3 + 2] = col.b;
   }
   const geo = new THREE.BufferGeometry();
   geo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
@@ -113,94 +118,88 @@ function buildField({ count, spreadX, spreadY, band, sigma, warmChance, bluen }:
   return geo;
 }
 
-function Starfield() {
-  const dot = useMemo(softDot, []);
-  const flare = useMemo(starFlare, []);
+function recycle(points: THREE.Points, speed: number, delta: number) {
+  const attr = points.geometry.attributes.position as THREE.BufferAttribute;
+  const a = attr.array as Float32Array;
+  for (let i = 2; i < a.length; i += 3) {
+    a[i] += speed * delta;
+    if (a[i] > NEAR) a[i] -= DEPTH;
+  }
+  attr.needsUpdate = true;
+}
 
-  const fine = useMemo(() => buildField({ count: 2600, spreadX: 30, spreadY: 22, band: false, sigma: 0, warmChance: 0.12, bluen: 0 }), []);
-  const mid = useMemo(() => buildField({ count: 1400, spreadX: 30, spreadY: 22, band: false, sigma: 0, warmChance: 0.18, bluen: 0 }), []);
-  const bandStars = useMemo(() => buildField({ count: 2200, spreadX: 28, spreadY: 22, band: true, sigma: 3.4, warmChance: 0.06, bluen: 0.35 }), []);
-
-  const bright = useMemo(() => {
-    const n = 34;
-    const positions = new Float32Array(n * 3);
-    const colors = new Float32Array(n * 3);
-    for (let i = 0; i < n; i++) {
-      const i3 = i * 3;
-      positions[i3] = (Math.random() * 2 - 1) * 28;
-      positions[i3 + 1] = (Math.random() * 2 - 1) * 20;
-      positions[i3 + 2] = -5 + (Math.random() - 0.5) * 3;
-      const col = pickColor(0.5);
-      colors[i3] = col.r; colors[i3 + 1] = col.g; colors[i3 + 2] = col.b;
-    }
-    const geo = new THREE.BufferGeometry();
-    geo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
-    geo.setAttribute('color', new THREE.BufferAttribute(colors, 3));
-    return geo;
-  }, []);
-
-  const haze = useMemo(() => {
-    const n = 5;
-    const positions = new Float32Array(n * 3);
-    for (let i = 0; i < n; i++) {
-      const i3 = i * 3;
-      const u = (Math.random() * 2 - 1) * 18;
-      const v = gauss() * 2;
-      positions[i3] = DIR[0] * u + PERP[0] * v;
-      positions[i3 + 1] = DIR[1] * u + PERP[1] * v;
-      positions[i3 + 2] = -8;
-    }
-    const geo = new THREE.BufferGeometry();
-    geo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
-    return geo;
-  }, []);
-
-  const group = useRef<THREE.Group>(null!);
-  useFrame((_, delta) => {
-    if (group.current) group.current.rotation.z += delta * 0.004;
-  });
-
+function StarLayer({ geo, tex, size, opacity, speed }: { geo: THREE.BufferGeometry; tex: THREE.Texture; size: number; opacity: number; speed: number; }) {
+  const ref = useRef<THREE.Points>(null!);
+  useFrame((_, delta) => { if (ref.current) recycle(ref.current, speed, delta); });
   return (
-    <group ref={group}>
-      <points geometry={haze}>
-        <pointsMaterial map={dot} color="#5566bb" size={9} sizeAttenuation transparent opacity={0.05} depthWrite={false} blending={THREE.AdditiveBlending} />
-      </points>
-      <points geometry={bandStars}>
-        <pointsMaterial map={dot} size={0.05} sizeAttenuation vertexColors transparent opacity={0.85} depthWrite={false} blending={THREE.AdditiveBlending} />
-      </points>
-      <points geometry={fine}>
-        <pointsMaterial map={dot} size={0.03} sizeAttenuation vertexColors transparent opacity={0.9} depthWrite={false} blending={THREE.AdditiveBlending} />
-      </points>
-      <points geometry={mid}>
-        <pointsMaterial map={dot} size={0.06} sizeAttenuation vertexColors transparent opacity={0.95} depthWrite={false} blending={THREE.AdditiveBlending} />
-      </points>
-      <points geometry={bright}>
-        <pointsMaterial map={flare} size={0.9} sizeAttenuation vertexColors transparent opacity={1} depthWrite={false} blending={THREE.AdditiveBlending} />
-      </points>
-    </group>
+    <points ref={ref} geometry={geo}>
+      <pointsMaterial map={tex} size={size} sizeAttenuation vertexColors transparent opacity={opacity} depthWrite={false} blending={THREE.AdditiveBlending} />
+    </points>
   );
 }
 
-function CameraDrift() {
+function Nebula({ tex }: { tex: THREE.Texture }) {
+  const ref = useRef<THREE.Points>(null!);
+  const geo = useMemo(() => {
+    const n = 6;
+    const positions = new Float32Array(n * 3);
+    for (let i = 0; i < n; i++) {
+      const i3 = i * 3;
+      const u = (Math.random() * 2 - 1) * 22;
+      const v = gauss() * 4;
+      positions[i3] = DIR[0] * u + PERP[0] * v;
+      positions[i3 + 1] = DIR[1] * u + PERP[1] * v;
+      positions[i3 + 2] = NEAR - Math.random() * DEPTH;
+    }
+    const g = new THREE.BufferGeometry();
+    g.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+    return g;
+  }, []);
+  useFrame((_, delta) => { if (ref.current) recycle(ref.current, FORWARD * 0.6, delta); });
+  return (
+    <points ref={ref} geometry={geo}>
+      <pointsMaterial map={tex} color="#4a3f8f" size={16} sizeAttenuation transparent opacity={0.07} depthWrite={false} blending={THREE.AdditiveBlending} />
+    </points>
+  );
+}
+
+function Scene() {
+  const dot = useMemo(softDot, []);
+  const flare = useMemo(starFlare, []);
+  const cloud = useMemo(() => softCloud('#5566bb'), []);
+
+  const dust = useMemo(() => buildVolume(3200, 0.7, 3.2, 0.05, 0.4, 34), []);   // Milky Way dust lane
+  const field = useMemo(() => buildVolume(3600, 0.15, 6, 0.16, 0, 36), []);     // general depth field
+  const bright = useMemo(() => buildVolume(40, 0.3, 5, 0.5, 0, 32), []);        // flared accents
+
+  // parallax: gentle camera sway so depth reads as you drift
   const { camera } = useThree();
   useFrame(({ clock }) => {
-    camera.position.x = Math.sin(clock.elapsedTime * 0.05) * 0.25;
-    camera.position.y = Math.cos(clock.elapsedTime * 0.04) * 0.18;
+    camera.position.x = Math.sin(clock.elapsedTime * 0.06) * 0.6;
+    camera.position.y = Math.cos(clock.elapsedTime * 0.05) * 0.4;
+    camera.lookAt(0, 0, -10);
   });
-  return null;
+
+  return (
+    <>
+      <Nebula tex={cloud} />
+      <StarLayer geo={dust} tex={dot} size={0.07} opacity={0.85} speed={FORWARD} />
+      <StarLayer geo={field} tex={dot} size={0.05} opacity={0.9} speed={FORWARD} />
+      <StarLayer geo={bright} tex={flare} size={1.1} opacity={1} speed={FORWARD} />
+    </>
+  );
 }
 
 export default function HeroCanvas() {
   return (
     <Canvas
       style={{ position: 'absolute', inset: 0 }}
-      camera={{ position: [0, 0, 9], fov: 58 }}
+      camera={{ position: [0, 0, 9], fov: 60 }}
       dpr={[1, 1.5]}
       gl={{ antialias: true, alpha: false }}
     >
       <color attach="background" args={['#070a14']} />
-      <Starfield />
-      <CameraDrift />
+      <Scene />
     </Canvas>
   );
 }
