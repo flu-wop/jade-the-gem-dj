@@ -70,6 +70,79 @@ function GemField() {
   );
 }
 
+// ── Spiral galaxy: bright core behind the logo, arms swirling around it ──
+// Tweakable knobs are the consts at the top of the useMemo.
+function Galaxy() {
+  const ref = useRef<THREE.Points>(null!);
+
+  const { geometry, material } = useMemo(() => {
+    const COUNT = 12000;
+    const RADIUS = 9;          // how far the arms reach
+    const BRANCHES = 5;        // number of spiral arms
+    const SPIN = 1.1;          // how tightly the arms wind
+    const RANDOMNESS = 0.4;    // scatter off the arms
+    const RAND_POWER = 3;      // higher = tighter to the arm centerline
+    const CORE = new THREE.Color('#f3d9a0');   // warm gold core (behind logo)
+    const EDGE = new THREE.Color('#4a3f8f');   // plum arms
+
+    const positions = new Float32Array(COUNT * 3);
+    const colors = new Float32Array(COUNT * 3);
+
+    for (let i = 0; i < COUNT; i++) {
+      const i3 = i * 3;
+      const r = Math.pow(Math.random(), 1.5) * RADIUS; // cluster toward center
+      const branchAngle = ((i % BRANCHES) / BRANCHES) * Math.PI * 2;
+      const spinAngle = r * SPIN;
+
+      const rand = () =>
+        Math.pow(Math.random(), RAND_POWER) *
+        (Math.random() < 0.5 ? 1 : -1) *
+        RANDOMNESS *
+        r;
+
+      positions[i3]     = Math.cos(branchAngle + spinAngle) * r + rand();
+      positions[i3 + 1] = Math.sin(branchAngle + spinAngle) * r + rand();
+      positions[i3 + 2] = rand() * 0.6; // thin disk depth (mostly face-on)
+
+      const c = CORE.clone().lerp(EDGE, r / RADIUS);
+      colors[i3] = c.r;
+      colors[i3 + 1] = c.g;
+      colors[i3 + 2] = c.b;
+    }
+
+    const geometry = new THREE.BufferGeometry();
+    geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+    geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+
+    const material = new THREE.PointsMaterial({
+      size: 0.045,
+      sizeAttenuation: true,
+      depthWrite: false,
+      blending: THREE.AdditiveBlending,
+      vertexColors: true,
+      transparent: true,
+    });
+
+    return { geometry, material };
+  }, []);
+
+  // Slow swirl around the logo
+  useFrame((_, delta) => {
+    if (ref.current) ref.current.rotation.z += delta * 0.04;
+  });
+
+  // Slight tilt for a touch of 3D depth; sits behind the gems at z = -2
+  return (
+    <points
+      ref={ref}
+      geometry={geometry}
+      material={material}
+      position={[0, 0, -2]}
+      rotation={[0.35, 0, 0]}
+    />
+  );
+}
+
 function CameraDrift() {
   const { camera } = useThree();
   useFrame(({ clock }) => {
@@ -92,7 +165,8 @@ export default function HeroCanvas() {
       <pointLight position={[8, 8, 6]}   color="#4a3f8f" intensity={3}   />
       <pointLight position={[-8, -6, 4]} color="#2a7a6f" intensity={2.5} />
       <pointLight position={[0, 2, 8]}   color="#d4af37" intensity={1}   />
-      <Stars radius={120} depth={60} count={2500} factor={3.5} saturation={0.6} fade speed={0.8} />
+      <Galaxy />
+      <Stars radius={120} depth={60} count={1500} factor={3.5} saturation={0.6} fade speed={0.8} />
       <GemField />
       <CameraDrift />
     </Canvas>
