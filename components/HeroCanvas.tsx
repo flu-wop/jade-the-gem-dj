@@ -196,9 +196,8 @@ export default function HeroCanvas() {
       style={{ position: 'absolute', inset: 0 }}
       camera={{ position: [0, 0, 9], fov: 60 }}
       dpr={[1, 1.5]}
-      gl={{ antialias: true, alpha: false }}
+      gl={{ antialias: true, alpha: true }}
     >
-      <color attach="background" args={['#070a14']} />
       <Scene />
     </Canvas>
   );

@@ -6,20 +6,55 @@ import { Music, Headphones } from 'lucide-react';
 
 const HeroCanvas = dynamic(() => import('./HeroCanvas'), { ssr: false });
 
+// ── Hero background media ──────────────────────────────────────
+// Drop in real media here. To use a video, put the file at
+// public/videos/hero.mp4 and set HERO_VIDEO to '/videos/hero.mp4'.
+// To use a photo, just replace public/images/hero-bg.jpg.
+// The galaxy starfield is layered on top of whichever you use.
+const HERO_VIDEO = ''; // e.g. '/videos/hero.mp4' — leave '' to use the image
+const HERO_IMAGE = '/images/hero-bg.jpg';
+
+// How dark the scrim over the media is (0–100). Higher = media darker,
+// stars pop more; lower = media more visible.
+const SCRIM = 'bg-background/60';
+
 export default function HeroSection() {
   return (
     <section className="relative min-h-screen flex flex-col items-center justify-center overflow-hidden bg-background px-6 pt-24 pb-20">
 
-      {/* ── R3F canvas — gem particle field ── */}
-      <HeroCanvas />
+      {/* ── Real media: video or photo of Jade ── */}
+      <div className="absolute inset-0 z-0">
+        {HERO_VIDEO ? (
+          <video
+            autoPlay
+            muted
+            loop
+            playsInline
+            poster={HERO_IMAGE}
+            className="w-full h-full object-cover"
+          >
+            <source src={HERO_VIDEO} type="video/mp4" />
+          </video>
+        ) : (
+          <Image src={HERO_IMAGE} alt="" fill priority className="object-cover" />
+        )}
+      </div>
+
+      {/* Dark scrim so the additive starfield reads over the media */}
+      <div className={`absolute inset-0 z-[1] ${SCRIM} pointer-events-none`} />
+
+      {/* ── Galaxy starfield overlay (transparent canvas) ── */}
+      <div className="absolute inset-0 z-[2]">
+        <HeroCanvas />
+      </div>
 
       {/* Text-contrast gradient overlays */}
-      <div className="absolute inset-0 bg-gradient-to-b from-background/55 via-transparent to-background z-[1] pointer-events-none" />
-      <div className="absolute inset-0 bg-gradient-to-r from-background/40 via-transparent to-background/40 z-[1] pointer-events-none" />
+      <div className="absolute inset-0 bg-gradient-to-b from-background/55 via-transparent to-background z-[3] pointer-events-none" />
+      <div className="absolute inset-0 bg-gradient-to-r from-background/40 via-transparent to-background/40 z-[3] pointer-events-none" />
 
       {/* Noise grain */}
       <div
-        className="absolute inset-0 opacity-[0.035] pointer-events-none z-[2]"
+        className="absolute inset-0 opacity-[0.035] pointer-events-none z-[4]"
         style={{
           backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")`,
         }}
