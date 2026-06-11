@@ -1,8 +1,8 @@
 import Link from "next/link";
-import { Instagram, Music, Twitter, Mail } from "lucide-react";
+import { Instagram, Music, Twitter, Mail, type LucideIcon } from "lucide-react";
 import { socialLinks } from "@/lib/data";
 
-const iconMap: Record<string, React.ElementType> = {
+const iconMap: Record<string, LucideIcon> = {
   Instagram,
   SoundCloud: Music,
   X: Twitter,

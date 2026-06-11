@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Instagram, Music, Twitter, Mail } from "lucide-react";
+import { Instagram, Music, Twitter, Mail, type LucideIcon } from "lucide-react";
 import { socialLinks } from "@/lib/data";
 
 export const metadata: Metadata = {
@@ -8,7 +8,7 @@ export const metadata: Metadata = {
     "Meet DJ Jade the Gem — New Orleans born event curator bringing fire mixes and electrifying live energy to clubs and events worldwide.",
 };
 
-const iconMap: Record<string, React.ElementType> = {
+const iconMap: Record<string, LucideIcon> = {
   Instagram,
   SoundCloud: Music,
   X: Twitter,
