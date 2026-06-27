@@ -1,6 +1,6 @@
 "use client";
 import { useState } from "react";
-import { CheckCircle, Tag, Clock, DollarSign, Shield, Music2, Star, Users, Building } from "lucide-react";
+import { CheckCircle, Tag, Clock, DollarSign, Shield, Music2, Star, Users, Building, ListMusic } from "lucide-react";
 
 const RATE = 150;
 const HOUR_OPTIONS = [2, 3, 4, 5, 6];
@@ -86,6 +86,91 @@ export default function BookingsPage() {
               <p className="text-mist/40 text-xs leading-relaxed font-body">{desc}</p>
             </div>
           ))}
+        </div>
+
+        {/* ── Playlist Curation ── */}
+        <div className="card p-8 mb-20">
+          <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-6 mb-8">
+            <div>
+              <div className="flex items-center gap-2 mb-2">
+                <ListMusic size={16} className="text-jade-light" />
+                <p className="section-label" style={{ marginBottom: 0 }}>Digital Service</p>
+              </div>
+              <h2 className="font-display text-3xl text-jade-light">
+                Custom Playlist Curation
+              </h2>
+              <p className="text-mist/50 text-sm font-body mt-2 max-w-lg leading-relaxed">
+                Your taste, elevated. Jade hand-builds a fully curated playlist around
+                your vibe — delivered as a Spotify or Apple Music link within 48–72 hours.
+                No filler, no random shuffle. Just the right songs in the right order.
+              </p>
+            </div>
+            <a
+              href="mailto:jadedwheeler8@gmail.com?subject=Playlist%20Curation%20Request"
+              className="btn-primary whitespace-nowrap self-start shrink-0"
+            >
+              Request a Playlist →
+            </a>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            {([
+              {
+                tier: "Vibe Check",
+                songs: "20–25 songs",
+                price: "$35",
+                desc: "Perfect for a mood, a drive, or a low-key gathering. Tell her the vibe and she'll handle the rest.",
+                featured: false,
+              },
+              {
+                tier: "Full Experience",
+                songs: "40–50 songs",
+                price: "$65",
+                desc: "A full journey. Built for parties, pre-games, events, or deep listening sessions that need to hit different.",
+                featured: true,
+              },
+              {
+                tier: "Event Package",
+                songs: "3 playlists",
+                price: "$125",
+                desc: "Three custom playlists — open, peak, and close. Everything you need to run a full event start to finish.",
+                featured: false,
+              },
+            ] as { tier: string; songs: string; price: string; desc: string; featured: boolean }[]).map(
+              ({ tier, songs, price, desc, featured }) => (
+                <div
+                  key={tier}
+                  className={`rounded-xl p-6 border ${
+                    featured
+                      ? "border-jade/50 bg-jade/5"
+                      : "border-white/5 bg-surface-2"
+                  }`}
+                >
+                  <p
+                    className={`font-sub text-xs tracking-widest uppercase mb-1 ${
+                      featured ? "text-jade-light" : "text-mist/40"
+                    }`}
+                  >
+                    {tier}
+                  </p>
+                  <p className="font-display text-4xl text-cream mb-1">{price}</p>
+                  <p className="text-mist/40 text-xs font-body mb-3">{songs}</p>
+                  <p className="text-mist/60 text-sm font-body leading-relaxed">{desc}</p>
+                </div>
+              )
+            )}
+          </div>
+
+          <p className="text-mist/30 text-xs font-body mt-6 text-center">
+            Delivered via Spotify or Apple Music · 48–72 hr turnaround · Email{" "}
+            <a
+              href="mailto:jadedwheeler8@gmail.com"
+              className="text-jade-light hover:underline"
+            >
+              jadedwheeler8@gmail.com
+            </a>{" "}
+            to get started
+          </p>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-5 gap-12">
