@@ -74,7 +74,7 @@ export const tracks: Track[] = [
     id: "t0",
     title: "SUNSET PLAYLIST",
     embedSrc:
-      "https://w.soundcloud.com/player/?url=https%3A//api.soundcloud.com/playlists/soundcloud%253Aplaylists%253A2258281325&color=%2300ff9d&auto_play=false&hide_related=false&show_comments=true&show_user=true&show_reposts=false&show_teaser=true&visual=true",
+      "https://w.soundcloud.com/player/?url=https%3A//soundcloud.com/jadethegem888/sets/interstate-sunset&color=%2300ff9d&auto_play=false&hide_related=false&show_comments=true&show_user=true&show_reposts=false&show_teaser=true&visual=true",
   },
   {
     id: "t1",
