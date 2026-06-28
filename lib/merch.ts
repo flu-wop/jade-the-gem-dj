@@ -6,7 +6,7 @@
 
 // ── Store on/off switch ───────────────────────────────────────
 // Flip to `true` once mockup images are added to public/images/merch/
-export const MERCH_LIVE = false;
+export const MERCH_LIVE = true;
 
 export type Gender = "Unisex" | "Women's";
 export type ShirtStyle =
