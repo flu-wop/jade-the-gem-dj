@@ -194,10 +194,14 @@ export default function PressPage() {
 
         <section className="text-center py-8">
           <h2 className="font-bebas text-4xl text-gold mb-3 tracking-wide">EPK</h2>
-          <p className="text-mist font-montserrat text-sm mb-4">Full press kit PDF</p>
-          <span className="inline-block border border-white/20 text-mist font-montserrat text-sm px-6 py-3 rounded-full">
-            Coming Soon
-          </span>
+          <p className="text-mist font-montserrat text-sm mb-6">Download the full press kit PDF</p>
+          <a
+            href="/jade-the-gem-press-kit.pdf"
+            download
+            className="inline-block bg-jade hover:bg-jade-light text-cream font-bungee text-sm tracking-wide px-8 py-3 rounded-full transition-colors"
+          >
+            Download Press Kit
+          </a>
         </section>
 
       </div>

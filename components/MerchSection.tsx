@@ -23,6 +23,7 @@ function ProductCard({ product }: { product: MerchProduct }) {
   const { addItem } = useCart();
   const [expanded, setExpanded] = useState(false);
   const [activeImg, setActiveImg] = useState(0);
+  const [touchStart, setTouchStart] = useState<number | null>(null);
   const [gender, setGender] = useState<Gender>("Unisex");
   const [style, setStyle] = useState<ShirtStyle | "">("");
   const [size, setSize] = useState<Size | "">("");
@@ -54,7 +55,22 @@ function ProductCard({ product }: { product: MerchProduct }) {
   return (
     <div className="card group flex flex-col">
       {/* Mockup image */}
-      <div className="relative aspect-square overflow-hidden bg-surface-2">
+      <div
+        className="relative aspect-square overflow-hidden bg-surface-2"
+        onTouchStart={(e) => setTouchStart(e.touches[0].clientX)}
+        onTouchEnd={(e) => {
+          if (touchStart === null) return;
+          const diff = touchStart - e.changedTouches[0].clientX;
+          if (Math.abs(diff) > 30) {
+            setActiveImg((prev) =>
+              diff > 0
+                ? (prev + 1) % product.mockups.length
+                : (prev - 1 + product.mockups.length) % product.mockups.length
+            );
+          }
+          setTouchStart(null);
+        }}
+      >
         {product.tag && (
           <span className="absolute top-3 left-3 z-10 bg-gold text-background font-sub text-[10px] tracking-[0.2em] uppercase px-3 py-1">
             {product.tag}

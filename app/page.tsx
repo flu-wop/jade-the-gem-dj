@@ -24,6 +24,11 @@ export default function HomePage() {
       {/* ══════════════ HERO ══════════════ */}
       <HeroSection />
 
+      {/* ══════════════ FEATURED IN ══════════════ */}
+      <Reveal>
+        <VideoSection />
+      </Reveal>
+
       {/* ══════════════ LATEST MIX ══════════════ */}
       <Reveal>
         <section className="py-24 px-6 bg-gradient-to-b from-transparent to-surface/70">
@@ -57,11 +62,6 @@ export default function HomePage() {
       {/* ══════════════ MERCH ══════════════ */}
       <Reveal>
         <MerchSection />
-      </Reveal>
-
-      {/* ══════════════ VIDEO ══════════════ */}
-      <Reveal>
-        <VideoSection />
       </Reveal>
 
       {/* ══════════════ UPCOMING EVENTS ══════════════ */}
