@@ -15,6 +15,7 @@ import {
   type Gender,
   type ShirtStyle,
   type Size,
+  formatSize,
 } from "@/lib/merch";
 import { useCart } from "@/lib/cart";
 
@@ -24,14 +25,21 @@ function ProductCard({ product }: { product: MerchProduct }) {
   const [expanded, setExpanded] = useState(false);
   const [activeImg, setActiveImg] = useState(0);
   const [touchStart, setTouchStart] = useState<number | null>(null);
-  const [gender, setGender] = useState<Gender>("Unisex");
+
+  const availableGenders = [...new Set(product.styles.flatMap((s) => s.forGenders))] as Gender[];
+  const showGender = availableGenders.length > 1;
+
+  const [gender, setGender] = useState<Gender>(availableGenders[0]);
   const [style, setStyle] = useState<ShirtStyle | "">("");
   const [size, setSize] = useState<Size | "">("");
   const [qty, setQty] = useState(1);
 
   const availableStyles = product.styles.filter((s) => s.forGenders.includes(gender));
   const selectedStyle = availableStyles.find((s) => s.label === style);
-  const finalPrice = product.basePrice + (selectedStyle?.priceModifier ?? 0);
+  const sizeModifier = size && selectedStyle?.sizePriceModifiers
+    ? (selectedStyle.sizePriceModifiers[size] ?? 0)
+    : 0;
+  const finalPrice = product.basePrice + (selectedStyle?.priceModifier ?? 0) + sizeModifier;
   const canAddToCart = !!(gender && style && size);
 
   function handleAdd() {
@@ -113,19 +121,21 @@ function ProductCard({ product }: { product: MerchProduct }) {
           </button>
         ) : (
           <div className="space-y-3">
-            {/* Gender */}
-            <div>
-              <label className="block font-sub text-[10px] tracking-[0.2em] uppercase text-mist/40 mb-1">Gender</label>
-              <select
-                value={gender}
-                onChange={(e) => { setGender(e.target.value as Gender); setStyle(""); setSize(""); }}
-                className="w-full bg-surface-2 border border-plum/30 text-cream font-body text-sm px-3 py-2 focus:outline-none focus:border-plum transition-colors"
-              >
-                {(["Unisex", "Women's"] as Gender[]).map((g) => (
-                  <option key={g} value={g}>{g}</option>
-                ))}
-              </select>
-            </div>
+            {/* Gender — only shown when product has multiple genders */}
+            {showGender && (
+              <div>
+                <label className="block font-sub text-[10px] tracking-[0.2em] uppercase text-mist/40 mb-1">Gender</label>
+                <select
+                  value={gender}
+                  onChange={(e) => { setGender(e.target.value as Gender); setStyle(""); setSize(""); }}
+                  className="w-full bg-surface-2 border border-plum/30 text-cream font-body text-sm px-3 py-2 focus:outline-none focus:border-plum transition-colors"
+                >
+                  {availableGenders.map((g) => (
+                    <option key={g} value={g}>{g}</option>
+                  ))}
+                </select>
+              </div>
+            )}
 
             {/* Style */}
             <div>
@@ -157,7 +167,7 @@ function ProductCard({ product }: { product: MerchProduct }) {
                         size === s ? "bg-plum border-plum text-cream" : "border-plum/30 text-mist/50 hover:border-plum/60 hover:text-mist"
                       }`}
                     >
-                      {s}
+                      {formatSize(s)}
                     </button>
                   ))}
                 </div>

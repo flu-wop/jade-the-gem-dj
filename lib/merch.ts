@@ -1,11 +1,4 @@
 // lib/merch.ts
-// ─────────────────────────────────────────────────────────────
-// Single source of truth for the merch store.
-// MerchSection (UI) and /api/merch/checkout (server) both read this.
-// ─────────────────────────────────────────────────────────────
-
-// ── Store on/off switch ───────────────────────────────────────
-// Flip to `true` once mockup images are added to public/images/merch/
 export const MERCH_LIVE = true;
 
 export type Gender = "Unisex" | "Women's";
@@ -17,20 +10,23 @@ export type ShirtStyle =
   | "Tote Bag"
   | "Trucker Hat"
   | "Art Print";
-export type Size = "S" | "M" | "L" | "XL" | "2XL" | "3XL" | "OS";
+export type Size =
+  | "S" | "M" | "L" | "XL" | "2XL" | "3XL" | "4XL" | "5XL" | "OS"
+  | "20x30" | "22x34" | "24x32" | "24x36" | "32x48";
 
 export interface StyleOption {
   label: ShirtStyle;
   forGenders: Gender[];
   sizes: Size[];
   priceModifier: number;
+  sizePriceModifiers?: Record<string, number>;
 }
 
 export interface MerchProduct {
   id: string;
   name: string;
   description: string;
-  basePrice: number; // USD retail (what the customer pays)
+  basePrice: number;
   mockups: [string, string, string];
   styles: StyleOption[];
   tag?: string;
@@ -53,8 +49,9 @@ export const PRODUCTS: MerchProduct[] = [
       {
         label: "Oversized Tee",
         forGenders: ["Unisex"],
-        sizes: ["S", "M", "L", "XL", "2XL", "3XL"],
+        sizes: ["S", "M", "L", "XL", "2XL"],
         priceModifier: 0,
+        sizePriceModifiers: { "L": 1, "XL": 1, "2XL": 7 },
       },
     ],
     printifyProductId: "29595105",
@@ -74,8 +71,9 @@ export const PRODUCTS: MerchProduct[] = [
       {
         label: "Heavyweight Tee",
         forGenders: ["Unisex", "Women's"],
-        sizes: ["S", "M", "L", "XL", "2XL", "3XL"],
+        sizes: ["S", "M", "L", "XL", "2XL", "3XL", "4XL", "5XL"],
         priceModifier: 0,
+        sizePriceModifiers: { "2XL": 2, "3XL": 4, "4XL": 6, "5XL": 8 },
       },
     ],
     printifyProductId: "28889240",
@@ -104,7 +102,7 @@ export const PRODUCTS: MerchProduct[] = [
     id: "hidden-poster",
     name: "Hidden Poster",
     description: "Limited edition art print. Frame it.",
-    basePrice: 18,
+    basePrice: 45,
     mockups: [
       "/images/merch/poster-1.jpg",
       "/images/merch/poster-2.jpg",
@@ -114,30 +112,22 @@ export const PRODUCTS: MerchProduct[] = [
       {
         label: "Art Print",
         forGenders: ["Unisex"],
-        sizes: ["OS"],
+        sizes: ["20x30", "22x34", "24x32", "24x36", "32x48"],
         priceModifier: 0,
+        sizePriceModifiers: {
+          "20x30": 3,   // $48
+          "22x34": 4,   // $49
+          "24x32": 0,   // $45
+          "24x36": 5,   // $50
+          "32x48": 35,  // $80
+        },
       },
     ],
     printifyProductId: "28886775",
   },
 ];
 
-// ── Printify variant mapping ─────────────────────────────────
-// Maps (style, size, gender) → Printify variant_id for auto-fulfillment.
-// Without these, orders still go through but require manual fulfillment.
-//
-// To fill these in:
-//   1. Hit /api/printify/products?key=YOUR_ADMIN_PASSWORD in your browser
-//   2. Each product returns variants[] with id + title
-//   3. Paste the variant IDs below
-//
-// Key format: `${style}|${size}|${gender}`
-export const PRINTIFY_VARIANTS: Record<string, Record<string, number>> = {
-  // "hidden-gem-airbrush": { "Oversized Tee|S|Unisex": 00000, ... },
-  // "hidden-gem-tee":      { "Heavyweight Tee|S|Unisex": 00000, ... },
-  // "hidden-vintage-trucker": { "Trucker Hat|OS|Unisex": 00000 },
-  // "hidden-poster":       { "Art Print|OS|Unisex": 00000 },
-};
+export const PRINTIFY_VARIANTS: Record<string, Record<string, number>> = {};
 
 export function variantKey(style: string, size: string, gender: string): string {
   return `${style}|${size}|${gender}`;
@@ -158,9 +148,14 @@ export function lineId(line: CartLine): string {
   return `${line.productId}|${line.style}|${line.size}|${line.gender}`;
 }
 
-export function priceFor(product: MerchProduct, style: string): number {
+export function priceFor(product: MerchProduct, style: string, size?: string): number {
   const styleOpt = product.styles.find((s) => s.label === style);
-  return product.basePrice + (styleOpt?.priceModifier ?? 0);
+  const baseAdjust = styleOpt?.priceModifier ?? 0;
+  const sizeAdjust =
+    size && styleOpt?.sizePriceModifiers
+      ? (styleOpt.sizePriceModifiers[size] ?? 0)
+      : 0;
+  return product.basePrice + baseAdjust + sizeAdjust;
 }
 
 export function getPrintifyVariant(
@@ -176,4 +171,16 @@ export function getPrintifyVariant(
 
 export function findProduct(id: string): MerchProduct | undefined {
   return PRODUCTS.find((p) => p.id === id);
+}
+
+/** Human-readable label for poster sizes */
+export function formatSize(size: string): string {
+  const map: Record<string, string> = {
+    "20x30": '20"×30"',
+    "22x34": '22"×34"',
+    "24x32": '24"×32"',
+    "24x36": '24"×36"',
+    "32x48": '32"×48"',
+  };
+  return map[size] ?? size;
 }

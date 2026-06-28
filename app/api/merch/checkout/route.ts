@@ -28,7 +28,7 @@ export async function POST(req: NextRequest) {
         size: l.size,
         gender: l.gender,
         qty,
-        price: priceFor(product, l.style), // authoritative price
+        price: priceFor(product, l.style, l.size), // authoritative price — includes size modifier
         image: product.mockups[0],
       });
     }
