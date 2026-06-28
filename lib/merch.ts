@@ -143,6 +143,26 @@ export function variantKey(style: string, size: string, gender: string): string 
   return `${style}|${size}|${gender}`;
 }
 
+export interface CartLine {
+  productId: string;
+  name: string;
+  style: ShirtStyle;
+  size: Size;
+  gender: Gender;
+  qty: number;
+  price: number;
+  image: string;
+}
+
+export function lineId(line: CartLine): string {
+  return `${line.productId}|${line.style}|${line.size}|${line.gender}`;
+}
+
+export function priceFor(product: MerchProduct, style: string): number {
+  const styleOpt = product.styles.find((s) => s.label === style);
+  return product.basePrice + (styleOpt?.priceModifier ?? 0);
+}
+
 export function getPrintifyVariant(
   productId: string,
   style: string,
