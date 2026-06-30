@@ -23,6 +23,28 @@ export default function BookingsPage() {
   const [agreed, setAgreed]   = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError]     = useState("");
+  const [playlistLoading, setPlaylistLoading] = useState<string | null>(null);
+
+  async function buyPlaylist(tierId: string) {
+    setPlaylistLoading(tierId);
+    try {
+      const res = await fetch("/api/playlist/checkout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ tierId }),
+      });
+      const data = await res.json();
+      if (data.url) {
+        window.location.href = data.url;
+      } else {
+        setPlaylistLoading(null);
+        alert("Something went wrong starting checkout — try again.");
+      }
+    } catch {
+      setPlaylistLoading(null);
+      alert("Something went wrong starting checkout — try again.");
+    }
+  }
 
   const subtotal = form.hours * RATE;
   const discount = discountApplied ? form.hours * 50 : 0;
@@ -105,17 +127,12 @@ export default function BookingsPage() {
                 No filler, no random shuffle. Just the right songs in the right order.
               </p>
             </div>
-            <a
-              href="mailto:jadedwheeler8@gmail.com?subject=Playlist%20Curation%20Request"
-              className="btn-primary whitespace-nowrap self-start shrink-0"
-            >
-              Request a Playlist →
-            </a>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             {([
               {
+                id: "vibe-check",
                 tier: "Vibe Check",
                 songs: "20–25 songs",
                 price: "$35",
@@ -123,6 +140,7 @@ export default function BookingsPage() {
                 featured: false,
               },
               {
+                id: "full-experience",
                 tier: "Full Experience",
                 songs: "40–50 songs",
                 price: "$65",
@@ -130,17 +148,18 @@ export default function BookingsPage() {
                 featured: true,
               },
               {
+                id: "event-package",
                 tier: "Event Package",
                 songs: "3 playlists",
                 price: "$125",
                 desc: "Three custom playlists — open, peak, and close. Everything you need to run a full event start to finish.",
                 featured: false,
               },
-            ] as { tier: string; songs: string; price: string; desc: string; featured: boolean }[]).map(
-              ({ tier, songs, price, desc, featured }) => (
+            ] as { id: string; tier: string; songs: string; price: string; desc: string; featured: boolean }[]).map(
+              ({ id, tier, songs, price, desc, featured }) => (
                 <div
                   key={tier}
-                  className={`rounded-xl p-6 border ${
+                  className={`rounded-xl p-6 border flex flex-col ${
                     featured
                       ? "border-jade/50 bg-jade/5"
                       : "border-white/5 bg-surface-2"
@@ -155,21 +174,30 @@ export default function BookingsPage() {
                   </p>
                   <p className="font-display text-4xl text-cream mb-1">{price}</p>
                   <p className="text-mist/40 text-xs font-body mb-3">{songs}</p>
-                  <p className="text-mist/60 text-sm font-body leading-relaxed">{desc}</p>
+                  <p className="text-mist/60 text-sm font-body leading-relaxed mb-5 flex-1">{desc}</p>
+                  <button
+                    onClick={() => buyPlaylist(id)}
+                    disabled={playlistLoading !== null}
+                    className={`w-full text-center font-sub text-sm tracking-wider uppercase py-2.5 transition-colors disabled:opacity-50 ${
+                      featured ? "btn-primary" : "btn-secondary"
+                    }`}
+                  >
+                    {playlistLoading === id ? "Redirecting…" : "Buy Now"}
+                  </button>
                 </div>
               )
             )}
           </div>
 
           <p className="text-mist/30 text-xs font-body mt-6 text-center">
-            Delivered via Spotify or Apple Music · 48–72 hr turnaround · Email{" "}
+            Delivered via Spotify or Apple Music · 48–72 hr turnaround · Have a code? Enter it
+            at checkout · Questions?{" "}
             <a
               href="mailto:jadedwheeler8@gmail.com"
               className="text-jade-light hover:underline"
             >
               jadedwheeler8@gmail.com
-            </a>{" "}
-            to get started
+            </a>
           </p>
         </div>
 

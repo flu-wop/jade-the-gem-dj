@@ -14,6 +14,16 @@ export const stripe = new Proxy({} as Stripe, {
 export const RATE = 150;
 export const MIN_HOURS = 2;
 
+export const PLAYLIST_TIERS = [
+  { id: "vibe-check",      name: "Vibe Check",      price: 35,  songs: "20–25 songs" },
+  { id: "full-experience", name: "Full Experience", price: 65,  songs: "40–50 songs" },
+  { id: "event-package",   name: "Event Package",   price: 125, songs: "3 playlists (open, peak, close)" },
+] as const;
+
+export function findPlaylistTier(id: string) {
+  return PLAYLIST_TIERS.find((t) => t.id === id);
+}
+
 export function calculateBookingTotal(hours: number, code?: string) {
   const subtotal = hours * RATE;
   const discountApplied = code?.toUpperCase() === "HIDDEN50";

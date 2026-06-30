@@ -109,6 +109,48 @@ export async function sendMerchEmails({
   });
 }
 
+export async function sendPlaylistEmails({
+  name, email, tier, total, discountApplied,
+}: {
+  name: string; email: string; tier: string; total: number; discountApplied: boolean;
+}) {
+  const from = process.env.RESEND_FROM_EMAIL ?? "onboarding@resend.dev";
+  const to_jade = process.env.RESEND_TO_EMAIL ?? "jadedwheeler8@gmail.com";
+
+  // Customer confirmation — carries the intake questionnaire so they can just hit reply
+  await resend.emails.send({
+    from, to: email,
+    subject: `Playlist Order Confirmed — ${tier} 💎`,
+    html: `<div style="font-family:sans-serif;background:#0e0b14;color:#f0ebe8;padding:40px;max-width:580px;margin:0 auto;">
+      <h1 style="color:#3aa898;font-size:26px;margin-bottom:4px;">You're in! 💎</h1>
+      <p style="color:#888;margin-bottom:24px;">Your <strong style="color:#f0ebe8;">${tier}</strong> playlist is booked${discountApplied ? " (discount applied)" : ""} — total paid: <strong style="color:#3aa898;">$${total}</strong>.</p>
+      <p style="color:#c4b8e0;margin-bottom:16px;">To get started, just reply to this email with the following:</p>
+      <ol style="color:#f0ebe8;line-height:1.9;padding-left:20px;">
+        <li>What's the vibe or mood? (chill, hype, romantic, nostalgic, etc.)</li>
+        <li>What's the occasion? (party, drive, study session, event, gift...)</li>
+        <li>Any must-include songs or artists?</li>
+        <li>Anything to avoid — genres, artists, explicit content?</li>
+        <li>Spotify or Apple Music for delivery?</li>
+        ${tier === "Event Package" ? `<li>For your 3 playlists — any specific moments you want for open, peak, and close?</li>` : ""}
+      </ol>
+      <p style="margin-top:28px;color:#666;">Jade will hand-build it and have it to you within 48–72 hours. Questions in the meantime? <a href="mailto:${to_jade}" style="color:#3aa898;">${to_jade}</a></p>
+    </div>`,
+  });
+
+  // Owner notification
+  await resend.emails.send({
+    from, to: to_jade,
+    subject: `New playlist order — ${tier} ($${total})`,
+    html: `<div style="font-family:sans-serif;background:#0e0b14;color:#f0ebe8;padding:40px;">
+      <h1 style="color:#3aa898;">New playlist order 💎</h1>
+      <p><strong>${name}</strong> · ${email}</p>
+      <p><strong>Tier:</strong> ${tier}</p>
+      <p><strong>Paid:</strong> $${total}${discountApplied ? " (PLAY30 applied)" : ""}</p>
+      <p style="margin-top:16px;color:#c4b8e0;">The customer's been emailed the intake questions — wait for their reply with the vibe/occasion/must-include details before starting.</p>
+    </div>`,
+  });
+}
+
 export async function sendNewsletterWelcome(email: string) {
   await resend.emails.send({
     from: process.env.RESEND_FROM_EMAIL ?? "onboarding@resend.dev",

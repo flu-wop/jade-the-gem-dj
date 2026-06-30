@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { stripe } from "@/lib/stripe";
 import { db, initDb } from "@/lib/db";
-import { sendBookingConfirmation, sendMerchEmails } from "@/lib/resend";
+import { sendBookingConfirmation, sendMerchEmails, sendPlaylistEmails } from "@/lib/resend";
 import {
   printifyConfigured,
   createOrder,
@@ -31,6 +31,8 @@ export async function POST(req: NextRequest) {
 
     if (meta.kind === "merch") {
       await handleMerch(session.id);
+    } else if (meta.kind === "playlist") {
+      await handlePlaylist(session.id);
     } else {
       await handleBooking(session, meta);
     }
@@ -158,5 +160,38 @@ async function handleMerch(sessionId: string) {
     });
   } catch (e) {
     console.error("Merch email error:", e);
+  }
+}
+
+// ── Playlist: one-click digital service purchase ──────────────
+async function handlePlaylist(sessionId: string) {
+  await initDb();
+
+  const row = (await db.execute({
+    sql: `SELECT * FROM playlist_orders WHERE stripe_session_id=?`,
+    args: [sessionId],
+  })).rows[0] as Record<string, unknown> | undefined;
+  if (!row) {
+    console.error("playlist_orders row not found for", sessionId);
+    return;
+  }
+
+  const full = await stripe.checkout.sessions.retrieve(sessionId);
+  const cust = full.customer_details;
+  const name = cust?.name || "Customer";
+  const email = cust?.email || "";
+  const tier = String(row.tier || "");
+  const total = (full.amount_total ?? Number(row.amount_cents)) / 100;
+  const discountApplied = (full.amount_total ?? 0) < Number(row.amount_cents);
+
+  await db.execute({
+    sql: `UPDATE playlist_orders SET status='paid', name=?, email=? WHERE stripe_session_id=?`,
+    args: [name, email, sessionId],
+  });
+
+  try {
+    await sendPlaylistEmails({ name, email, tier, total, discountApplied });
+  } catch (e) {
+    console.error("Playlist email error:", e);
   }
 }

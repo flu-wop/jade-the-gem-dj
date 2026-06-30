@@ -53,4 +53,16 @@ export async function initDb() {
       created_at TEXT DEFAULT (datetime('now'))
     )
   `);
+  await db.execute(`
+    CREATE TABLE IF NOT EXISTS playlist_orders (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      tier TEXT NOT NULL,
+      name TEXT,
+      email TEXT,
+      amount_cents INTEGER NOT NULL,
+      stripe_session_id TEXT,
+      status TEXT DEFAULT 'pending',  -- pending | paid
+      created_at TEXT DEFAULT (datetime('now'))
+    )
+  `);
 }
