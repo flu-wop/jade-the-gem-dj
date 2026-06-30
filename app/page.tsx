@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { Music, ArrowRight } from "lucide-react";
+import { Music, ArrowRight, Disc3, Mic2, SlidersHorizontal, PenLine } from "lucide-react";
 import HeroSection from "@/components/HeroSection";
 import SoundCloudEmbed from "@/components/SoundCloudEmbed";
 import NewsletterForm from "@/components/NewsletterForm";
@@ -130,17 +130,18 @@ export default function HomePage() {
               </div>
             </div>
 
-            {/* Stat cards */}
+            {/* Roles */}
             <div className="grid grid-cols-2 gap-4">
               {[
-                { num: "∞",    label: "Live Sets",        color: "text-jade-light" },
-                { num: "504",  label: "NOLA Roots",       color: "text-gold-muted" },
-                { num: "24/7", label: "Always Creating",  color: "text-gold"       },
-                { num: "∞",    label: "Energy Delivered", color: "text-jade-light" },
-              ].map(({ num, label, color }) => (
+                { Icon: Disc3,             label: "DJ",         desc: "Live sets & club energy", color: "text-jade-light" },
+                { Icon: SlidersHorizontal, label: "Producer",   desc: "Beats & original mixes",  color: "text-gold-muted" },
+                { Icon: Mic2,              label: "Vocalist",   desc: "Voice on every track",     color: "text-gold"       },
+                { Icon: PenLine,           label: "Songwriter", desc: "Words behind the sound",   color: "text-jade-light" },
+              ].map(({ Icon, label, desc, color }) => (
                 <div key={label} className="card p-6 text-center">
-                  <p className={`font-display text-5xl ${color} leading-none mb-2`}>{num}</p>
-                  <p className="font-sub text-[10px] text-mist/40 uppercase tracking-widest">{label}</p>
+                  <Icon size={28} className={`${color} mx-auto mb-3`} strokeWidth={1.5} />
+                  <p className="font-sub text-sm text-cream uppercase tracking-widest mb-1">{label}</p>
+                  <p className="font-body text-[11px] text-mist/40 leading-snug">{desc}</p>
                 </div>
               ))}
             </div>
