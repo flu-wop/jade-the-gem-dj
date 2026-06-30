@@ -6,6 +6,7 @@
 // cart — Snipcart has been removed.
 // Mockups go in: public/images/merch/
 
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import Image from "next/image";
 import { useState } from "react";
 import {
@@ -24,7 +25,6 @@ function ProductCard({ product }: { product: MerchProduct }) {
   const { addItem } = useCart();
   const [expanded, setExpanded] = useState(false);
   const [activeImg, setActiveImg] = useState(0);
-  const [touchStart, setTouchStart] = useState<{ x: number; y: number } | null>(null);
 
   const availableGenders = [...new Set(product.styles.flatMap((s) => s.forGenders))] as Gender[];
   const showGender = availableGenders.length > 1;
@@ -63,29 +63,7 @@ function ProductCard({ product }: { product: MerchProduct }) {
   return (
     <div className="card group flex flex-col">
       {/* Mockup image */}
-      <div
-        className="relative aspect-square overflow-hidden bg-surface-2"
-        style={{ touchAction: "pan-y" }}
-        onTouchStart={(e) => {
-          const t = e.touches[0];
-          setTouchStart({ x: t.clientX, y: t.clientY });
-        }}
-        onTouchEnd={(e) => {
-          if (!touchStart) return;
-          const t = e.changedTouches[0];
-          const dx = touchStart.x - t.clientX;
-          const dy = touchStart.y - t.clientY;
-          // Only treat as a swipe if the gesture was mostly horizontal
-          if (Math.abs(dx) > 25 && Math.abs(dx) > Math.abs(dy)) {
-            setActiveImg((prev) =>
-              dx > 0
-                ? (prev + 1) % product.mockups.length
-                : (prev - 1 + product.mockups.length) % product.mockups.length
-            );
-          }
-          setTouchStart(null);
-        }}
-      >
+      <div className="relative aspect-square overflow-hidden bg-surface-2">
         {product.tag && (
           <span className="absolute top-3 left-3 z-10 bg-gold text-background font-sub text-[10px] tracking-[0.2em] uppercase px-3 py-1">
             {product.tag}
@@ -98,14 +76,33 @@ function ProductCard({ product }: { product: MerchProduct }) {
           className="object-cover group-hover:scale-105 transition-transform duration-700"
         />
         <div className="absolute inset-0 opacity-0 group-hover:opacity-100 bg-gradient-to-t from-plum/20 to-transparent transition-opacity duration-300" />
-        {/* Thumbnail dots */}
-        <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-2 z-10">
+
+        {/* Prev / next arrows */}
+        <button
+          type="button"
+          onClick={() =>
+            setActiveImg((prev) => (prev - 1 + product.mockups.length) % product.mockups.length)
+          }
+          aria-label="Previous image"
+          className="absolute left-2 top-1/2 -translate-y-1/2 z-10 w-8 h-8 flex items-center justify-center rounded-full bg-background/60 text-cream hover:bg-background/90 hover:text-gold transition-colors"
+        >
+          <ChevronLeft size={18} />
+        </button>
+        <button
+          type="button"
+          onClick={() => setActiveImg((prev) => (prev + 1) % product.mockups.length)}
+          aria-label="Next image"
+          className="absolute right-2 top-1/2 -translate-y-1/2 z-10 w-8 h-8 flex items-center justify-center rounded-full bg-background/60 text-cream hover:bg-background/90 hover:text-gold transition-colors"
+        >
+          <ChevronRight size={18} />
+        </button>
+
+        {/* Photo position indicator */}
+        <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5 z-10">
           {product.mockups.map((_, i) => (
-            <button
+            <span
               key={i}
-              onClick={() => setActiveImg(i)}
-              className={`w-2 h-2 rounded-full transition-all ${activeImg === i ? "bg-gold scale-125" : "bg-mist/40 hover:bg-mist/70"}`}
-              aria-label={`View mockup ${i + 1}`}
+              className={`w-1.5 h-1.5 rounded-full transition-all ${activeImg === i ? "bg-gold scale-125" : "bg-mist/40"}`}
             />
           ))}
         </div>
