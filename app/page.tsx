@@ -148,24 +148,6 @@ export default function HomePage() {
         </section>
       </Reveal>
 
-      {/* ══════════════ NEW DROP TEASER ══════════════ */}
-      <Reveal>
-        <section className="py-24 px-6 bg-surface/65 border-y border-plum/10">
-          <div className="max-w-2xl mx-auto text-center">
-            <p className="section-label mb-2">Coming Soon</p>
-            <h2 className="section-title mb-3">
-              New Drop <span className="text-jade-light">Loading…</span>
-            </h2>
-            <p className="font-body text-mist/50 text-sm mb-8 max-w-md mx-auto">
-              Something new is in the lab. Drop your email to be the first to know when it lands.
-            </p>
-            <div className="max-w-md mx-auto">
-              <NewsletterForm cta="Alert Me" />
-            </div>
-          </div>
-        </section>
-      </Reveal>
-
       {/* ══════════════ STAY CONNECTED ══════════════ */}
       <Reveal>
         <section className="py-24 px-6 bg-gradient-to-b from-transparent to-surface/70">
