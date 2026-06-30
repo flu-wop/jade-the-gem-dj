@@ -46,29 +46,6 @@ export default function MusicPage() {
           </div>
         </section>
 
-        {/* ── New drop teaser ── */}
-        <section className="relative mb-20 overflow-hidden rounded-2xl border border-neon-purple/20 bg-gradient-to-br from-neon-purple/10 via-surface to-neon-green/10 p-8 sm:p-12 text-center">
-          <div className="relative z-10">
-            <span className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-neon-gold/10 border border-neon-gold/30 text-neon-gold text-xs font-bold uppercase tracking-widest mb-4">
-              🔥 Coming Soon
-            </span>
-            <h2 className="font-display text-4xl md:text-5xl text-white mb-3">
-              New Drop <span className="text-neon-green">Loading…</span>
-            </h2>
-            <p className="text-white/50 text-sm mb-8 max-w-md mx-auto">
-              Working on something exclusive. Sign up to be the very first to
-              hear it when it drops.
-            </p>
-            {/* Fake album art placeholder */}
-            <div className="w-44 h-44 mx-auto mb-8 rounded-2xl bg-surface-2 border border-white/10 flex items-center justify-center text-5xl">
-              💎
-            </div>
-            <div className="max-w-sm mx-auto">
-              <NewsletterForm cta="Alert Me First" />
-            </div>
-          </div>
-        </section>
-
         {/* ── All mixes grid ── */}
         <section>
           <div className="flex items-center justify-between mb-8">
@@ -95,6 +72,25 @@ export default function MusicPage() {
                 <SoundCloudEmbed src={track.embedSrc} title={track.title} />
               </div>
             ))}
+          </div>
+        </section>
+
+        {/* ── New drop teaser ── */}
+        <section className="relative mt-20 mb-16 overflow-hidden rounded-2xl border border-neon-purple/20 bg-gradient-to-br from-neon-purple/10 via-surface to-neon-green/10 p-8 sm:p-12 text-center">
+          <div className="relative z-10">
+            <span className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-neon-gold/10 border border-neon-gold/30 text-neon-gold text-xs font-bold uppercase tracking-widest mb-4">
+              🔥 Coming Soon
+            </span>
+            <h2 className="font-display text-4xl md:text-5xl text-white mb-3">
+              New Drop <span className="text-neon-green">Loading…</span>
+            </h2>
+            <p className="text-white/50 text-sm mb-8 max-w-md mx-auto">
+              Working on something exclusive. Sign up to be the very first to
+              hear it when it drops.
+            </p>
+            <div className="max-w-sm mx-auto">
+              <NewsletterForm cta="Alert Me First" />
+            </div>
           </div>
         </section>
 

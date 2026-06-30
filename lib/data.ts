@@ -82,18 +82,6 @@ export const tracks: Track[] = [
     embedSrc:
       "https://w.soundcloud.com/player/?url=https%3A//api.soundcloud.com/playlists/1982508040&color=%2300ff9d&auto_play=false&hide_related=false&show_comments=true&show_user=true&show_reposts=false&show_teaser=true",
   },
-  {
-    id: "t2",
-    title: "Fire Mix Vol. 2",
-    embedSrc:
-      "https://w.soundcloud.com/player/?url=https%3A//api.soundcloud.com/users/jadethegem888&color=%2300ff9d&auto_play=false&hide_related=false&show_comments=false&show_user=true&show_reposts=false&show_teaser=false",
-  },
-  {
-    id: "t3",
-    title: "504 Bounce Session",
-    embedSrc:
-      "https://w.soundcloud.com/player/?url=https%3A//api.soundcloud.com/users/jadethegem888&color=%2300ff9d&auto_play=false&hide_related=false&show_comments=false&show_user=true&show_reposts=false&show_teaser=false",
-  },
 ];
 
 /* ── Merch items ────────────────────────────────────── */
