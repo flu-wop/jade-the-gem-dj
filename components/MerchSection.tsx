@@ -24,7 +24,7 @@ function ProductCard({ product }: { product: MerchProduct }) {
   const { addItem } = useCart();
   const [expanded, setExpanded] = useState(false);
   const [activeImg, setActiveImg] = useState(0);
-  const [touchStart, setTouchStart] = useState<number | null>(null);
+  const [touchStart, setTouchStart] = useState<{ x: number; y: number } | null>(null);
 
   const availableGenders = [...new Set(product.styles.flatMap((s) => s.forGenders))] as Gender[];
   const showGender = availableGenders.length > 1;
@@ -65,13 +65,20 @@ function ProductCard({ product }: { product: MerchProduct }) {
       {/* Mockup image */}
       <div
         className="relative aspect-square overflow-hidden bg-surface-2"
-        onTouchStart={(e) => setTouchStart(e.touches[0].clientX)}
+        style={{ touchAction: "pan-y" }}
+        onTouchStart={(e) => {
+          const t = e.touches[0];
+          setTouchStart({ x: t.clientX, y: t.clientY });
+        }}
         onTouchEnd={(e) => {
-          if (touchStart === null) return;
-          const diff = touchStart - e.changedTouches[0].clientX;
-          if (Math.abs(diff) > 30) {
+          if (!touchStart) return;
+          const t = e.changedTouches[0];
+          const dx = touchStart.x - t.clientX;
+          const dy = touchStart.y - t.clientY;
+          // Only treat as a swipe if the gesture was mostly horizontal
+          if (Math.abs(dx) > 25 && Math.abs(dx) > Math.abs(dy)) {
             setActiveImg((prev) =>
-              diff > 0
+              dx > 0
                 ? (prev + 1) % product.mockups.length
                 : (prev - 1 + product.mockups.length) % product.mockups.length
             );
