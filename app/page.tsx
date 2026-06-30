@@ -135,7 +135,7 @@ export default function HomePage() {
               {[
                 { Icon: Disc3,             label: "DJ",         desc: "Live sets & club energy", color: "text-jade-light" },
                 { Icon: SlidersHorizontal, label: "Producer",   desc: "Beats & original mixes",  color: "text-gold-muted" },
-                { Icon: Mic2,              label: "Vocalist",   desc: "Voice on every track",     color: "text-gold"       },
+                { Icon: Mic2,              label: "Vocalist",   desc: "Rapping & singing on demos", color: "text-gold"       },
                 { Icon: PenLine,           label: "Songwriter", desc: "Words behind the sound",   color: "text-jade-light" },
               ].map(({ Icon, label, desc, color }) => (
                 <div key={label} className="card p-6 text-center">
