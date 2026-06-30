@@ -1,20 +1,20 @@
 import { NextRequest, NextResponse } from "next/server";
-import { stripe, findPlaylistTier } from "@/lib/stripe";
+import { stripe, findPlaylistTier, calculatePlaylistTotal } from "@/lib/stripe";
 import { db, initDb } from "@/lib/db";
 
 export async function POST(req: NextRequest) {
   try {
-    const { tierId } = await req.json();
+    const { tierId, discountCode } = await req.json();
     const tier = findPlaylistTier(tierId);
     if (!tier) return NextResponse.json({ error: "Invalid tier" }, { status: 400 });
 
+    const { total, discountApplied } = calculatePlaylistTotal(tier.price, discountCode);
     const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
-    const amountCents = tier.price * 100;
+    const amountCents = Math.round(total * 100);
 
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ["card"],
       mode: "payment",
-      allow_promotion_codes: true, // lets PLAY30 be entered right on Stripe's checkout page
       line_items: [
         {
           price_data: {
@@ -28,15 +28,20 @@ export async function POST(req: NextRequest) {
           quantity: 1,
         },
       ],
-      metadata: { kind: "playlist", tier: tier.name, songs: tier.songs },
+      metadata: {
+        kind: "playlist",
+        tier: tier.name,
+        songs: tier.songs,
+        discountCode: discountApplied ? "PLAY30" : "",
+      },
       success_url: `${siteUrl}/playlist/success?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${siteUrl}/bookings`,
     });
 
     await initDb();
     await db.execute({
-      sql: `INSERT INTO playlist_orders (tier, amount_cents, stripe_session_id, status) VALUES (?,?,?, 'pending')`,
-      args: [tier.name, amountCents, session.id],
+      sql: `INSERT INTO playlist_orders (tier, discount_code, amount_cents, stripe_session_id, status) VALUES (?,?,?,?, 'pending')`,
+      args: [tier.name, discountApplied ? "PLAY30" : "", amountCents, session.id],
     });
 
     return NextResponse.json({ url: session.url });

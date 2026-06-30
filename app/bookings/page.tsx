@@ -24,6 +24,7 @@ export default function BookingsPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError]     = useState("");
   const [playlistLoading, setPlaylistLoading] = useState<string | null>(null);
+  const [playlistCode, setPlaylistCode] = useState("");
 
   async function buyPlaylist(tierId: string) {
     setPlaylistLoading(tierId);
@@ -31,7 +32,7 @@ export default function BookingsPage() {
       const res = await fetch("/api/playlist/checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ tierId }),
+        body: JSON.stringify({ tierId, discountCode: playlistCode }),
       });
       const data = await res.json();
       if (data.url) {
@@ -189,9 +190,23 @@ export default function BookingsPage() {
             )}
           </div>
 
-          <p className="text-mist/30 text-xs font-body mt-6 text-center">
-            Delivered via Spotify or Apple Music · 48–72 hr turnaround · Have a code? Enter it
-            at checkout · Questions?{" "}
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-3 mt-6">
+            <div className="flex items-center gap-2">
+              <Tag size={13} className="text-mist/30" />
+              <input
+                type="text"
+                value={playlistCode}
+                onChange={(e) => setPlaylistCode(e.target.value)}
+                placeholder="Discount code"
+                className="bg-surface-2 border border-plum/20 text-cream text-xs font-body px-3 py-1.5 w-36 focus:outline-none focus:border-jade-light transition-colors placeholder:text-mist/30"
+              />
+            </div>
+            <p className="text-mist/30 text-xs font-body text-center">
+              Applies automatically on Buy Now · Delivered via Spotify or Apple Music · 48–72 hr turnaround
+            </p>
+          </div>
+          <p className="text-mist/30 text-xs font-body mt-3 text-center">
+            Questions?{" "}
             <a
               href="mailto:jadedwheeler8@gmail.com"
               className="text-jade-light hover:underline"

@@ -59,6 +59,7 @@ export async function initDb() {
       tier TEXT NOT NULL,
       name TEXT,
       email TEXT,
+      discount_code TEXT,
       amount_cents INTEGER NOT NULL,
       stripe_session_id TEXT,
       status TEXT DEFAULT 'pending',  -- pending | paid

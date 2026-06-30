@@ -182,7 +182,8 @@ async function handlePlaylist(sessionId: string) {
   const email = cust?.email || "";
   const tier = String(row.tier || "");
   const total = (full.amount_total ?? Number(row.amount_cents)) / 100;
-  const discountApplied = (full.amount_total ?? 0) < Number(row.amount_cents);
+  const discountCode = String(row.discount_code || "");
+  const discountApplied = discountCode === "PLAY30";
 
   await db.execute({
     sql: `UPDATE playlist_orders SET status='paid', name=?, email=? WHERE stripe_session_id=?`,

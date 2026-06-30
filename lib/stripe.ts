@@ -31,3 +31,10 @@ export function calculateBookingTotal(hours: number, code?: string) {
   const total = subtotal - discount;
   return { subtotal, discount, total, discountApplied };
 }
+
+export function calculatePlaylistTotal(price: number, code?: string) {
+  const discountApplied = code?.toUpperCase() === "PLAY30";
+  const discount = discountApplied ? Math.round(price * 0.3 * 100) / 100 : 0;
+  const total = price - discount;
+  return { subtotal: price, discount, total, discountApplied };
+}
