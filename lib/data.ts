@@ -129,10 +129,6 @@ export const socialLinks: SocialLink[] = [
 ];
 
 /* ── Formspree endpoints (override via env vars) ─────── */
-export const FORMSPREE_BOOKING =
-  process.env.NEXT_PUBLIC_FORMSPREE_BOOKING ??
-  "https://formspree.io/f/YOUR_BOOKING_FORM_ID";
-
 export const FORMSPREE_NEWSLETTER =
   process.env.NEXT_PUBLIC_FORMSPREE_NEWSLETTER ??
   "https://formspree.io/f/YOUR_NEWSLETTER_FORM_ID";
