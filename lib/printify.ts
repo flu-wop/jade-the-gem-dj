@@ -30,6 +30,7 @@ async function req<T>(path: string, init?: RequestInit): Promise<T> {
     headers: {
       Authorization: `Bearer ${token()}`,
       "Content-Type": "application/json",
+      "User-Agent": "jade-the-gem-dj/1.0",
       ...(init?.headers || {}),
     },
   });
