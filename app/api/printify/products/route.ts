@@ -15,11 +15,18 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: "PRINTIFY_API_TOKEN not set yet." }, { status: 400 });
 
   try {
-    // If shop id isn't set, list shops so you can grab it.
+    // Always test auth by listing shops first — confirms token validity
+    const shops = await listShops();
+
+    // If shop id isn't set, return shops so you can grab it
     if (!process.env.PRINTIFY_SHOP_ID) {
-      const shops = await listShops();
+      return NextResponse.json({ note: "Set PRINTIFY_SHOP_ID to one of these, then reload.", shops });
+    }
+
+    const shopMatch = shops.find((s) => String(s.id) === process.env.PRINTIFY_SHOP_ID);
+    if (!shopMatch) {
       return NextResponse.json({
-        note: "Add PRINTIFY_SHOP_ID using the id below, then reload this page.",
+        error: `PRINTIFY_SHOP_ID ${process.env.PRINTIFY_SHOP_ID} not found in your account. Your shops are:`,
         shops,
       });
     }
