@@ -12,7 +12,7 @@
 const BASE = "https://api.printify.com/v1";
 
 function token() {
-  return process.env.PRINTIFY_API_TOKEN;
+  return process.env.PRINTIFY_API_TOKEN?.trim();
 }
 function shopId() {
   return process.env.PRINTIFY_SHOP_ID;

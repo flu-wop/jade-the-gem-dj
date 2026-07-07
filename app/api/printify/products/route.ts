@@ -34,6 +34,6 @@ export async function GET(req: NextRequest) {
     }));
     return NextResponse.json({ configured: printifyConfigured(), products: simplified });
   } catch (err) {
-    return NextResponse.json({ error: (err as Error).message }, { status: 500 });
+    return NextResponse.json({ error: (err as Error).message, token_length: process.env.PRINTIFY_API_TOKEN?.trim().length ?? 0 }, { status: 500 });
   }
 }
