@@ -9,7 +9,11 @@ export function getDb() {
   return _db;
 }
 export const db = new Proxy({} as ReturnType<typeof createClient>, {
-  get: (_, prop) => getDb()[prop as keyof ReturnType<typeof createClient>],
+  get: (_, prop) => {
+    const client = getDb();
+    const val = client[prop as keyof ReturnType<typeof createClient>];
+    return typeof val === "function" ? (val as (...a: unknown[]) => unknown).bind(client) : val;
+  },
 });
 
 export async function initDb() {
