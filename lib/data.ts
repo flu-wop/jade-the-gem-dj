@@ -29,13 +29,6 @@ export interface SocialLink {
   url: string;
 }
 
-export interface MerchItem {
-  id: string;
-  name: string;
-  price: string;
-  image: string;
-  link?: string; // Optional purchase link
-}
 
 /* ── Upcoming events ─────────────────────────────────── */
 export const upcomingEvents: Event[] = [];
@@ -84,30 +77,6 @@ export const tracks: Track[] = [
   },
 ];
 
-/* ── Merch items ────────────────────────────────────── */
-export const merchItems: MerchItem[] = [
-  {
-    id: "m1",
-    name: "504 Creative Tee",
-    price: "$30",
-    image: "/images/merch-tee-1.jpg",
-    link: "",
-  },
-  {
-    id: "m2",
-    name: "Jade The Gem Logo Tee",
-    price: "$30",
-    image: "/images/merch-tee-2.jpg",
-    link: "",
-  },
-  {
-    id: "m3",
-    name: "NOLA Energy Tee",
-    price: "$30",
-    image: "/images/merch-tee-3.jpg",
-    link: "",
-  },
-];
 
 /* ── Social links ────────────────────────────────────── */
 export const socialLinks: SocialLink[] = [
