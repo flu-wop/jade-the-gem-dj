@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Instagram, Music, Twitter, Mail, type LucideIcon } from "lucide-react";
 import { socialLinks } from "@/lib/data";
+import { BuiltBySignature } from "./BuiltBySignature";
 
 const iconMap: Record<string, LucideIcon> = {
   Instagram,
@@ -88,11 +89,9 @@ export default function Footer() {
           <p className="font-body text-xs text-mist/20">
             © {new Date().getFullYear()} DJ Jade the Gem. All rights reserved. Made with 💜 in New Orleans.
           </p>
-          <p className="font-body text-[10px] text-mist/15 mt-2">
-            Site by In-flu-ential LLC
-          </p>
         </div>
       </div>
+      <BuiltBySignature />
     </footer>
   );
 }
