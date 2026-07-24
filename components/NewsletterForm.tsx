@@ -72,6 +72,9 @@ export default function NewsletterForm({ cta = "Notify Me" }: Props) {
           Something went wrong — try again or DM @jluhvv
         </p>
       )}
+      <p className="mt-2 text-[11px] text-white/30 text-center">
+        We&apos;ll only use this to send updates. <a href="/privacy" className="underline-offset-2 hover:underline">Privacy policy</a>
+      </p>
     </form>
   );
 }

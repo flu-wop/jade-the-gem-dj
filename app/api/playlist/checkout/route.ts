@@ -1,9 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { stripe, findPlaylistTier, calculatePlaylistTotal } from "@/lib/stripe";
 import { db, initDb } from "@/lib/db";
+import { rateLimit, clientIp } from "@/lib/rate-limit";
 
 export async function POST(req: NextRequest) {
   try {
+    const ok = await rateLimit(`checkout:${clientIp(req)}`, 10, 600); // 10 per 10 min
+    if (!ok) return NextResponse.json({ error: "Too many requests" }, { status: 429 });
+
     const { tierId, discountCode } = await req.json();
     const tier = findPlaylistTier(tierId);
     if (!tier) return NextResponse.json({ error: "Invalid tier" }, { status: 400 });

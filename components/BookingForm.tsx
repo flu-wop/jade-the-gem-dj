@@ -103,6 +103,13 @@ export function BookingCTA() {
           </a>{" "}
           on Instagram
         </p>
+        <p className="font-body text-[11px] text-mist/20 mt-2">
+          Your info is only used to confirm and deliver your booking. See our{" "}
+          <a href="/privacy" className="underline-offset-2 hover:underline">
+            privacy policy
+          </a>
+          .
+        </p>
       </div>
     </section>
   );

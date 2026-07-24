@@ -132,6 +132,9 @@ export default function CartDrawer() {
             <p className="font-body text-[11px] text-mist/30">
               Shipping calculated at checkout. Taxes where applicable.
             </p>
+            <p className="font-body text-[11px] text-mist/20">
+              Your info is used only to ship your order. <a href="/privacy" className="underline-offset-2 hover:underline">Privacy policy</a>
+            </p>
             {error && <p className="font-body text-xs text-jade-light">{error}</p>}
             <button
               onClick={checkout}

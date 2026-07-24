@@ -1,11 +1,18 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db, initDb } from "@/lib/db";
 import { resend, sendNewsletterWelcome } from "@/lib/resend";
+import { rateLimit, clientIp } from "@/lib/rate-limit";
+
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export async function POST(req: NextRequest) {
   try {
+    const ok = await rateLimit(`newsletter:${clientIp(req)}`, 5, 600); // 5 per 10 min
+    if (!ok) return NextResponse.json({ error: "Too many requests" }, { status: 429 });
+
     const { email } = await req.json();
-    if (!email) return NextResponse.json({ error: "Email required" }, { status: 400 });
+    if (!email || typeof email !== "string" || !EMAIL_RE.test(email))
+      return NextResponse.json({ error: "Valid email required" }, { status: 400 });
     await initDb();
     try {
       await db.execute({ sql: "INSERT INTO newsletter (email) VALUES (?)", args: [email] });

@@ -1,4 +1,7 @@
+import { cookies } from "next/headers";
 import { db, initDb } from "@/lib/db";
+import { ADMIN_COOKIE, sessionToken } from "@/lib/admin-auth";
+import AdminLoginForm from "@/components/AdminLoginForm";
 
 export const dynamic = "force-dynamic";
 
@@ -23,20 +26,16 @@ function StatusPill({ status }: { status: unknown }) {
   );
 }
 
-export default async function AdminPage({
-  searchParams,
-}: {
-  searchParams: Promise<{ key?: string }>;
-}) {
-  const { key } = await searchParams;
+export default async function AdminPage() {
+  const cookieStore = await cookies();
+  const session = cookieStore.get(ADMIN_COOKIE)?.value;
 
-  if (key !== process.env.ADMIN_PASSWORD) {
+  if (!session || session !== sessionToken()) {
     return (
       <main style={{ minHeight: "100vh", background: "#0e0b14", color: "#f0ebe8", fontFamily: "system-ui", padding: 48 }}>
-        <h1 style={{ color: "#d4af37" }}>Unauthorized</h1>
-        <p style={{ color: "#c4b8e0" }}>
-          Append <code>?key=YOUR_ADMIN_PASSWORD</code> to the URL.
-        </p>
+        <h1 style={{ color: "#d4af37" }}>Admin Login</h1>
+        <p style={{ color: "#c4b8e0" }}>Enter the admin password to view bookings and orders.</p>
+        <AdminLoginForm />
       </main>
     );
   }

@@ -2,11 +2,15 @@ import { NextRequest, NextResponse } from "next/server";
 import { stripe } from "@/lib/stripe";
 import { db, initDb } from "@/lib/db";
 import { findProduct, priceFor, type CartLine } from "@/lib/merch";
+import { rateLimit, clientIp } from "@/lib/rate-limit";
 
 export const runtime = "nodejs";
 
 export async function POST(req: NextRequest) {
   try {
+    const ok = await rateLimit(`checkout:${clientIp(req)}`, 10, 600); // 10 per 10 min
+    if (!ok) return NextResponse.json({ error: "Too many requests" }, { status: 429 });
+
     const { items } = (await req.json()) as { items: CartLine[] };
     if (!Array.isArray(items) || items.length === 0)
       return NextResponse.json({ error: "Cart is empty" }, { status: 400 });

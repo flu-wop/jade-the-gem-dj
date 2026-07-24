@@ -46,6 +46,16 @@ async function handleBooking(
   session: { id: string; amount_total?: number },
   meta: Record<string, string>
 ) {
+  await initDb();
+  // IDEMPOTENCY: only proceed if this session hasn't already been confirmed
+  // (Stripe retries webhook delivery — without this, a retry re-sends the
+  // confirmation email every time).
+  const existing = (await db.execute({
+    sql: `SELECT status FROM bookings WHERE stripe_session_id=?`,
+    args: [session.id],
+  })).rows[0] as Record<string, unknown> | undefined;
+  if (!existing || existing.status === "confirmed") return;
+
   await db.execute({
     sql: `UPDATE bookings SET status='confirmed' WHERE stripe_session_id=?`,
     args: [session.id],
@@ -75,6 +85,8 @@ async function handleMerch(sessionId: string) {
     console.error("merch_orders row not found for", sessionId);
     return;
   }
+  // IDEMPOTENCY: don't re-fulfill or re-email an order already processed
+  if (row.status !== "pending") return;
 
   const items = JSON.parse(String(row.items)) as CartLine[];
   const total = Number(row.amount_cents) / 100;
@@ -175,6 +187,8 @@ async function handlePlaylist(sessionId: string) {
     console.error("playlist_orders row not found for", sessionId);
     return;
   }
+  // IDEMPOTENCY: don't re-email an order already marked paid
+  if (row.status !== "pending") return;
 
   const full = await stripe.checkout.sessions.retrieve(sessionId);
   const cust = full.customer_details;
