@@ -14,6 +14,7 @@ const pages = [
   { href: "/bookings", label: "Bookings"  },
   { href: "/press",    label: "Press Kit" },
   { href: "/refund-shipping", label: "Shipping & Refunds" },
+  { href: "/privacy", label: "Privacy Policy" },
 ];
 
 export default function Footer() {
@@ -80,8 +81,13 @@ export default function Footer() {
         </div>
 
         {/* Bottom bar */}
-        <div className="border-t border-plum/10 pt-6 text-center font-body text-xs text-mist/20">
-          © {new Date().getFullYear()} DJ Jade the Gem. All rights reserved. Made with 💜 in New Orleans.
+        <div className="border-t border-plum/10 pt-6 text-center">
+          <p className="font-sub text-[11px] tracking-[0.25em] uppercase text-jade-light/40 mb-2">
+            Every set has a hidden gem in it.
+          </p>
+          <p className="font-body text-xs text-mist/20">
+            © {new Date().getFullYear()} DJ Jade the Gem. All rights reserved. Made with 💜 in New Orleans.
+          </p>
         </div>
       </div>
     </footer>
