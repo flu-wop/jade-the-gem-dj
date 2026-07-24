@@ -39,7 +39,7 @@ const anton = Anton({
 
 /* ── Metadata ────────────────────────────────────────── */
 export const metadata: Metadata = {
-  metadataBase: new URL("https://jade-the-gem-dj.vercel.app"),
+  metadataBase: new URL("https://dahiddengem.com"),
   title: {
     default: "DJ Jade the Gem | 504 Creative | Fire Mixes & Live Energy",
     template: "%s | DJ Jade the Gem",
@@ -63,7 +63,7 @@ export const metadata: Metadata = {
   openGraph: {
     type: "website",
     locale: "en_US",
-    url: "https://jade-the-gem-dj.vercel.app",
+    url: "https://dahiddengem.com",
     siteName: "DJ Jade the Gem",
     title: "DJ Jade the Gem | 504 Creative | Fire Mixes & Live Energy",
     description:
