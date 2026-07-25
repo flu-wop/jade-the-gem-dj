@@ -70,4 +70,16 @@ export async function initDb() {
       created_at TEXT DEFAULT (datetime('now'))
     )
   `);
+  // discount_code was added to the CREATE TABLE above after playlist_orders
+  // already existed in production — CREATE TABLE IF NOT EXISTS is a no-op on
+  // an existing table, so the column never actually landed there. This
+  // ALTER TABLE is the real fix; the checkout route always inserts into
+  // discount_code (even as an empty string), so without this every playlist
+  // purchase fails with "no such column: discount_code" before the customer
+  // ever reaches Stripe checkout.
+  try {
+    await db.execute(`ALTER TABLE playlist_orders ADD COLUMN discount_code TEXT`);
+  } catch {
+    // Column already exists — fine.
+  }
 }
