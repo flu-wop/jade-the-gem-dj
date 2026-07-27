@@ -24,6 +24,47 @@ export function findPlaylistTier(id: string) {
   return PLAYLIST_TIERS.find((t) => t.id === id);
 }
 
+// ── Merch Build (Jade's productized merch-store design service) ──
+// Base fee covers store setup/Printify listing work (fixed per project);
+// per-item fee covers design time and scales with catalog size.
+export const MERCH_BUILD_BASE = 275;
+export const MERCH_BUILD_PER_ITEM = 55;
+export const MERCH_BUILD_REVISION_ROUND_PRICE = 40;
+
+export const MERCH_BUILD_TIERS = [
+  {
+    id: "capsule",
+    name: "Capsule",
+    itemCount: 4,
+    desc: "A focused starter line — perfect for testing merch as a new revenue stream.",
+    featured: false,
+  },
+  {
+    id: "full-line",
+    name: "Full Line",
+    itemCount: 6,
+    desc: "A complete catalog across apparel and accessories, with room to grow.",
+    featured: true,
+  },
+  {
+    id: "brand-package",
+    name: "Brand Package",
+    itemCount: 9,
+    desc: "The full build — maximum catalog depth and design direction for an established brand.",
+    featured: false,
+  },
+] as const;
+
+export function findMerchBuildTier(id: string) {
+  return MERCH_BUILD_TIERS.find((t) => t.id === id);
+}
+
+export function calculateMerchBuildTotal(itemCount: number) {
+  const perItemTotal = itemCount * MERCH_BUILD_PER_ITEM;
+  const total = MERCH_BUILD_BASE + perItemTotal;
+  return { base: MERCH_BUILD_BASE, perItemTotal, total };
+}
+
 export function calculateBookingTotal(hours: number, code?: string) {
   const subtotal = hours * RATE;
   const discountApplied = code?.toUpperCase() === "HIDDEN50";

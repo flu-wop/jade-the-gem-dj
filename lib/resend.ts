@@ -163,3 +163,45 @@ export async function sendNewsletterWelcome(email: string) {
     </div>`,
   });
 }
+
+export async function sendMerchBuildEmails({
+  name, email, tier, itemCount, total,
+}: {
+  name: string; email: string; tier: string; itemCount: number; total: number;
+}) {
+  const from = process.env.RESEND_FROM_EMAIL ?? "onboarding@resend.dev";
+  const to_jade = process.env.RESEND_TO_EMAIL ?? "jadedwheeler8@gmail.com";
+
+  // Client confirmation — carries the intake questionnaire so they can just hit reply
+  await resend.emails.send({
+    from, to: email,
+    subject: `Merch Store Build Confirmed — ${tier} 💎`,
+    html: `<div style="font-family:sans-serif;background:#0e0b14;color:#f0ebe8;padding:40px;max-width:580px;margin:0 auto;">
+      <h1 style="color:#3aa898;font-size:26px;margin-bottom:4px;">Let's build your line! 💎</h1>
+      <p style="color:#888;margin-bottom:24px;">Your <strong style="color:#f0ebe8;">${tier}</strong> merch store build (${itemCount} products) is booked — total paid: <strong style="color:#3aa898;">$${total}</strong>.</p>
+      <p style="color:#c4b8e0;margin-bottom:16px;">To get started, just reply to this email with the following:</p>
+      <ol style="color:#f0ebe8;line-height:1.9;padding-left:20px;">
+        <li>Brand name and a link/logo files (or attach directly to this email)</li>
+        <li>Brand colors and any existing style guide</li>
+        <li>Which products you'd like included (tees, hoodies, hats, posters, etc.)</li>
+        <li>Any reference brands or merch lines whose look you like</li>
+        <li>Target timeline for launch</li>
+      </ol>
+      <p style="color:#c4b8e0;margin-top:20px;margin-bottom:0;">Your build includes 2 rounds of design revisions. Additional rounds are $40 each.</p>
+      <p style="margin-top:28px;color:#666;">Jade will start on concepts once she has your brand assets. Questions in the meantime? <a href="mailto:${to_jade}" style="color:#3aa898;">${to_jade}</a></p>
+    </div>`,
+  });
+
+  // Owner notification
+  await resend.emails.send({
+    from, to: to_jade,
+    subject: `New merch build order — ${tier} ($${total})`,
+    html: `<div style="font-family:sans-serif;background:#0e0b14;color:#f0ebe8;padding:40px;">
+      <h1 style="color:#3aa898;">New merch build order 💎</h1>
+      <p><strong>${name}</strong> · ${email}</p>
+      <p><strong>Tier:</strong> ${tier} (${itemCount} products)</p>
+      <p><strong>Paid:</strong> $${total}</p>
+      <p style="margin-top:16px;color:#c4b8e0;">The client's been emailed the intake questions — wait for their reply with brand assets and product picks before starting concepts. 2 revision rounds included; additional rounds are $40 each.</p>
+    </div>`,
+  });
+}

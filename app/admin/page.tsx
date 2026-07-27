@@ -44,6 +44,7 @@ export default async function AdminPage() {
   const bookings = (await db.execute("SELECT * FROM bookings ORDER BY created_at DESC")).rows as Row[];
   const orders = (await db.execute("SELECT * FROM merch_orders ORDER BY created_at DESC")).rows as Row[];
   const playlists = (await db.execute("SELECT * FROM playlist_orders ORDER BY created_at DESC")).rows as Row[];
+  const merchBuilds = (await db.execute("SELECT * FROM merch_build_orders ORDER BY created_at DESC")).rows as Row[];
 
   const th: React.CSSProperties = { textAlign: "left", padding: "8px 10px", color: "#A89880", fontWeight: 400, fontSize: 12, textTransform: "uppercase", letterSpacing: "0.08em" };
   const td: React.CSSProperties = { padding: "8px 10px", borderTop: "1px solid #2a2336", fontSize: 13, verticalAlign: "top" };
@@ -150,6 +151,36 @@ export default async function AdminPage() {
                 <tr key={String(r.id)}>
                   <td style={td}>{String(r.created_at || "")}</td>
                   <td style={td}>{String(r.tier || "")}</td>
+                  <td style={td}>{String(r.name || "")}</td>
+                  <td style={td}>{String(r.email || "")}</td>
+                  <td style={td}>{money(r.amount_cents)}</td>
+                  <td style={td}><StatusPill status={r.status} /></td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      {/* Merch build orders */}
+      <section style={{ marginTop: 48 }}>
+        <h2 style={{ color: "#3aa898" }}>Merch Build Orders ({merchBuilds.length})</h2>
+        <div style={{ overflowX: "auto" }}>
+          <table style={{ width: "100%", borderCollapse: "collapse", marginTop: 12, minWidth: 640 }}>
+            <thead>
+              <tr>
+                <th style={th}>When</th><th style={th}>Tier</th><th style={th}>Items</th>
+                <th style={th}>Name</th><th style={th}>Email</th><th style={th}>Paid</th><th style={th}>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              {merchBuilds.length === 0 ? (
+                <tr><td style={td} colSpan={7}>No merch build orders yet.</td></tr>
+              ) : merchBuilds.map((r) => (
+                <tr key={String(r.id)}>
+                  <td style={td}>{String(r.created_at || "")}</td>
+                  <td style={td}>{String(r.tier || "")}</td>
+                  <td style={td}>{String(r.item_count || "")}</td>
                   <td style={td}>{String(r.name || "")}</td>
                   <td style={td}>{String(r.email || "")}</td>
                   <td style={td}>{money(r.amount_cents)}</td>
