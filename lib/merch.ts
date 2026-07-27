@@ -127,7 +127,48 @@ export const PRODUCTS: MerchProduct[] = [
   },
 ];
 
-export const PRINTIFY_VARIANTS: Record<string, Record<string, number>> = {};
+// Variant IDs pulled from Printify (shop 27644500 / jadehiddengems),
+// pinned to each product's default colorway shown in the mockups above:
+// Air Brush -> White, Hidden Gem Tee -> Black, Trucker -> Black/Leopard.
+export const PRINTIFY_VARIANTS: Record<string, Record<string, number>> = {
+  "hidden-gem-airbrush": {
+    [variantKey("Oversized Tee", "S", "Unisex")]: 118089,
+    [variantKey("Oversized Tee", "M", "Unisex")]: 118090,
+    [variantKey("Oversized Tee", "L", "Unisex")]: 118091,
+    [variantKey("Oversized Tee", "XL", "Unisex")]: 118107,
+    [variantKey("Oversized Tee", "2XL", "Unisex")]: 118092,
+  },
+  "hidden-gem-tee": {
+    [variantKey("Heavyweight Tee", "S", "Unisex")]: 117443,
+    [variantKey("Heavyweight Tee", "M", "Unisex")]: 117442,
+    [variantKey("Heavyweight Tee", "L", "Unisex")]: 117441,
+    [variantKey("Heavyweight Tee", "XL", "Unisex")]: 117444,
+    [variantKey("Heavyweight Tee", "2XL", "Unisex")]: 117437,
+    [variantKey("Heavyweight Tee", "3XL", "Unisex")]: 117438,
+    [variantKey("Heavyweight Tee", "4XL", "Unisex")]: 117439,
+    [variantKey("Heavyweight Tee", "5XL", "Unisex")]: 117440,
+    // Same physical product for Women's -- Printify has no separate
+    // women's variant here, so these map to the same IDs as Unisex.
+    [variantKey("Heavyweight Tee", "S", "Women's")]: 117443,
+    [variantKey("Heavyweight Tee", "M", "Women's")]: 117442,
+    [variantKey("Heavyweight Tee", "L", "Women's")]: 117441,
+    [variantKey("Heavyweight Tee", "XL", "Women's")]: 117444,
+    [variantKey("Heavyweight Tee", "2XL", "Women's")]: 117437,
+    [variantKey("Heavyweight Tee", "3XL", "Women's")]: 117438,
+    [variantKey("Heavyweight Tee", "4XL", "Women's")]: 117439,
+    [variantKey("Heavyweight Tee", "5XL", "Women's")]: 117440,
+  },
+  "hidden-vintage-trucker": {
+    [variantKey("Trucker Hat", "OS", "Unisex")]: 122989,
+  },
+  "hidden-poster": {
+    [variantKey("Art Print", "20x30", "Unisex")]: 100940,
+    [variantKey("Art Print", "22x34", "Unisex")]: 100942,
+    [variantKey("Art Print", "24x32", "Unisex")]: 75295,
+    [variantKey("Art Print", "24x36", "Unisex")]: 75296,
+    [variantKey("Art Print", "32x48", "Unisex")]: 75298,
+  },
+};
 
 export function variantKey(style: string, size: string, gender: string): string {
   return `${style}|${size}|${gender}`;
