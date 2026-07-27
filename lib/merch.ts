@@ -54,7 +54,7 @@ export const PRODUCTS: MerchProduct[] = [
         sizePriceModifiers: { "L": 1, "XL": 1, "2XL": 7 },
       },
     ],
-    printifyProductId: "29595105",
+    printifyProductId: "6a402761b38ebb906e0692b5",
   },
   {
     id: "hidden-gem-tee",
@@ -76,7 +76,7 @@ export const PRODUCTS: MerchProduct[] = [
         sizePriceModifiers: { "2XL": 2, "3XL": 4, "4XL": 6, "5XL": 8 },
       },
     ],
-    printifyProductId: "28889240",
+    printifyProductId: "6a1535ec69e138f54905134e",
   },
   {
     id: "hidden-vintage-trucker",
@@ -96,7 +96,7 @@ export const PRODUCTS: MerchProduct[] = [
         priceModifier: 0,
       },
     ],
-    printifyProductId: "28887077",
+    printifyProductId: "6a145e8598c5cbc2170dcf1b",
   },
   {
     id: "hidden-poster",
@@ -123,7 +123,7 @@ export const PRODUCTS: MerchProduct[] = [
         },
       },
     ],
-    printifyProductId: "28886775",
+    printifyProductId: "6a41717777569fc62a0efa06",
   },
 ];
 
