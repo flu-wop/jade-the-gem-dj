@@ -26,43 +26,27 @@ export function findPlaylistTier(id: string) {
 
 // ── Merch Build (Jade's productized merch-store design service) ──
 // Base fee covers store setup/Printify listing work (fixed per project);
-// per-item fee covers design time and scales with catalog size.
+// per-item fee covers design time and scales with catalog size — true
+// sliding scale, not fixed presets, so any item count in range works.
 export const MERCH_BUILD_BASE = 275;
 export const MERCH_BUILD_PER_ITEM = 55;
 export const MERCH_BUILD_REVISION_ROUND_PRICE = 40;
+export const MERCH_BUILD_MIN_ITEMS = 3;
+export const MERCH_BUILD_MAX_ITEMS = 12;
 
-export const MERCH_BUILD_TIERS = [
-  {
-    id: "capsule",
-    name: "Capsule",
-    itemCount: 4,
-    desc: "A focused starter line — perfect for testing merch as a new revenue stream.",
-    featured: false,
-  },
-  {
-    id: "full-line",
-    name: "Full Line",
-    itemCount: 6,
-    desc: "A complete catalog across apparel and accessories, with room to grow.",
-    featured: true,
-  },
-  {
-    id: "brand-package",
-    name: "Brand Package",
-    itemCount: 9,
-    desc: "The full build — maximum catalog depth and design direction for an established brand.",
-    featured: false,
-  },
-] as const;
-
-export function findMerchBuildTier(id: string) {
-  return MERCH_BUILD_TIERS.find((t) => t.id === id);
+// Labels are descriptive only (shown on the slider + stored for admin
+// readability) — they don't gate pricing, which is computed continuously.
+export function merchBuildTierLabel(itemCount: number): string {
+  if (itemCount <= 4) return "Capsule";
+  if (itemCount <= 7) return "Full Line";
+  return "Brand Package";
 }
 
 export function calculateMerchBuildTotal(itemCount: number) {
-  const perItemTotal = itemCount * MERCH_BUILD_PER_ITEM;
+  const clamped = Math.min(MERCH_BUILD_MAX_ITEMS, Math.max(MERCH_BUILD_MIN_ITEMS, itemCount));
+  const perItemTotal = clamped * MERCH_BUILD_PER_ITEM;
   const total = MERCH_BUILD_BASE + perItemTotal;
-  return { base: MERCH_BUILD_BASE, perItemTotal, total };
+  return { itemCount: clamped, base: MERCH_BUILD_BASE, perItemTotal, total };
 }
 
 export function calculateBookingTotal(hours: number, code?: string) {

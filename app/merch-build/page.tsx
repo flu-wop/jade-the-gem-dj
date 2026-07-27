@@ -1,61 +1,49 @@
 "use client";
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { ShoppingBag, Sparkles, Palette } from "lucide-react";
 
-const TIERS = [
-  {
-    id: "capsule",
-    name: "Capsule",
-    itemCount: 4,
-    price: "$495",
-    desc: "A focused starter line — perfect for testing merch as a new revenue stream.",
-    featured: false,
-  },
-  {
-    id: "full-line",
-    name: "Full Line",
-    itemCount: 6,
-    price: "$605",
-    desc: "A complete catalog across apparel and accessories, with room to grow.",
-    featured: true,
-  },
-  {
-    id: "brand-package",
-    name: "Brand Package",
-    itemCount: 9,
-    price: "$770",
-    desc: "The full build — maximum catalog depth and design direction for an established brand.",
-    featured: false,
-  },
-];
+const MIN_ITEMS = 3;
+const MAX_ITEMS = 12;
+const BASE = 275;
+const PER_ITEM = 55;
+
+function tierLabel(count: number) {
+  if (count <= 4) return "Capsule";
+  if (count <= 7) return "Full Line";
+  return "Brand Package";
+}
 
 export default function MerchBuildPage() {
-  const [loading, setLoading] = useState<string | null>(null);
+  const [itemCount, setItemCount] = useState(6);
+  const [loading, setLoading] = useState(false);
 
-  async function buyTier(tierId: string) {
-    setLoading(tierId);
+  const total = useMemo(() => BASE + itemCount * PER_ITEM, [itemCount]);
+  const label = tierLabel(itemCount);
+
+  async function buy() {
+    setLoading(true);
     try {
       const res = await fetch("/api/merch-build/checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ tierId }),
+        body: JSON.stringify({ itemCount }),
       });
       const data = await res.json();
       if (data.url) {
         window.location.href = data.url;
       } else {
-        setLoading(null);
+        setLoading(false);
         alert("Something went wrong starting checkout — try again.");
       }
     } catch {
-      setLoading(null);
+      setLoading(false);
       alert("Something went wrong starting checkout — try again.");
     }
   }
 
   return (
     <div className="min-h-screen pt-24 pb-24 px-4">
-      <div className="max-w-6xl mx-auto">
+      <div className="max-w-4xl mx-auto">
 
         {/* Header */}
         <header className="text-center mb-16">
@@ -74,7 +62,7 @@ export default function MerchBuildPage() {
           {[
             { icon: Palette, title: "Custom Design", desc: "Original logo and mockup concepts built around your brand" },
             { icon: ShoppingBag, title: "Full Catalog Setup", desc: "Products sourced, sized, and listed — ready to sell" },
-            { icon: Sparkles, title: "2 Revision Rounds", desc: "Included on every tier, so the direction lands right" },
+            { icon: Sparkles, title: "2 Revision Rounds", desc: "Included on every build, so the direction lands right" },
           ].map(({ icon: Icon, title, desc }) => (
             <div key={title} className="card p-6 text-center">
               <Icon className="text-jade-light mx-auto mb-3" size={28} />
@@ -84,32 +72,41 @@ export default function MerchBuildPage() {
           ))}
         </div>
 
-        {/* Tiers */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          {TIERS.map(({ id, name, itemCount, price, desc, featured }) => (
-            <div
-              key={id}
-              className={`rounded-xl p-6 border flex flex-col ${
-                featured ? "border-jade/50 bg-jade/5" : "border-white/5 bg-surface-2"
-              }`}
-            >
-              <p className={`font-sub text-xs tracking-widest uppercase mb-1 ${featured ? "text-jade-light" : "text-mist/40"}`}>
-                {name}
+        {/* Sliding scale builder */}
+        <div className="card p-8">
+          <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 mb-8">
+            <div>
+              <p className="font-sub text-xs tracking-widest uppercase text-jade-light mb-1">{label}</p>
+              <p className="font-display text-5xl text-cream">${total.toLocaleString()}</p>
+              <p className="text-mist/40 text-xs font-body mt-1">
+                ${BASE} base + ${PER_ITEM}/item × {itemCount} {itemCount === 1 ? "product" : "products"}
               </p>
-              <p className="font-display text-4xl text-cream mb-1">{price}</p>
-              <p className="text-mist/40 text-xs font-body mb-3">{itemCount} products</p>
-              <p className="text-mist/60 text-sm font-body leading-relaxed mb-5 flex-1">{desc}</p>
-              <button
-                onClick={() => buyTier(id)}
-                disabled={loading !== null}
-                className={`w-full text-center font-sub text-sm tracking-wider uppercase py-2.5 transition-colors disabled:opacity-50 ${
-                  featured ? "btn-primary" : "btn-secondary"
-                }`}
-              >
-                {loading === id ? "Redirecting…" : "Buy Now"}
-              </button>
             </div>
-          ))}
+            <button
+              onClick={buy}
+              disabled={loading}
+              className="btn-primary py-3 px-8 font-sub text-sm tracking-wider uppercase disabled:opacity-50 whitespace-nowrap"
+            >
+              {loading ? "Redirecting…" : "Buy Now"}
+            </button>
+          </div>
+
+          <div className="flex items-center gap-4">
+            <span className="text-mist/40 text-xs font-body w-6 text-right">{MIN_ITEMS}</span>
+            <input
+              type="range"
+              min={MIN_ITEMS}
+              max={MAX_ITEMS}
+              step={1}
+              value={itemCount}
+              onChange={(e) => setItemCount(Number(e.target.value))}
+              className="flex-1 accent-jade-light"
+            />
+            <span className="text-mist/40 text-xs font-body w-6">{MAX_ITEMS}</span>
+          </div>
+          <p className="text-center text-cream font-sub text-sm tracking-wider uppercase mt-3">
+            {itemCount} {itemCount === 1 ? "Product" : "Products"}
+          </p>
         </div>
 
         <p className="text-mist/30 text-xs font-body mt-6 text-center">

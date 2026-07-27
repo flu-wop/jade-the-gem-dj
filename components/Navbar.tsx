@@ -11,6 +11,7 @@ const links = [
   { label: "Merch",    href: "/#merch" },
   { label: "Bookings", href: "/bookings" },
   { label: "Press",    href: "/press" },
+  { label: "Merch Build", href: "/merch-build" },
 ];
 
 export default function Navbar() {

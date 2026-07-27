@@ -1,5 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
-import { stripe, findMerchBuildTier, calculateMerchBuildTotal } from "@/lib/stripe";
+import {
+  stripe,
+  calculateMerchBuildTotal,
+  merchBuildTierLabel,
+  MERCH_BUILD_MIN_ITEMS,
+  MERCH_BUILD_MAX_ITEMS,
+} from "@/lib/stripe";
 import { db, initDb } from "@/lib/db";
 import { rateLimit, clientIp } from "@/lib/rate-limit";
 
@@ -8,11 +14,14 @@ export async function POST(req: NextRequest) {
     const ok = await rateLimit(`checkout:${clientIp(req)}`, 10, 600); // 10 per 10 min
     if (!ok) return NextResponse.json({ error: "Too many requests" }, { status: 429 });
 
-    const { tierId } = await req.json();
-    const tier = findMerchBuildTier(tierId);
-    if (!tier) return NextResponse.json({ error: "Invalid tier" }, { status: 400 });
+    const { itemCount } = await req.json();
+    const count = Number(itemCount);
+    if (!Number.isInteger(count) || count < MERCH_BUILD_MIN_ITEMS || count > MERCH_BUILD_MAX_ITEMS) {
+      return NextResponse.json({ error: "Invalid item count" }, { status: 400 });
+    }
 
-    const { total } = calculateMerchBuildTotal(tier.itemCount);
+    const { total } = calculateMerchBuildTotal(count);
+    const tierLabel = merchBuildTierLabel(count);
     const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
     const amountCents = Math.round(total * 100);
 
@@ -24,8 +33,8 @@ export async function POST(req: NextRequest) {
           price_data: {
             currency: "usd",
             product_data: {
-              name: `Merch Store Build — ${tier.name}`,
-              description: `${tier.itemCount} products, designed and built by Hidden Gem`,
+              name: `Merch Store Build — ${tierLabel}`,
+              description: `${count} products, designed and built by Hidden Gem`,
             },
             unit_amount: amountCents,
           },
@@ -34,8 +43,8 @@ export async function POST(req: NextRequest) {
       ],
       metadata: {
         kind: "merch-build",
-        tier: tier.name,
-        itemCount: String(tier.itemCount),
+        tier: tierLabel,
+        itemCount: String(count),
       },
       success_url: `${siteUrl}/merch-build/success?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${siteUrl}/merch-build`,
@@ -44,7 +53,7 @@ export async function POST(req: NextRequest) {
     await initDb();
     await db.execute({
       sql: `INSERT INTO merch_build_orders (tier, item_count, amount_cents, stripe_session_id, status) VALUES (?,?,?,?, 'pending')`,
-      args: [tier.name, tier.itemCount, amountCents, session.id],
+      args: [tierLabel, count, amountCents, session.id],
     });
 
     return NextResponse.json({ url: session.url });
