@@ -107,8 +107,16 @@ export default async function AdminPage() {
               ) : orders.map((r) => {
                 let items = "";
                 try {
-                  const parsed = JSON.parse(String(r.items || "[]")) as Array<{ name: string; style: string; size: string; qty: number }>;
-                  items = parsed.map((l) => `${l.name} (${l.style} ${l.size}) ×${l.qty}`).join("; ");
+                  const parsed = JSON.parse(String(r.items || "[]")) as Array<Record<string, unknown>>;
+                  items = parsed
+                    .map((l) => {
+                      // New shape: {name, variantName, qty}. Old orders placed
+                      // before the live-Printify rebuild used {name, style, size, qty} —
+                      // handle both so historical rows still render.
+                      const variant = String(l.variantName ?? [l.style, l.size].filter(Boolean).join(" "));
+                      return `${l.name} (${variant}) ×${l.qty}`;
+                    })
+                    .join("; ");
                 } catch { items = String(r.items || ""); }
                 let ship = "";
                 try {

@@ -88,8 +88,7 @@ export async function sendToProduction(orderId: string): Promise<unknown> {
 }
 
 // ── Helpers used by the /api/printify/products admin route ──
-// They let you read your real product_id + variant_id values so you
-// can fill them into lib/merch.ts → PRINTIFY_VARIANTS.
+// They let you read your real product_id + variant_id values directly.
 
 export async function listShops(): Promise<Array<{ id: number; title: string }>> {
   return req(`/shops.json`);
@@ -103,4 +102,206 @@ export async function listProducts(): Promise<{
   }>;
 }> {
   return req(`/shops/${shopId()}/products.json`);
+}
+
+// ─────────────────────────────────────────────────────────────
+// Live storefront catalog — the actual product/merch pages fetch
+// this directly instead of reading a hand-maintained static list,
+// so colors/sizes/availability always match what's really in
+// Printify. Same pattern as the MCS site's lib/printify.ts.
+// ─────────────────────────────────────────────────────────────
+
+interface PrintifyImage {
+  src: string;
+  variant_ids: number[];
+  position: string;
+  is_default: boolean;
+}
+
+interface PrintifyOptionValue {
+  id: number;
+  title: string;
+}
+
+interface PrintifyOption {
+  name: string; // e.g. "Colors", "Sizes"
+  type: string;
+  values: PrintifyOptionValue[];
+}
+
+interface PrintifyRawVariant {
+  id: number;
+  sku: string;
+  price: number; // cents
+  title: string; // e.g. "White / S"
+  is_enabled: boolean;
+  is_available: boolean;
+  is_default: boolean;
+  options: number[]; // option-value ids, positional per product.options
+}
+
+interface PrintifyRawProduct {
+  id: string;
+  title: string;
+  description: string;
+  options: PrintifyOption[];
+  variants: PrintifyRawVariant[];
+  images: PrintifyImage[];
+  visible: boolean;
+}
+
+export interface PrintifyVariantDetail {
+  variantId: number;
+  productId: string;
+  name: string; // e.g. "White / S"
+  retailPrice: string; // formatted dollar string, no $ sign, e.g. "36.00"
+  sku: string;
+  isAvailable: boolean;
+  options: { id: string; value: string }[]; // e.g. [{id:'colors',value:'White'},{id:'sizes',value:'S'}]
+  imageUrl: string;
+  imagesByPosition: Record<string, string>; // e.g. { front: '...', back: '...' }
+}
+
+export interface MerchProduct {
+  id: string;
+  slug: string;
+  name: string;
+  thumbnailUrl: string;
+  price: number; // lowest enabled variant price, dollars
+  priceFormatted: string; // "$36.00"
+  variants: PrintifyVariantDetail[];
+  description: string; // raw HTML from Printify
+  inStock: boolean;
+}
+
+function toSlug(name: string): string {
+  return name
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-|-$/g, "");
+}
+
+function formatPrice(cents: number): { price: number; formatted: string } {
+  const price = cents / 100;
+  return { price, formatted: `$${price.toFixed(2)}` };
+}
+
+function resolveVariantOptions(
+  variant: PrintifyRawVariant,
+  productOptions: PrintifyOption[]
+): { id: string; value: string }[] {
+  return productOptions
+    .map((opt) => {
+      const valueId = variant.options.find((id) =>
+        opt.values.some((v) => v.id === id)
+      );
+      const match = opt.values.find((v) => v.id === valueId);
+      if (!match) return null;
+      return { id: opt.name.toLowerCase(), value: match.title };
+    })
+    .filter((o): o is { id: string; value: string } => o !== null);
+}
+
+function resolveVariantImage(variantId: number, images: PrintifyImage[]): string {
+  const forVariant = images.filter((img) => img.variant_ids.includes(variantId));
+  const fallback = images.find((img) => img.is_default) ?? images[0];
+  return (forVariant[0] ?? fallback)?.src ?? "";
+}
+
+function resolveVariantImagesByPosition(
+  variantId: number,
+  images: PrintifyImage[]
+): Record<string, string> {
+  const forVariant = images.filter((img) => img.variant_ids.includes(variantId));
+  const byPosition: Record<string, string> = {};
+  for (const img of forVariant) {
+    if (!byPosition[img.position]) byPosition[img.position] = img.src;
+  }
+  return byPosition;
+}
+
+function enrichVariant(v: PrintifyRawVariant, product: PrintifyRawProduct): PrintifyVariantDetail {
+  const { formatted } = formatPrice(v.price);
+  return {
+    variantId: v.id,
+    productId: product.id,
+    name: v.title,
+    retailPrice: formatted.replace("$", ""),
+    sku: v.sku,
+    isAvailable: v.is_enabled && v.is_available,
+    options: resolveVariantOptions(v, product.options),
+    imageUrl: resolveVariantImage(v.id, product.images),
+    imagesByPosition: resolveVariantImagesByPosition(v.id, product.images),
+  };
+}
+
+function enrichProduct(p: PrintifyRawProduct): MerchProduct {
+  const slug = toSlug(p.title);
+  const enabledVariants = p.variants.filter((v) => v.is_enabled && v.is_available);
+  const prices = enabledVariants.map((v) => v.price).filter((n) => !isNaN(n));
+  const lowestCents = prices.length > 0 ? Math.min(...prices) : 0;
+  const { price, formatted } = formatPrice(lowestCents);
+  const defaultImage = p.images.find((img) => img.is_default) ?? p.images[0];
+
+  return {
+    id: p.id,
+    slug,
+    name: p.title,
+    thumbnailUrl: defaultImage?.src ?? "",
+    price,
+    priceFormatted: formatted,
+    variants: p.variants.map((v) => enrichVariant(v, p)),
+    description: p.description ?? "",
+    inStock: p.variants.some((v) => v.is_enabled && v.is_available),
+  };
+}
+
+async function pfGetCached(path: string) {
+  const res = await fetch(`${BASE}${path}`, {
+    headers: {
+      Authorization: `Bearer ${token()}`,
+      "User-Agent": "jade-the-gem-dj/1.0",
+    },
+    next: { revalidate: 3600 }, // ISR — re-fetch at most once an hour
+  });
+  if (!res.ok) throw new Error(`Printify GET ${path} failed: ${res.status}`);
+  return res.json();
+}
+
+// The Printify shop (27644500 / jadehiddengems) has old test products,
+// duplicates, and at least one other brand's item sitting in it, all
+// marked visible — Printify's own "visible" flag isn't a reliable filter
+// here. This is the explicit, permanent list of the 4 real storefront
+// products, keyed by Printify's own product id (never changes, unlike
+// titles). getProduct() enforces this too, not just getProducts() — the
+// checkout route calls getProduct() with a client-supplied product id,
+// so without this an arbitrary product id from the same Printify account
+// (including other brands' items) could be checked out through Jade's
+// store. Ask Jade to clean up/unpublish the extras in the Printify
+// dashboard when she gets a chance; this list is the safety net either way.
+const STOREFRONT_PRODUCT_IDS = new Set([
+  "6a402761b38ebb906e0692b5", // HIDDEN GEM AIR BRUSH
+  "6a1535ec69e138f54905134e", // HIDDEN GEM TEE
+  "6a145e8598c5cbc2170dcf1b", // HIDDEN VINTAGE TRUCKER
+  "6a41717777569fc62a0efa06", // HIDDEN POSTER
+]);
+
+/** Full live storefront catalog — visible products only. */
+export async function getProducts(): Promise<MerchProduct[]> {
+  const data = await pfGetCached(`/shops/${shopId()}/products.json?limit=50`);
+  const raw: PrintifyRawProduct[] = data.data ?? [];
+  return raw
+    .filter((p) => p.visible && STOREFRONT_PRODUCT_IDS.has(p.id))
+    .map(enrichProduct);
+}
+
+/** One product by Printify product id, with full variant detail. */
+export async function getProduct(id: string): Promise<MerchProduct | null> {
+  if (!STOREFRONT_PRODUCT_IDS.has(id)) return null;
+  try {
+    const raw: PrintifyRawProduct = await pfGetCached(`/shops/${shopId()}/products/${id}.json`);
+    return enrichProduct(raw);
+  } catch {
+    return null;
+  }
 }

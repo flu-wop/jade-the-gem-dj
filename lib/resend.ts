@@ -59,7 +59,7 @@ export async function sendMerchEmails({
 }: {
   name: string;
   email: string;
-  items: Array<{ name: string; style: string; size: string; gender: string; qty: number; price: number }>;
+  items: Array<{ name: string; variantName: string; qty: number; price: number }>;
   subtotal: number;
   discountCode?: string;
   discount: number;
@@ -74,7 +74,7 @@ export async function sendMerchEmails({
   const rows = items
     .map(
       (l) =>
-        `<tr><td style="padding:8px 0;border-bottom:1px solid #222;">${l.name} — ${l.style} · ${l.gender} · ${l.size} ×${l.qty}</td><td style="padding:8px 0;border-bottom:1px solid #222;text-align:right;color:#3aa898;">$${(l.price * l.qty).toFixed(2)}</td></tr>`
+        `<tr><td style="padding:8px 0;border-bottom:1px solid #222;">${l.name} — ${l.variantName} ×${l.qty}</td><td style="padding:8px 0;border-bottom:1px solid #222;text-align:right;color:#3aa898;">$${(l.price * l.qty).toFixed(2)}</td></tr>`
     )
     .join("");
 

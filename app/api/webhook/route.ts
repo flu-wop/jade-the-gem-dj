@@ -8,7 +8,7 @@ import {
   sendToProduction,
   type PrintifyLineItem,
 } from "@/lib/printify";
-import { findProduct, getPrintifyVariant, type CartLine } from "@/lib/merch";
+import type { CartItem } from "@/lib/cart";
 
 export const runtime = "nodejs";
 
@@ -90,7 +90,7 @@ async function handleMerch(sessionId: string) {
   // IDEMPOTENCY: don't re-fulfill or re-email an order already processed
   if (row.status !== "pending") return;
 
-  const items = JSON.parse(String(row.items)) as CartLine[];
+  const items = JSON.parse(String(row.items)) as CartItem[];
   const discountCode = String(row.discount_code || "");
   const shippingCents = Number(row.shipping_cents || 0);
 
@@ -126,17 +126,16 @@ async function handleMerch(sessionId: string) {
     args: [fullName, email, phone, JSON.stringify(addr ?? {}), sessionId],
   });
 
-  // Build Printify line items from the variant mapping
-  let fulfilled = false;
-  const lineItems: PrintifyLineItem[] = [];
-  for (const l of items) {
-    const product = findProduct(l.productId);
-    const variantId = getPrintifyVariant(l.productId, l.style, l.size, l.gender);
-    if (product?.printifyProductId && variantId) {
-      lineItems.push({ product_id: product.printifyProductId, variant_id: variantId, quantity: l.qty });
-    }
-  }
+  // Build Printify line items — productId/variantId ARE the real Printify
+  // ids now (pulled live at checkout), so no separate variant-mapping
+  // lookup is needed here anymore.
+  const lineItems: PrintifyLineItem[] = items.map((l) => ({
+    product_id: l.productId,
+    variant_id: l.variantId,
+    quantity: l.qty,
+  }));
 
+  let fulfilled = false;
   if (printifyConfigured() && lineItems.length === items.length && addr) {
     try {
       const order = await createOrder({
@@ -176,7 +175,7 @@ async function handleMerch(sessionId: string) {
     await sendMerchEmails({
       name: fullName,
       email,
-      items: items.map((l) => ({ name: l.name, style: l.style, size: l.size, gender: l.gender, qty: l.qty, price: l.price })),
+      items: items.map((l) => ({ name: l.name, variantName: l.variantName, qty: l.qty, price: l.price })),
       subtotal: itemSubtotal,
       discountCode: discountCode || undefined,
       discount,

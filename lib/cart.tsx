@@ -9,27 +9,40 @@ import {
   useCallback,
   type ReactNode,
 } from "react";
-import { type CartLine, lineId } from "@/lib/merch";
 
-const STORAGE_KEY = "jade-cart-v1";
+const STORAGE_KEY = "jade-cart-v2"; // v2: variant-based schema (live Printify), not style/size/gender
+
+// One cart line = one Printify variant. Since a variant already encodes
+// color + size together, there's nothing else to key on — no more manual
+// style/size/gender combinations to keep in sync with the real catalog.
+export interface CartItem {
+  variantId: number;
+  productId: string;
+  slug: string;
+  name: string; // product name, e.g. "Hidden Gem Tee"
+  variantName: string; // e.g. "Black / L" or "One size / Black / Leopard"
+  price: number; // dollars, snapshotted at add-to-cart time (re-validated at checkout)
+  qty: number;
+  image: string;
+}
 
 interface CartContextValue {
-  items: CartLine[];
+  items: CartItem[];
   count: number;
   subtotal: number;
   isOpen: boolean;
   open: () => void;
   close: () => void;
-  addItem: (line: CartLine) => void;
-  setQty: (id: string, qty: number) => void;
-  removeItem: (id: string) => void;
+  addItem: (item: CartItem) => void;
+  setQty: (variantId: number, qty: number) => void;
+  removeItem: (variantId: number) => void;
   clear: () => void;
 }
 
 const CartContext = createContext<CartContextValue | null>(null);
 
 export function CartProvider({ children }: { children: ReactNode }) {
-  const [items, setItems] = useState<CartLine[]>([]);
+  const [items, setItems] = useState<CartItem[]>([]);
   const [isOpen, setIsOpen] = useState(false);
   const [hydrated, setHydrated] = useState(false);
 
@@ -54,30 +67,29 @@ export function CartProvider({ children }: { children: ReactNode }) {
     }
   }, [items, hydrated]);
 
-  const addItem = useCallback((line: CartLine) => {
+  const addItem = useCallback((item: CartItem) => {
     setItems((prev) => {
-      const id = lineId(line);
-      const existing = prev.find((l) => lineId(l) === id);
+      const existing = prev.find((l) => l.variantId === item.variantId);
       if (existing) {
         return prev.map((l) =>
-          lineId(l) === id ? { ...l, qty: l.qty + line.qty } : l
+          l.variantId === item.variantId ? { ...l, qty: l.qty + item.qty } : l
         );
       }
-      return [...prev, line];
+      return [...prev, item];
     });
     setIsOpen(true);
   }, []);
 
-  const setQty = useCallback((id: string, qty: number) => {
+  const setQty = useCallback((variantId: number, qty: number) => {
     setItems((prev) =>
       prev
-        .map((l) => (lineId(l) === id ? { ...l, qty: Math.max(1, qty) } : l))
+        .map((l) => (l.variantId === variantId ? { ...l, qty: Math.max(1, qty) } : l))
         .filter((l) => l.qty > 0)
     );
   }, []);
 
-  const removeItem = useCallback((id: string) => {
-    setItems((prev) => prev.filter((l) => lineId(l) !== id));
+  const removeItem = useCallback((variantId: number) => {
+    setItems((prev) => prev.filter((l) => l.variantId !== variantId));
   }, []);
 
   const clear = useCallback(() => setItems([]), []);

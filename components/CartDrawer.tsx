@@ -4,7 +4,6 @@ import Image from "next/image";
 import { useState } from "react";
 import { X, ShoppingBag, Minus, Plus, Trash2, Tag } from "lucide-react";
 import { useCart } from "@/lib/cart";
-import { lineId } from "@/lib/merch";
 
 const SHIPPING_FLAT = 5.99;
 
@@ -100,7 +99,7 @@ export default function CartDrawer() {
           ) : (
             <ul className="space-y-4">
               {items.map((l) => {
-                const id = lineId(l);
+                const id = l.variantId;
                 return (
                   <li key={id} className="flex gap-4 border-b border-plum/10 pb-4">
                     <div className="relative w-16 h-16 shrink-0 bg-surface-2 overflow-hidden">
@@ -111,7 +110,7 @@ export default function CartDrawer() {
                         {l.name}
                       </p>
                       <p className="font-body text-[11px] text-mist/40 mt-0.5">
-                        {l.style} · {l.size} · {l.gender}
+                        {l.variantName}
                       </p>
                       <div className="flex items-center justify-between mt-2">
                         <div className="flex items-center gap-2">
@@ -131,7 +130,7 @@ export default function CartDrawer() {
                             <Plus size={12} />
                           </button>
                         </div>
-                        <span className="font-sub text-gold text-sm">${l.price * l.qty}</span>
+                        <span className="font-sub text-gold text-sm">${(l.price * l.qty).toFixed(2)}</span>
                       </div>
                     </div>
                     <button

@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { stripe, MERCH_SHIPPING_FLAT_CENTS, calculateMerchDiscount } from "@/lib/stripe";
 import { db, initDb } from "@/lib/db";
-import { findProduct, priceFor, type CartLine } from "@/lib/merch";
+import { getProduct } from "@/lib/printify";
 import { rateLimit, clientIp } from "@/lib/rate-limit";
+import type { CartItem } from "@/lib/cart";
 
 export const runtime = "nodejs";
 
@@ -11,36 +12,44 @@ export async function POST(req: NextRequest) {
     const ok = await rateLimit(`checkout:${clientIp(req)}`, 10, 600); // 10 per 10 min
     if (!ok) return NextResponse.json({ error: "Too many requests" }, { status: 429 });
 
-    const { items, code } = (await req.json()) as { items: CartLine[]; code?: string };
+    const { items, code } = (await req.json()) as { items: CartItem[]; code?: string };
     if (!Array.isArray(items) || items.length === 0)
       return NextResponse.json({ error: "Cart is empty" }, { status: 400 });
 
-    // Re-validate every line against the catalog. Never trust client prices.
-    const validated: CartLine[] = [];
+    // Re-validate every line against the LIVE Printify catalog. Never trust
+    // client-sent prices, names, or images — a client could have stale or
+    // tampered cart data. One getProduct() call per distinct product id
+    // (cached in-process for the life of this request), not one per line.
+    const productCache = new Map<string, Awaited<ReturnType<typeof getProduct>>>();
+    const validated: CartItem[] = [];
     for (const l of items) {
-      const product = findProduct(l.productId);
-      if (!product) return NextResponse.json({ error: `Unknown product: ${l.productId}` }, { status: 400 });
-      const styleOpt = product.styles.find((s) => s.label === l.style);
-      if (!styleOpt) return NextResponse.json({ error: `Invalid style for ${product.name}` }, { status: 400 });
-      if (!styleOpt.forGenders.includes(l.gender) || !styleOpt.sizes.includes(l.size))
-        return NextResponse.json({ error: `Invalid option for ${product.name}` }, { status: 400 });
+      if (!productCache.has(l.productId)) {
+        productCache.set(l.productId, await getProduct(l.productId));
+      }
+      const product = productCache.get(l.productId);
+      if (!product) return NextResponse.json({ error: `Product unavailable: ${l.productId}` }, { status: 400 });
+
+      const variant = product.variants.find((v) => v.variantId === l.variantId);
+      if (!variant) return NextResponse.json({ error: `Unknown variant for ${product.name}` }, { status: 400 });
+      if (!variant.isAvailable) return NextResponse.json({ error: `${product.name} — ${variant.name} is sold out` }, { status: 400 });
+
       const qty = Math.max(1, Math.floor(Number(l.qty) || 1));
       validated.push({
+        variantId: variant.variantId,
         productId: product.id,
+        slug: product.slug,
         name: product.name,
-        style: l.style,
-        size: l.size,
-        gender: l.gender,
+        variantName: variant.name,
         qty,
-        price: priceFor(product, l.style, l.size), // authoritative price — includes size modifier
-        image: product.mockups[0],
+        price: parseFloat(variant.retailPrice), // authoritative — from live Printify data
+        image: variant.imageUrl || product.thumbnailUrl,
       });
     }
 
     // Discount applies to item cost only — computed server-side, never
     // trust a client-sent discount amount. Same pattern as HIDDEN50/PLAY30.
     const rawSubtotal = validated.reduce((s, l) => s + l.price * l.qty, 0);
-    const { discount, discountApplied } = calculateMerchDiscount(rawSubtotal, code);
+    const { discountApplied } = calculateMerchDiscount(rawSubtotal, code);
     const discountRate = discountApplied ? 0.8 : 1;
 
     const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
@@ -66,9 +75,8 @@ export async function POST(req: NextRequest) {
           currency: "usd",
           unit_amount: unitAmount,
           product_data: {
-            name: `${l.name} — ${l.style}`,
-            description: `${l.gender} · Size ${l.size}`,
-            images: [`${siteUrl}${l.image}`],
+            name: `${l.name} — ${l.variantName}`,
+            images: l.image ? [l.image] : undefined, // Printify's own CDN URL, already absolute
           },
         },
       })),
@@ -89,10 +97,9 @@ export async function POST(req: NextRequest) {
     });
 
     // Save a pending row keyed by session id. The webhook reads it back
-    // after payment to build the Printify order (Stripe gives us the
-    // address, this row gives us the variants). `items` keeps the
-    // original catalog prices (pre-discount) for order records; the
-    // discount and shipping are tracked separately.
+    // after payment to build the Printify order directly from the
+    // variantId/productId here — no separate variant-mapping step needed,
+    // these ARE the live Printify ids.
     await initDb();
     await db.execute({
       sql: `INSERT INTO merch_orders (items, discount_code, shipping_cents, amount_cents, stripe_session_id, status)
