@@ -97,13 +97,13 @@ export default async function AdminPage() {
             <thead>
               <tr>
                 <th style={th}>When</th><th style={th}>Name</th><th style={th}>Email</th>
-                <th style={th}>Items</th><th style={th}>Paid</th>
+                <th style={th}>Items</th><th style={th}>Paid</th><th style={th}>Code</th>
                 <th style={th}>Ship To</th><th style={th}>Printify</th><th style={th}>Status</th>
               </tr>
             </thead>
             <tbody>
               {orders.length === 0 ? (
-                <tr><td style={td} colSpan={8}>No orders yet.</td></tr>
+                <tr><td style={td} colSpan={9}>No orders yet.</td></tr>
               ) : orders.map((r) => {
                 let items = "";
                 try {
@@ -122,6 +122,7 @@ export default async function AdminPage() {
                     <td style={td}>{String(r.email || "")}</td>
                     <td style={td}>{items}</td>
                     <td style={td}>{money(r.amount_cents)}</td>
+                    <td style={td}>{String(r.discount_code || "")}</td>
                     <td style={td}>{ship}</td>
                     <td style={td}>{String(r.printify_order_id || "—")}</td>
                     <td style={td}><StatusPill status={r.status} /></td>

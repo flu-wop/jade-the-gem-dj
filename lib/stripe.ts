@@ -63,3 +63,18 @@ export function calculatePlaylistTotal(price: number, code?: string) {
   const total = price - discount;
   return { subtotal: price, discount, total, discountApplied };
 }
+
+// ── Merch storefront: flat shipping + discount code ──
+// Shipping is a flat rate for now (US/CA only, matches
+// shipping_address_collection in the checkout route) — no weight/zone
+// tiers yet. Tax collection is a separate follow-up.
+export const MERCH_SHIPPING_FLAT_CENTS = 599; // $5.99, all orders
+
+// HIDDEN20 discounts item cost only — shipping is charged in full
+// regardless of code.
+export function calculateMerchDiscount(itemSubtotal: number, code?: string) {
+  const discountApplied = code?.trim().toUpperCase() === "HIDDEN20";
+  const discount = discountApplied ? Math.round(itemSubtotal * 0.2 * 100) / 100 : 0;
+  const total = itemSubtotal - discount;
+  return { subtotal: itemSubtotal, discount, total, discountApplied };
+}

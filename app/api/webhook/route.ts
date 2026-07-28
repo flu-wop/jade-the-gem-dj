@@ -91,7 +91,8 @@ async function handleMerch(sessionId: string) {
   if (row.status !== "pending") return;
 
   const items = JSON.parse(String(row.items)) as CartLine[];
-  const total = Number(row.amount_cents) / 100;
+  const discountCode = String(row.discount_code || "");
+  const shippingCents = Number(row.shipping_cents || 0);
 
   // Pull the customer + shipping address from Stripe
   const full = await stripe.checkout.sessions.retrieve(sessionId);
@@ -103,6 +104,14 @@ async function handleMerch(sessionId: string) {
   const lastName = rest.join(" ") || firstName;
   const email = cust?.email || "";
   const phone = cust?.phone || "";
+
+  // Stripe's amount_total is the authoritative charged amount (items after
+  // discount + shipping) — fall back to our stored total if it's ever
+  // unavailable.
+  const total = (full.amount_total ?? Number(row.amount_cents)) / 100;
+  const itemSubtotal = items.reduce((s, l) => s + l.price * l.qty, 0);
+  const discount = discountCode ? Math.round(itemSubtotal * 0.2 * 100) / 100 : 0;
+  const shipping = shippingCents / 100;
 
   const shippingLines = [
     fullName,
@@ -168,6 +177,10 @@ async function handleMerch(sessionId: string) {
       name: fullName,
       email,
       items: items.map((l) => ({ name: l.name, style: l.style, size: l.size, gender: l.gender, qty: l.qty, price: l.price })),
+      subtotal: itemSubtotal,
+      discountCode: discountCode || undefined,
+      discount,
+      shipping,
       total,
       shippingLines,
       fulfilled,

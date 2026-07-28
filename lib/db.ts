@@ -48,8 +48,10 @@ export async function initDb() {
       name TEXT,
       email TEXT,
       phone TEXT,
-      items TEXT NOT NULL,            -- JSON array of cart lines
-      amount_cents INTEGER NOT NULL,
+      items TEXT NOT NULL,            -- JSON array of cart lines (pre-discount prices)
+      discount_code TEXT,
+      shipping_cents INTEGER DEFAULT 0,
+      amount_cents INTEGER NOT NULL,  -- full charged total: discounted items + shipping
       stripe_session_id TEXT,
       printify_order_id TEXT,
       shipping_json TEXT,             -- JSON of the shipping address
@@ -92,6 +94,18 @@ export async function initDb() {
   // ever reaches Stripe checkout.
   try {
     await db.execute(`ALTER TABLE playlist_orders ADD COLUMN discount_code TEXT`);
+  } catch {
+    // Column already exists — fine.
+  }
+  // Same story as above: merch_orders already exists in production, so
+  // CREATE TABLE IF NOT EXISTS won't add these new columns on its own.
+  try {
+    await db.execute(`ALTER TABLE merch_orders ADD COLUMN discount_code TEXT`);
+  } catch {
+    // Column already exists — fine.
+  }
+  try {
+    await db.execute(`ALTER TABLE merch_orders ADD COLUMN shipping_cents INTEGER DEFAULT 0`);
   } catch {
     // Column already exists — fine.
   }

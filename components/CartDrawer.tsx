@@ -2,14 +2,40 @@
 
 import Image from "next/image";
 import { useState } from "react";
-import { X, ShoppingBag, Minus, Plus, Trash2 } from "lucide-react";
+import { X, ShoppingBag, Minus, Plus, Trash2, Tag } from "lucide-react";
 import { useCart } from "@/lib/cart";
 import { lineId } from "@/lib/merch";
+
+const SHIPPING_FLAT = 5.99;
 
 export default function CartDrawer() {
   const { items, isOpen, close, subtotal, setQty, removeItem } = useCart();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [codeInput, setCodeInput] = useState("");
+  const [appliedCode, setAppliedCode] = useState<string | null>(null);
+  const [codeError, setCodeError] = useState("");
+
+  function applyCode() {
+    const trimmed = codeInput.trim().toUpperCase();
+    setCodeError("");
+    if (!trimmed) return;
+    if (trimmed === "HIDDEN20") {
+      setAppliedCode(trimmed);
+    } else {
+      setAppliedCode(null);
+      setCodeError("That code isn't valid.");
+    }
+  }
+
+  function removeCode() {
+    setAppliedCode(null);
+    setCodeInput("");
+    setCodeError("");
+  }
+
+  const discount = appliedCode === "HIDDEN20" ? Math.round(subtotal * 0.2 * 100) / 100 : 0;
+  const total = subtotal - discount + SHIPPING_FLAT;
 
   async function checkout() {
     if (items.length === 0) return;
@@ -19,7 +45,7 @@ export default function CartDrawer() {
       const res = await fetch("/api/merch/checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ items }),
+        body: JSON.stringify({ items, code: appliedCode ?? undefined }),
       });
       const data = await res.json();
       if (data.url) {
@@ -125,12 +151,67 @@ export default function CartDrawer() {
         {/* Footer */}
         {items.length > 0 && (
           <div className="border-t border-plum/20 px-6 py-5 space-y-4">
-            <div className="flex justify-between font-sub text-sm tracking-wider uppercase">
-              <span className="text-mist/50">Subtotal</span>
-              <span className="text-cream">${subtotal}</span>
+            {/* Discount code */}
+            {appliedCode ? (
+              <div className="flex items-center justify-between bg-surface-2 border border-gold/30 px-3 py-2">
+                <span className="font-body text-xs text-gold flex items-center gap-1.5">
+                  <Tag size={12} /> {appliedCode} applied
+                </span>
+                <button
+                  onClick={removeCode}
+                  className="font-body text-[11px] text-mist/40 hover:text-jade-light underline-offset-2 hover:underline"
+                >
+                  Remove
+                </button>
+              </div>
+            ) : (
+              <div>
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={codeInput}
+                    onChange={(e) => setCodeInput(e.target.value)}
+                    onKeyDown={(e) => e.key === "Enter" && applyCode()}
+                    placeholder="Discount code"
+                    className="flex-1 bg-surface-2 border border-plum/30 px-3 py-2 text-xs font-body text-cream placeholder:text-mist/30 focus:outline-none focus:border-gold/50"
+                  />
+                  <button
+                    onClick={applyCode}
+                    className="px-4 py-2 font-sub text-[11px] tracking-wider uppercase border border-plum/30 text-mist hover:border-gold hover:text-gold transition-colors"
+                  >
+                    Apply
+                  </button>
+                </div>
+                {codeError && (
+                  <p className="font-body text-[11px] text-jade-light mt-1.5">{codeError}</p>
+                )}
+              </div>
+            )}
+
+            {/* Price breakdown */}
+            <div className="space-y-1.5">
+              <div className="flex justify-between font-body text-xs">
+                <span className="text-mist/50">Subtotal</span>
+                <span className="text-cream">${subtotal.toFixed(2)}</span>
+              </div>
+              {discount > 0 && (
+                <div className="flex justify-between font-body text-xs">
+                  <span className="text-mist/50">Discount ({appliedCode})</span>
+                  <span className="text-gold">-${discount.toFixed(2)}</span>
+                </div>
+              )}
+              <div className="flex justify-between font-body text-xs">
+                <span className="text-mist/50">Shipping</span>
+                <span className="text-cream">${SHIPPING_FLAT.toFixed(2)}</span>
+              </div>
+              <div className="flex justify-between font-sub text-sm tracking-wider uppercase pt-1.5 border-t border-plum/10">
+                <span className="text-mist/50">Total</span>
+                <span className="text-cream">${total.toFixed(2)}</span>
+              </div>
             </div>
+
             <p className="font-body text-[11px] text-mist/30">
-              Shipping calculated at checkout. Taxes where applicable.
+              US &amp; Canada shipping only for now. Taxes calculated at checkout where applicable.
             </p>
             <p className="font-body text-[11px] text-mist/20">
               Your info is used only to ship your order. <a href="/privacy" className="underline-offset-2 hover:underline">Privacy policy</a>
