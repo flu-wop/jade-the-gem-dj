@@ -2,8 +2,21 @@ import { NextRequest, NextResponse } from "next/server";
 import { db, initDb } from "@/lib/db";
 import { sendRsvpEmails } from "@/lib/resend";
 import { rateLimit, clientIp } from "@/lib/rate-limit";
+import { upcomingEvents } from "@/lib/data";
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const MAX_GUESTS_PER_RSVP = 2;
+
+// Addresses are private and never committed to the (public) repo.
+// Set RSVP_ADDRESSES in Vercel as JSON: {"event-id": "123 Main St, New Orleans, LA"}
+function addressForEvent(eventId: string): string | undefined {
+  try {
+    const map = JSON.parse(process.env.RSVP_ADDRESSES ?? "{}") as Record<string, string>;
+    return map[eventId];
+  } catch {
+    return undefined;
+  }
+}
 
 export async function POST(req: NextRequest) {
   try {
@@ -19,7 +32,7 @@ export async function POST(req: NextRequest) {
     const message = typeof body.message === "string" ? body.message.trim().slice(0, 500) : "";
     let guests = Number(body.guests);
     if (!Number.isFinite(guests) || guests < 1) guests = 1;
-    guests = Math.min(Math.floor(guests), 10);
+    guests = Math.min(Math.floor(guests), MAX_GUESTS_PER_RSVP);
 
     if (!eventId || !eventTitle)
       return NextResponse.json({ error: "Missing event" }, { status: 400 });
@@ -29,6 +42,25 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Valid email required" }, { status: 400 });
 
     await initDb();
+
+    const capacity = upcomingEvents.find((e) => e.id === eventId)?.rsvpCapacity;
+    if (typeof capacity === "number") {
+      const r = await db.execute({
+        sql: "SELECT COALESCE(SUM(guests), 0) AS total FROM rsvps WHERE event_id = ?",
+        args: [eventId],
+      });
+      const already = Number(r.rows[0]?.total ?? 0);
+      if (already >= capacity)
+        return NextResponse.json({ error: "This event is sold out." }, { status: 409 });
+      if (already + guests > capacity) {
+        const remaining = capacity - already;
+        return NextResponse.json(
+          { error: `Only ${remaining} spot${remaining === 1 ? "" : "s"} left — try a smaller guest count.` },
+          { status: 409 }
+        );
+      }
+    }
+
     await db.execute({
       sql: `INSERT INTO rsvps (event_id, event_title, name, email, phone, guests, message)
             VALUES (?, ?, ?, ?, ?, ?, ?)`,
@@ -36,7 +68,7 @@ export async function POST(req: NextRequest) {
     });
 
     try {
-      await sendRsvpEmails({ eventTitle, name, email, phone, guests, message });
+      await sendRsvpEmails({ eventTitle, name, email, phone, guests, message, address: addressForEvent(eventId) });
     } catch (emailErr) {
       // RSVP is saved even if email delivery fails
       console.error("RSVP email error:", emailErr);
@@ -48,3 +80,4 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Server error" }, { status: 500 });
   }
 }
+

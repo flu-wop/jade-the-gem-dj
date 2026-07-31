@@ -7,6 +7,7 @@ import RSVPForm from "@/components/RSVPForm";
 
 interface Props {
   event: Event;
+  soldOut?: boolean;
 }
 
 const MONTH_SHORT = [
@@ -14,7 +15,7 @@ const MONTH_SHORT = [
   "JUL","AUG","SEP","OCT","NOV","DEC",
 ];
 
-export default function EventCard({ event }: Props) {
+export default function EventCard({ event, soldOut }: Props) {
   const [rsvpOpen, setRsvpOpen] = useState(false);
   const d = new Date(`${event.date}T12:00:00`);
   const month = MONTH_SHORT[d.getMonth()];
@@ -48,6 +49,13 @@ export default function EventCard({ event }: Props) {
         {event.isPast && (
           <span className="absolute top-3 right-3 z-10 px-2 py-1 rounded text-[10px] font-bold uppercase tracking-widest bg-black/70 text-white/50">
             Past
+          </span>
+        )}
+
+        {/* Sold out badge */}
+        {!event.isPast && soldOut && (
+          <span className="absolute top-3 right-3 z-10 px-2 py-1 rounded text-[10px] font-bold uppercase tracking-widest bg-black/70 text-red-400">
+            Sold Out
           </span>
         )}
 
@@ -85,12 +93,18 @@ export default function EventCard({ event }: Props) {
         {!event.isPast && (
           <>
             {event.rsvpRequired ? (
-              <button
-                onClick={() => setRsvpOpen(true)}
-                className="btn-primary w-full text-xs py-2.5"
-              >
-                RSVP for Address
-              </button>
+              soldOut ? (
+                <button disabled className="btn-ghost w-full text-xs py-2.5 opacity-50 cursor-not-allowed">
+                  Sold Out
+                </button>
+              ) : (
+                <button
+                  onClick={() => setRsvpOpen(true)}
+                  className="btn-primary w-full text-xs py-2.5"
+                >
+                  RSVP for Address
+                </button>
+              )
             ) : event.ticketLink ? (
               <a
                 href={event.ticketLink}

@@ -109,7 +109,7 @@ export default function RSVPForm({ eventId, eventTitle, onClose }: Props) {
                   onChange={(e) => setGuests(Number(e.target.value))}
                   className="w-full bg-surface border border-plum/30 text-white text-sm px-4 py-3 focus:outline-none focus:border-neon-green transition-colors"
                 >
-                  {Array.from({ length: 10 }, (_, i) => i + 1).map((n) => (
+                  {Array.from({ length: 2 }, (_, i) => i + 1).map((n) => (
                     <option key={n} value={n}>
                       {n} guest{n > 1 ? "s" : ""}
                     </option>

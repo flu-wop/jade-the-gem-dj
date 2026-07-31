@@ -16,6 +16,8 @@ export interface Event {
   time?: string;
   /** Address is private and only shared with confirmed guests via RSVP form */
   rsvpRequired?: boolean;
+  /** Max total guests (summed across all RSVPs) before the event shows as sold out */
+  rsvpCapacity?: number;
 }
 
 export interface Track {
@@ -46,6 +48,7 @@ export const upcomingEvents: Event[] = [
     flyerImage: "/images/flyer-aug-2026-after-white-linen.jpg",
     time: "10:00 PM",
     rsvpRequired: true,
+    rsvpCapacity: 30,
   },
 ];
 

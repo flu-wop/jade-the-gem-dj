@@ -1,6 +1,9 @@
 import type { Metadata } from "next";
 import EventCard from "@/components/EventCard";
 import { upcomingEvents, pastEvents } from "@/lib/data";
+import { db, initDb } from "@/lib/db";
+
+export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: "Events",
@@ -8,7 +11,22 @@ export const metadata: Metadata = {
     "Catch DJ Jade the Gem live — upcoming club nights, festivals, and private events in New Orleans and beyond.",
 };
 
-export default function EventsPage() {
+export default async function EventsPage() {
+  await initDb();
+  const sortedUpcoming = [...upcomingEvents].sort((a, b) => a.date.localeCompare(b.date));
+  const sortedPast = [...pastEvents].sort((a, b) => b.date.localeCompare(a.date));
+
+  const soldOutIds = new Set<string>();
+  for (const event of sortedUpcoming) {
+    if (!event.rsvpRequired || typeof event.rsvpCapacity !== "number") continue;
+    const r = await db.execute({
+      sql: "SELECT COALESCE(SUM(guests), 0) AS total FROM rsvps WHERE event_id = ?",
+      args: [event.id],
+    });
+    const total = Number(r.rows[0]?.total ?? 0);
+    if (total >= event.rsvpCapacity) soldOutIds.add(event.id);
+  }
+
   return (
     <div className="min-h-screen pt-24 pb-24 px-4">
       <div className="max-w-7xl mx-auto">
@@ -32,14 +50,14 @@ export default function EventsPage() {
               Upcoming Events
             </h2>
             <span className="px-3 py-1 rounded-full bg-neon-green/10 border border-neon-green/20 text-neon-green text-xs font-bold">
-              {upcomingEvents.length} Shows
+              {sortedUpcoming.length} Shows
             </span>
           </div>
 
-          {upcomingEvents.length > 0 ? (
+          {sortedUpcoming.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {upcomingEvents.map((event) => (
-                <EventCard key={event.id} event={event} />
+              {sortedUpcoming.map((event) => (
+                <EventCard key={event.id} event={event} soldOut={soldOutIds.has(event.id)} />
               ))}
             </div>
           ) : (
@@ -61,7 +79,7 @@ export default function EventsPage() {
             Past Performances
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {pastEvents.map((event) => (
+            {sortedPast.map((event) => (
               <EventCard key={event.id} event={event} />
             ))}
           </div>

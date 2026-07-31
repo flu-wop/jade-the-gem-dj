@@ -203,7 +203,9 @@ export default async function AdminPage() {
       </section>
       {/* RSVPs */}
       <section style={{ marginTop: 48 }}>
-        <h2 style={{ color: "#3aa898" }}>RSVPs ({rsvps.length})</h2>
+        <h2 style={{ color: "#3aa898" }}>
+          RSVPs ({rsvps.length}, {rsvps.reduce((sum, r) => sum + Number(r.guests || 1), 0)} guests total)
+        </h2>
         <div style={{ overflowX: "auto" }}>
           <table style={{ width: "100%", borderCollapse: "collapse", marginTop: 12, minWidth: 720 }}>
             <thead>

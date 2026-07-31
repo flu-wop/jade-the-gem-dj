@@ -172,9 +172,9 @@ export async function sendNewsletterWelcome(email: string) {
 }
 
 export async function sendRsvpEmails({
-  eventTitle, name, email, phone, guests, message,
+  eventTitle, name, email, phone, guests, message, address,
 }: {
-  eventTitle: string; name: string; email: string; phone?: string; guests: number; message?: string;
+  eventTitle: string; name: string; email: string; phone?: string; guests: number; message?: string; address?: string;
 }) {
   const from = process.env.RESEND_FROM_EMAIL ?? "onboarding@resend.dev";
   const to_jade = process.env.RESEND_TO_EMAIL ?? "jadedwheeler8@gmail.com";
@@ -185,7 +185,15 @@ export async function sendRsvpEmails({
     html: `<div style="font-family:sans-serif;background:#0e0b14;color:#f0ebe8;padding:40px;max-width:580px;margin:0 auto;">
       <h1 style="color:#3aa898;font-size:28px;margin-bottom:4px;">You're RSVP'd! 💎</h1>
       <p style="color:#888;margin-bottom:28px;">${eventTitle}</p>
-      <p>Thanks for RSVPing, ${name}. The address is sent out directly to guests closer to the date — keep an eye on your inbox (and check spam, just in case).</p>
+      <p>Thanks for RSVPing, ${name}. This confirms you're on the guest list.</p>
+      ${
+        address
+          ? `<div style="margin-top:20px;padding:16px 20px;background:#1a1626;border:1px solid #3aa89855;">
+               <p style="color:#888;margin:0 0 4px;font-size:12px;letter-spacing:0.08em;text-transform:uppercase;">Address</p>
+               <p style="color:#f0ebe8;margin:0;font-size:15px;">${address}</p>
+             </div>`
+          : `<p style="margin-top:16px;">The address is sent out directly to guests closer to the date — keep an eye on your inbox (and check spam, just in case).</p>`
+      }
       <p style="color:#888;margin-top:16px;">Guests: ${guests}</p>
       <p style="margin-top:32px;color:#666;">Questions? <a href="mailto:${to_jade}" style="color:#3aa898;">${to_jade}</a></p>
     </div>`,
