@@ -9,6 +9,32 @@ async function isAdmin() {
   return !!cookie && cookie === sessionToken();
 }
 
+export async function POST(req: NextRequest) {
+  if (!(await isAdmin())) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  const body = (await req.json().catch(() => ({}))) as {
+    eventId?: string; eventTitle?: string; name?: string; email?: string;
+    phone?: string; guests?: number; message?: string; createdAt?: string;
+  };
+  if (!body.eventId || !body.eventTitle || !body.name || !body.email) {
+    return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
+  }
+
+  await initDb();
+  await db.execute({
+    sql: `INSERT INTO rsvps (event_id, event_title, name, email, phone, guests, message, created_at)
+          VALUES (?, ?, ?, ?, ?, ?, ?, COALESCE(?, datetime('now')))`,
+    args: [
+      body.eventId, body.eventTitle, body.name, body.email,
+      body.phone || null, body.guests || 1, body.message || null, body.createdAt || null,
+    ],
+  });
+
+  return NextResponse.json({ ok: true });
+}
+
 export async function DELETE(req: NextRequest) {
   if (!(await isAdmin())) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });

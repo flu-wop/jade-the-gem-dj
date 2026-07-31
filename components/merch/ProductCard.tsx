@@ -37,14 +37,11 @@ export default function ProductCard({ product }: { product: MerchProduct }) {
     return sizeVariants.find((v) => optionValue(v, "size") === preferred) ?? sizeVariants[0];
   })();
 
-  const [selectedVariant, setSelectedVariant] = useState<PrintifyVariantDetail | null>(
-    sizeVariants.length > 6 ? null : defaultVariant
-  );
+  const [selectedVariant, setSelectedVariant] = useState<PrintifyVariantDetail | null>(defaultVariant);
   const [added, setAdded] = useState(false);
   const [imgError, setImgError] = useState(false);
 
   const handleAddToCart = useCallback(() => {
-    if (sizeVariants.length > 6 && !selectedVariant) return;
     const variant = selectedVariant ?? product.variants[0];
     if (!variant) return;
 
@@ -61,10 +58,10 @@ export default function ProductCard({ product }: { product: MerchProduct }) {
     setAdded(true);
     open();
     setTimeout(() => setAdded(false), 1500);
-  }, [addItem, open, product, selectedVariant, sizeVariants.length]);
+  }, [addItem, open, product, selectedVariant]);
 
   const price = selectedVariant ? parseFloat(selectedVariant.retailPrice) : product.price;
-  const canAdd = !product.inStock ? false : sizeVariants.length > 6 ? !!selectedVariant : true;
+  const canAdd = !product.inStock ? false : sizeVariants.length > 1 ? !!selectedVariant : true;
 
   return (
     <div className="flex flex-col">
@@ -103,46 +100,23 @@ export default function ProductCard({ product }: { product: MerchProduct }) {
         </div>
 
         {sizeVariants.length > 1 && (
-          sizeVariants.length > 6 ? (
-            <select
-              aria-label="Select size"
-              value={selectedVariant?.variantId ?? ""}
-              onChange={(e) => {
-                const v = sizeVariants.find((sv) => sv.variantId === Number(e.target.value));
-                if (v) setSelectedVariant(v);
-              }}
-              className="mb-3 w-full bg-surface border border-plum/30 text-mist/70 text-[11px] tracking-wider uppercase px-2 py-2 font-sub focus:outline-none focus:border-gold/50"
-            >
-              <option value="" disabled>Select a size</option>
-              {sizeVariants.map((v) => {
-                const size = optionValue(v, "size") ?? v.name;
-                return (
-                  <option key={v.variantId} value={v.variantId}>{size}</option>
-                );
-              })}
-            </select>
-          ) : (
-            <div className="flex flex-wrap gap-1.5 mb-3" role="group" aria-label="Select size">
-              {sizeVariants.map((v) => {
-                const size = optionValue(v, "size") ?? v.name;
-                const isSelected = selectedVariant?.variantId === v.variantId;
-                return (
-                  <button
-                    key={v.variantId}
-                    onClick={() => setSelectedVariant(v)}
-                    aria-pressed={isSelected}
-                    className={`min-w-[36px] px-2 py-1 font-sub text-[11px] uppercase tracking-wider border transition-all duration-150 ${
-                      isSelected
-                        ? "bg-plum border-plum text-cream"
-                        : "border-plum/30 text-mist/50 hover:border-plum/60 hover:text-mist"
-                    }`}
-                  >
-                    {size}
-                  </button>
-                );
-              })}
-            </div>
-          )
+          <select
+            aria-label="Select size"
+            value={selectedVariant?.variantId ?? ""}
+            onChange={(e) => {
+              const v = sizeVariants.find((sv) => sv.variantId === Number(e.target.value));
+              if (v) setSelectedVariant(v);
+            }}
+            className="mb-3 w-full bg-surface border border-plum/30 text-mist/70 text-[11px] tracking-wider uppercase px-2 py-2 font-sub focus:outline-none focus:border-gold/50"
+          >
+            <option value="" disabled>Select a size</option>
+            {sizeVariants.map((v) => {
+              const size = optionValue(v, "size") ?? v.name;
+              return (
+                <option key={v.variantId} value={v.variantId}>{size}</option>
+              );
+            })}
+          </select>
         )}
 
         <button

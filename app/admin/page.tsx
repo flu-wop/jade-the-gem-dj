@@ -3,6 +3,8 @@ import { db, initDb } from "@/lib/db";
 import { ADMIN_COOKIE, sessionToken } from "@/lib/admin-auth";
 import AdminLoginForm from "@/components/AdminLoginForm";
 import DeleteRsvpButton from "@/components/DeleteRsvpButton";
+import DeleteOrderButton from "@/components/DeleteOrderButton";
+import ClearPendingButton from "@/components/ClearPendingButton";
 
 export const dynamic = "force-dynamic";
 
@@ -93,7 +95,10 @@ export default async function AdminPage() {
 
       {/* Merch orders */}
       <section style={{ marginTop: 48 }}>
-        <h2 style={{ color: "#3aa898" }}>Merch Orders ({orders.length})</h2>
+        <h2 style={{ color: "#3aa898" }}>
+          Merch Orders ({orders.length})
+          <ClearPendingButton table="merch" count={orders.filter((r) => r.status === "pending").length} />
+        </h2>
         <div style={{ overflowX: "auto" }}>
           <table style={{ width: "100%", borderCollapse: "collapse", marginTop: 12, minWidth: 760 }}>
             <thead>
@@ -101,11 +106,12 @@ export default async function AdminPage() {
                 <th style={th}>When</th><th style={th}>Name</th><th style={th}>Email</th>
                 <th style={th}>Items</th><th style={th}>Paid</th><th style={th}>Code</th>
                 <th style={th}>Ship To</th><th style={th}>Printify</th><th style={th}>Status</th>
+                <th style={th}>Actions</th>
               </tr>
             </thead>
             <tbody>
               {orders.length === 0 ? (
-                <tr><td style={td} colSpan={9}>No orders yet.</td></tr>
+                <tr><td style={td} colSpan={10}>No orders yet.</td></tr>
               ) : orders.map((r) => {
                 let items = "";
                 try {
@@ -136,6 +142,7 @@ export default async function AdminPage() {
                     <td style={td}>{ship}</td>
                     <td style={td}>{String(r.printify_order_id || "—")}</td>
                     <td style={td}><StatusPill status={r.status} /></td>
+                    <td style={td}><DeleteOrderButton table="merch" id={r.id as number} /></td>
                   </tr>
                 );
               })}
@@ -146,18 +153,22 @@ export default async function AdminPage() {
 
       {/* Playlist orders */}
       <section style={{ marginTop: 48 }}>
-        <h2 style={{ color: "#3aa898" }}>Playlist Orders ({playlists.length})</h2>
+        <h2 style={{ color: "#3aa898" }}>
+          Playlist Orders ({playlists.length})
+          <ClearPendingButton table="playlist" count={playlists.filter((r) => r.status === "pending").length} />
+        </h2>
         <div style={{ overflowX: "auto" }}>
           <table style={{ width: "100%", borderCollapse: "collapse", marginTop: 12, minWidth: 600 }}>
             <thead>
               <tr>
                 <th style={th}>When</th><th style={th}>Tier</th><th style={th}>Name</th>
                 <th style={th}>Email</th><th style={th}>Paid</th><th style={th}>Status</th>
+                <th style={th}>Actions</th>
               </tr>
             </thead>
             <tbody>
               {playlists.length === 0 ? (
-                <tr><td style={td} colSpan={6}>No playlist orders yet.</td></tr>
+                <tr><td style={td} colSpan={7}>No playlist orders yet.</td></tr>
               ) : playlists.map((r) => (
                 <tr key={String(r.id)}>
                   <td style={td}>{String(r.created_at || "")}</td>
@@ -166,6 +177,7 @@ export default async function AdminPage() {
                   <td style={td}>{String(r.email || "")}</td>
                   <td style={td}>{money(r.amount_cents)}</td>
                   <td style={td}><StatusPill status={r.status} /></td>
+                  <td style={td}><DeleteOrderButton table="playlist" id={r.id as number} /></td>
                 </tr>
               ))}
             </tbody>
@@ -175,18 +187,22 @@ export default async function AdminPage() {
 
       {/* Merch build orders */}
       <section style={{ marginTop: 48 }}>
-        <h2 style={{ color: "#3aa898" }}>Merch Build Orders ({merchBuilds.length})</h2>
+        <h2 style={{ color: "#3aa898" }}>
+          Merch Build Orders ({merchBuilds.length})
+          <ClearPendingButton table="merch-build" count={merchBuilds.filter((r) => r.status === "pending").length} />
+        </h2>
         <div style={{ overflowX: "auto" }}>
           <table style={{ width: "100%", borderCollapse: "collapse", marginTop: 12, minWidth: 640 }}>
             <thead>
               <tr>
                 <th style={th}>When</th><th style={th}>Tier</th><th style={th}>Items</th>
                 <th style={th}>Name</th><th style={th}>Email</th><th style={th}>Paid</th><th style={th}>Status</th>
+                <th style={th}>Actions</th>
               </tr>
             </thead>
             <tbody>
               {merchBuilds.length === 0 ? (
-                <tr><td style={td} colSpan={7}>No merch build orders yet.</td></tr>
+                <tr><td style={td} colSpan={8}>No merch build orders yet.</td></tr>
               ) : merchBuilds.map((r) => (
                 <tr key={String(r.id)}>
                   <td style={td}>{String(r.created_at || "")}</td>
@@ -196,6 +212,7 @@ export default async function AdminPage() {
                   <td style={td}>{String(r.email || "")}</td>
                   <td style={td}>{money(r.amount_cents)}</td>
                   <td style={td}><StatusPill status={r.status} /></td>
+                  <td style={td}><DeleteOrderButton table="merch-build" id={r.id as number} /></td>
                 </tr>
               ))}
             </tbody>

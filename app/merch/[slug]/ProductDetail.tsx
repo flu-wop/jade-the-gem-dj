@@ -59,7 +59,7 @@ export default function ProductDetail({ product }: { product: MerchProduct }) {
   }, [variants, product.thumbnailUrl]);
 
   const [selectedSize, setSelectedSize] = useState<string | undefined>(
-    sizes.length > 10 ? undefined : defaultSize(availableSizes.length ? availableSizes : sizes)
+    defaultSize(availableSizes.length ? availableSizes : sizes)
   );
   const [selectedColor, setSelectedColor] = useState<string | undefined>(colors[0]);
   const [activeImage, setActiveImage] = useState(0);
@@ -76,18 +76,6 @@ export default function ProductDetail({ product }: { product: MerchProduct }) {
     ? "front"
     : sides[0];
 
-  const isSizeAvailable = useCallback(
-    (size: string) => {
-      return variants.some(
-        (v) =>
-          optionValue(v, "size") === size &&
-          (!colors.length || optionValue(v, "color") === selectedColor) &&
-          v.isAvailable
-      );
-    },
-    [variants, colors, selectedColor]
-  );
-
   const selectedVariant = useMemo(() => {
     const match = variants.find(
       (v) =>
@@ -95,7 +83,7 @@ export default function ProductDetail({ product }: { product: MerchProduct }) {
         (!colors.length || optionValue(v, "color") === selectedColor)
     );
     if (match) return match;
-    if (sizes.length > 10 && !selectedSize) return undefined;
+    if (sizes.length && !selectedSize) return undefined;
     return variants[0];
   }, [variants, sizes, colors, selectedSize, selectedColor]);
 
@@ -233,36 +221,17 @@ export default function ProductDetail({ product }: { product: MerchProduct }) {
         {sizes.length > 1 && (
           <div className="mb-6">
             <p className="text-[9px] tracking-[0.14em] uppercase text-mist/40 font-sub mb-2">Size</p>
-            {sizes.length > 10 ? (
-              <select
-                aria-label="Select size"
-                value={selectedSize ?? ""}
-                onChange={(e) => setSelectedSize(e.target.value)}
-                className="w-full bg-surface-2 border border-plum/30 text-mist/70 text-[11px] tracking-wider uppercase px-3 py-2.5 font-sub focus:outline-none focus:border-gold/50"
-              >
-                <option value="" disabled>Select a size</option>
-                {availableSizes.map((s) => (
-                  <option key={s} value={s}>{s}</option>
-                ))}
-              </select>
-            ) : (
-              <div className="flex flex-wrap gap-1.5" role="group" aria-label="Select size">
-                {sizes.filter(isSizeAvailable).map((s) => (
-                  <button
-                    key={s}
-                    onClick={() => setSelectedSize(s)}
-                    aria-pressed={selectedSize === s}
-                    className={`min-w-[36px] px-3 py-1.5 font-sub text-[11px] uppercase tracking-wider border transition-colors ${
-                      selectedSize === s
-                        ? "bg-plum border-plum text-cream"
-                        : "border-plum/30 text-mist/50 hover:border-plum/60 hover:text-mist"
-                    }`}
-                  >
-                    {s}
-                  </button>
-                ))}
-              </div>
-            )}
+            <select
+              aria-label="Select size"
+              value={selectedSize ?? ""}
+              onChange={(e) => setSelectedSize(e.target.value)}
+              className="w-full bg-surface-2 border border-plum/30 text-mist/70 text-[11px] tracking-wider uppercase px-3 py-2.5 font-sub focus:outline-none focus:border-gold/50"
+            >
+              <option value="" disabled>Select a size</option>
+              {availableSizes.map((s) => (
+                <option key={s} value={s}>{s}</option>
+              ))}
+            </select>
           </div>
         )}
 
