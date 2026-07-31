@@ -26,20 +26,18 @@ export default function EventCard({ event, soldOut }: Props) {
     <article className="card overflow-hidden hover:border-neon-green/30 transition-colors group">
       {/* Flyer image */}
       <div
-        className="relative w-full h-52 bg-surface-2 flex items-center justify-center overflow-hidden"
+        className="relative w-full aspect-[3/4] bg-surface-2 flex items-center justify-center overflow-hidden"
         style={
           event.flyerImage
             ? {
                 backgroundImage: `url(${event.flyerImage})`,
-                backgroundSize: "cover",
+                backgroundSize: "contain",
+                backgroundRepeat: "no-repeat",
                 backgroundPosition: "center",
               }
             : undefined
         }
       >
-        {/* gradient overlay */}
-        <div className="absolute inset-0 bg-gradient-to-t from-surface-2/90 via-surface-2/30 to-transparent" />
-
         {/* Fallback emoji if no image */}
         {!event.flyerImage && (
           <span className="text-5xl relative z-10">🎵</span>

@@ -50,7 +50,7 @@ export default async function EventsPage() {
               Upcoming Events
             </h2>
             <span className="px-3 py-1 rounded-full bg-neon-green/10 border border-neon-green/20 text-neon-green text-xs font-bold">
-              {sortedUpcoming.length} Shows
+              {sortedUpcoming.length} Show{sortedUpcoming.length === 1 ? "" : "s"}
             </span>
           </div>
 
