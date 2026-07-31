@@ -99,7 +99,8 @@ export default function RSVPForm({ eventId, eventTitle, onClose }: Props) {
               <div className="grid grid-cols-2 gap-3">
                 <input
                   type="tel"
-                  placeholder="Phone (optional)"
+                  required
+                  placeholder="Phone Number"
                   value={phone}
                   onChange={(e) => setPhone(e.target.value)}
                   className="w-full bg-surface border border-plum/30 text-white text-sm px-4 py-3 placeholder:text-white/30 focus:outline-none focus:border-neon-green transition-colors"

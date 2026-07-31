@@ -40,6 +40,8 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Name required" }, { status: 400 });
     if (!email || !EMAIL_RE.test(email))
       return NextResponse.json({ error: "Valid email required" }, { status: 400 });
+    if (!phone)
+      return NextResponse.json({ error: "Phone number required" }, { status: 400 });
 
     await initDb();
 
