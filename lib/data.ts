@@ -52,6 +52,17 @@ export const upcomingEvents: Event[] = [
 /* ── Past events ─────────────────────────────────────── */
 export const pastEvents: Event[] = [
   {
+    id: "p2",
+    title: "Hidden Gem",
+    date: "2025-04-20",
+    venue: "513 Dumaine St",
+    city: "New Orleans",
+    state: "LA",
+    flyerImage: "/images/flyer-apr-2025-hidden-gem.jpg",
+    time: "8:00 PM",
+    isPast: true,
+  },
+  {
     id: "p1",
     title: "Hidden Gem Feb 2026",
     date: "2026-02-15",
