@@ -2,6 +2,7 @@ import { cookies } from "next/headers";
 import { db, initDb } from "@/lib/db";
 import { ADMIN_COOKIE, sessionToken } from "@/lib/admin-auth";
 import AdminLoginForm from "@/components/AdminLoginForm";
+import DeleteRsvpButton from "@/components/DeleteRsvpButton";
 
 export const dynamic = "force-dynamic";
 
@@ -212,12 +213,12 @@ export default async function AdminPage() {
               <tr>
                 <th style={th}>When</th><th style={th}>Event</th><th style={th}>Name</th>
                 <th style={th}>Email</th><th style={th}>Phone</th><th style={th}>Guests</th>
-                <th style={th}>Message</th>
+                <th style={th}>Message</th><th style={th}>Actions</th>
               </tr>
             </thead>
             <tbody>
               {rsvps.length === 0 ? (
-                <tr><td style={td} colSpan={7}>No RSVPs yet.</td></tr>
+                <tr><td style={td} colSpan={8}>No RSVPs yet.</td></tr>
               ) : rsvps.map((r) => (
                 <tr key={String(r.id)}>
                   <td style={td}>{String(r.created_at || "")}</td>
@@ -227,6 +228,7 @@ export default async function AdminPage() {
                   <td style={td}>{String(r.phone || "—")}</td>
                   <td style={td}>{String(r.guests || 1)}</td>
                   <td style={td}>{String(r.message || "—")}</td>
+                  <td style={td}><DeleteRsvpButton id={r.id as number} /></td>
                 </tr>
               ))}
             </tbody>
