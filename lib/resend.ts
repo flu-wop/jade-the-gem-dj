@@ -179,29 +179,46 @@ export async function sendRsvpEmails({
   const from = process.env.RESEND_FROM_EMAIL ?? "onboarding@resend.dev";
   const to_jade = process.env.RESEND_TO_EMAIL ?? "jadedwheeler8@gmail.com";
 
+  const addressBlock = address
+    ? `<div style="margin-top:20px;padding:16px 20px;background:#f6f6f6;border:1px solid #ddd;border-radius:6px;">
+         <p style="color:#666;margin:0 0 4px;font-size:12px;letter-spacing:0.04em;text-transform:uppercase;">Address</p>
+         <p style="color:#111;margin:0;font-size:15px;">${address}</p>
+       </div>`
+    : `<p style="margin-top:16px;">The address will be sent directly to confirmed guests closer to the date.</p>`;
+
+  const addressText = address
+    ? `Address: ${address}`
+    : `The address will be sent directly to confirmed guests closer to the date.`;
+
   await resend.emails.send({
     from, to: email,
-    subject: `You're on the list — ${eventTitle} 💎`,
-    html: `<div style="font-family:sans-serif;background:#0e0b14;color:#f0ebe8;padding:40px;max-width:580px;margin:0 auto;">
-      <h1 style="color:#3aa898;font-size:28px;margin-bottom:4px;">You're RSVP'd! 💎</h1>
-      <p style="color:#888;margin-bottom:28px;">${eventTitle}</p>
-      <p>Thanks for RSVPing, ${name}. This confirms you're on the guest list.</p>
-      ${
-        address
-          ? `<div style="margin-top:20px;padding:16px 20px;background:#1a1626;border:1px solid #3aa89855;">
-               <p style="color:#888;margin:0 0 4px;font-size:12px;letter-spacing:0.08em;text-transform:uppercase;">Address</p>
-               <p style="color:#f0ebe8;margin:0;font-size:15px;">${address}</p>
-             </div>`
-          : `<p style="margin-top:16px;">The address is sent out directly to guests closer to the date — keep an eye on your inbox (and check spam, just in case).</p>`
-      }
-      <p style="color:#888;margin-top:16px;">Guests: ${guests}</p>
-      <p style="margin-top:32px;color:#666;">Questions? <a href="mailto:${to_jade}" style="color:#3aa898;">${to_jade}</a></p>
+    subject: `RSVP confirmed — ${eventTitle}`,
+    text: `You're confirmed for ${eventTitle}.
+
+Hi ${name}, this confirms your RSVP.
+
+${addressText}
+
+Guests: ${guests}
+
+Questions? Reply to this email or reach out at ${to_jade}.`,
+    html: `<div style="font-family:Arial,Helvetica,sans-serif;color:#111;padding:32px;max-width:560px;margin:0 auto;line-height:1.5;">
+      <h1 style="font-size:22px;margin-bottom:4px;">You're confirmed for ${eventTitle}</h1>
+      <p style="color:#666;margin-bottom:24px;">Hi ${name}, this confirms your RSVP.</p>
+      ${addressBlock}
+      <p style="color:#666;margin-top:16px;">Guests: ${guests}</p>
+      <p style="margin-top:28px;color:#666;font-size:14px;">Questions? Reach out at <a href="mailto:${to_jade}" style="color:#3aa898;">${to_jade}</a></p>
     </div>`,
   });
 
   await resend.emails.send({
     from, to: to_jade,
     subject: `New RSVP — ${eventTitle}`,
+    text: `${name} RSVP'd for ${eventTitle}.
+Email: ${email}
+Phone: ${phone || "—"}
+Guests: ${guests}
+${message ? `Message: ${message}` : ""}`,
     html: `<div style="font-family:sans-serif;">
       <p><strong>${name}</strong> RSVP'd for <strong>${eventTitle}</strong></p>
       <p>Email: ${email}</p>
