@@ -12,6 +12,10 @@ export interface Event {
   flyerImage: string;
   ticketLink?: string;
   isPast?: boolean;
+  /** Display time, e.g. "10:00 PM" */
+  time?: string;
+  /** Address is private and only shared with confirmed guests via RSVP form */
+  rsvpRequired?: boolean;
 }
 
 export interface Track {
@@ -31,7 +35,19 @@ export interface SocialLink {
 
 
 /* ── Upcoming events ─────────────────────────────────── */
-export const upcomingEvents: Event[] = [];
+export const upcomingEvents: Event[] = [
+  {
+    id: "after-white-linen-aug-2026",
+    title: "After White Linen",
+    date: "2026-08-01",
+    venue: "RSVP for Address",
+    city: "New Orleans",
+    state: "LA",
+    flyerImage: "/images/flyer-aug-2026-after-white-linen.jpg",
+    time: "10:00 PM",
+    rsvpRequired: true,
+  },
+];
 
 /* ── Past events ─────────────────────────────────────── */
 export const pastEvents: Event[] = [

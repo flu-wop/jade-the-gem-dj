@@ -171,6 +171,39 @@ export async function sendNewsletterWelcome(email: string) {
   });
 }
 
+export async function sendRsvpEmails({
+  eventTitle, name, email, phone, guests, message,
+}: {
+  eventTitle: string; name: string; email: string; phone?: string; guests: number; message?: string;
+}) {
+  const from = process.env.RESEND_FROM_EMAIL ?? "onboarding@resend.dev";
+  const to_jade = process.env.RESEND_TO_EMAIL ?? "jadedwheeler8@gmail.com";
+
+  await resend.emails.send({
+    from, to: email,
+    subject: `You're on the list — ${eventTitle} 💎`,
+    html: `<div style="font-family:sans-serif;background:#0e0b14;color:#f0ebe8;padding:40px;max-width:580px;margin:0 auto;">
+      <h1 style="color:#3aa898;font-size:28px;margin-bottom:4px;">You're RSVP'd! 💎</h1>
+      <p style="color:#888;margin-bottom:28px;">${eventTitle}</p>
+      <p>Thanks for RSVPing, ${name}. The address is sent out directly to guests closer to the date — keep an eye on your inbox (and check spam, just in case).</p>
+      <p style="color:#888;margin-top:16px;">Guests: ${guests}</p>
+      <p style="margin-top:32px;color:#666;">Questions? <a href="mailto:${to_jade}" style="color:#3aa898;">${to_jade}</a></p>
+    </div>`,
+  });
+
+  await resend.emails.send({
+    from, to: to_jade,
+    subject: `New RSVP — ${eventTitle}`,
+    html: `<div style="font-family:sans-serif;">
+      <p><strong>${name}</strong> RSVP'd for <strong>${eventTitle}</strong></p>
+      <p>Email: ${email}</p>
+      <p>Phone: ${phone || "—"}</p>
+      <p>Guests: ${guests}</p>
+      ${message ? `<p>Message: ${message}</p>` : ""}
+    </div>`,
+  });
+}
+
 export async function sendMerchBuildEmails({
   name, email, tier, itemCount, total,
 }: {

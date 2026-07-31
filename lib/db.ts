@@ -36,6 +36,19 @@ export async function initDb() {
     )
   `);
   await db.execute(`
+    CREATE TABLE IF NOT EXISTS rsvps (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      event_id TEXT NOT NULL,
+      event_title TEXT NOT NULL,
+      name TEXT NOT NULL,
+      email TEXT NOT NULL,
+      phone TEXT,
+      guests INTEGER DEFAULT 1,
+      message TEXT,
+      created_at TEXT DEFAULT (datetime('now'))
+    )
+  `);
+  await db.execute(`
     CREATE TABLE IF NOT EXISTS newsletter (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       email TEXT UNIQUE NOT NULL,

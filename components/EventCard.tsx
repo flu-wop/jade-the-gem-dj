@@ -1,5 +1,9 @@
+"use client";
+
+import { useState } from "react";
 import { Calendar, MapPin, Ticket } from "lucide-react";
 import type { Event } from "@/lib/data";
+import RSVPForm from "@/components/RSVPForm";
 
 interface Props {
   event: Event;
@@ -11,6 +15,7 @@ const MONTH_SHORT = [
 ];
 
 export default function EventCard({ event }: Props) {
+  const [rsvpOpen, setRsvpOpen] = useState(false);
   const d = new Date(`${event.date}T12:00:00`);
   const month = MONTH_SHORT[d.getMonth()];
   const day = String(d.getDate()).padStart(2, "0");
@@ -73,12 +78,20 @@ export default function EventCard({ event }: Props) {
               day: "numeric",
               year: "numeric",
             })}
+            {event.time ? ` · ${event.time}` : ""}
           </p>
         </div>
 
         {!event.isPast && (
           <>
-            {event.ticketLink ? (
+            {event.rsvpRequired ? (
+              <button
+                onClick={() => setRsvpOpen(true)}
+                className="btn-primary w-full text-xs py-2.5"
+              >
+                RSVP for Address
+              </button>
+            ) : event.ticketLink ? (
               <a
                 href={event.ticketLink}
                 target="_blank"
@@ -101,6 +114,14 @@ export default function EventCard({ event }: Props) {
           </>
         )}
       </div>
+
+      {rsvpOpen && (
+        <RSVPForm
+          eventId={event.id}
+          eventTitle={event.title}
+          onClose={() => setRsvpOpen(false)}
+        />
+      )}
     </article>
   );
 }
