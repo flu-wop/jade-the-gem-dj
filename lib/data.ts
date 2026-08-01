@@ -48,7 +48,7 @@ export const upcomingEvents: Event[] = [
     flyerImage: "/images/flyer-aug-2026-after-white-linen.jpg",
     time: "10:00 PM",
     rsvpRequired: true,
-    rsvpCapacity: 30,
+    rsvpCapacity: 40,
   },
 ];
 

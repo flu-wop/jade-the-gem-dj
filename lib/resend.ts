@@ -171,6 +171,29 @@ export async function sendNewsletterWelcome(email: string) {
   });
 }
 
+export async function sendRsvpBroadcast({
+  to, name, subject, heading, message,
+}: { to: string; name: string; subject: string; heading: string; message: string }) {
+  const from = process.env.RESEND_FROM_EMAIL ?? "onboarding@resend.dev";
+
+  // message may contain simple line breaks — convert to <p> tags for HTML
+  const htmlBody = message
+    .split(/\n{2,}/)
+    .map((para) => `<p style="margin:0 0 14px;">${para.replace(/\n/g, "<br/>")}</p>`)
+    .join("");
+
+  await resend.emails.send({
+    from, to,
+    subject,
+    text: `${heading}\n\nHi ${name},\n\n${message}`,
+    html: `<div style="font-family:Arial,Helvetica,sans-serif;color:#111;padding:32px;max-width:560px;margin:0 auto;line-height:1.5;">
+      <h1 style="font-size:20px;margin-bottom:16px;">${heading}</h1>
+      <p style="margin:0 0 14px;">Hi ${name},</p>
+      ${htmlBody}
+    </div>`,
+  });
+}
+
 export async function sendRsvpEmails({
   eventTitle, name, email, phone, guests, message, address,
 }: {

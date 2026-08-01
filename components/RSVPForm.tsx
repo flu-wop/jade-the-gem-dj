@@ -13,7 +13,7 @@ export default function RSVPForm({ eventId, eventTitle, onClose }: Props) {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
-  const [guests, setGuests] = useState(1);
+  const guests = 1;
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -96,27 +96,14 @@ export default function RSVPForm({ eventId, eventTitle, onClose }: Props) {
                 onChange={(e) => setEmail(e.target.value)}
                 className="w-full bg-surface border border-plum/30 text-white text-sm px-4 py-3 placeholder:text-white/30 focus:outline-none focus:border-neon-green transition-colors"
               />
-              <div className="grid grid-cols-2 gap-3">
-                <input
-                  type="tel"
-                  required
-                  placeholder="Phone Number"
-                  value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
-                  className="w-full bg-surface border border-plum/30 text-white text-sm px-4 py-3 placeholder:text-white/30 focus:outline-none focus:border-neon-green transition-colors"
-                />
-                <select
-                  value={guests}
-                  onChange={(e) => setGuests(Number(e.target.value))}
-                  className="w-full bg-surface border border-plum/30 text-white text-sm px-4 py-3 focus:outline-none focus:border-neon-green transition-colors"
-                >
-                  {Array.from({ length: 2 }, (_, i) => i + 1).map((n) => (
-                    <option key={n} value={n}>
-                      {n} guest{n > 1 ? "s" : ""}
-                    </option>
-                  ))}
-                </select>
-              </div>
+              <input
+                type="tel"
+                required
+                placeholder="Phone Number"
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
+                className="w-full bg-surface border border-plum/30 text-white text-sm px-4 py-3 placeholder:text-white/30 focus:outline-none focus:border-neon-green transition-colors"
+              />
               <textarea
                 placeholder="Anything Jade should know? (optional)"
                 rows={3}

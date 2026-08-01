@@ -5,7 +5,7 @@ import { rateLimit, clientIp } from "@/lib/rate-limit";
 import { upcomingEvents } from "@/lib/data";
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-const MAX_GUESTS_PER_RSVP = 2;
+const MAX_GUESTS_PER_RSVP = 1; // No plus-ones — every RSVP is for one person only.
 
 // Addresses are private and never committed to the (public) repo.
 // Set RSVP_ADDRESSES in Vercel as JSON: {"event-id": "123 Main St, New Orleans, LA"}
