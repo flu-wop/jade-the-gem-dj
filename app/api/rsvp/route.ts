@@ -3,6 +3,7 @@ import { db, initDb } from "@/lib/db";
 import { sendRsvpEmails } from "@/lib/resend";
 import { rateLimit, clientIp } from "@/lib/rate-limit";
 import { upcomingEvents } from "@/lib/data";
+import { domainCanReceiveMail } from "@/lib/mx-check";
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const MAX_GUESTS_PER_RSVP = 1; // No plus-ones — every RSVP is for one person only.
@@ -40,6 +41,8 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Name required" }, { status: 400 });
     if (!email || !EMAIL_RE.test(email))
       return NextResponse.json({ error: "Valid email required" }, { status: 400 });
+    if (!(await domainCanReceiveMail(email)))
+      return NextResponse.json({ error: "That email address doesn't look deliverable — double-check for typos." }, { status: 400 });
     if (!phone)
       return NextResponse.json({ error: "Phone number required" }, { status: 400 });
 
