@@ -2,7 +2,6 @@
 
 import { useState, FormEvent } from "react";
 import { Mail, Loader2 } from "lucide-react";
-import { FORMSPREE_NEWSLETTER } from "@/lib/data";
 
 interface Props {
   /** Button label override */
@@ -16,11 +15,12 @@ export default function NewsletterForm({ cta = "Notify Me" }: Props) {
     e.preventDefault();
     setStatus("loading");
     const form = e.currentTarget;
+    const email = new FormData(form).get("email");
     try {
-      const res = await fetch(FORMSPREE_NEWSLETTER, {
+      const res = await fetch("/api/newsletter", {
         method: "POST",
-        body: new FormData(form),
-        headers: { Accept: "application/json" },
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email }),
       });
       if (res.ok) {
         setStatus("ok");

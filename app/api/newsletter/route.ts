@@ -15,7 +15,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Valid email required" }, { status: 400 });
     await initDb();
     try {
-      await db.execute({ sql: "INSERT INTO newsletter (email) VALUES (?)", args: [email] });
+      await db.execute({ sql: "INSERT INTO newsletter_subscribers (email) VALUES (?)", args: [email] });
     } catch { return NextResponse.json({ ok: true }); }
     await sendNewsletterWelcome(email);
     await resend.emails.send({

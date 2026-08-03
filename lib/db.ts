@@ -48,13 +48,27 @@ export async function initDb() {
       created_at TEXT DEFAULT (datetime('now'))
     )
   `);
+  // Newsletter-engine migration (Aug 2026): renamed from `newsletter` to
+  // `newsletter_subscribers` + added unsubscribed_at, to match the Epoch
+  // Skin standard schema. Safe to run repeatedly — the rename only succeeds
+  // once (old table gone after), everything else is idempotent.
+  try {
+    await db.execute(`ALTER TABLE newsletter RENAME TO newsletter_subscribers`);
+  } catch {
+    // already renamed, or this is a fresh DB that never had `newsletter` — fine
+  }
   await db.execute(`
-    CREATE TABLE IF NOT EXISTS newsletter (
+    CREATE TABLE IF NOT EXISTS newsletter_subscribers (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       email TEXT UNIQUE NOT NULL,
       created_at TEXT DEFAULT (datetime('now'))
     )
   `);
+  try {
+    await db.execute(`ALTER TABLE newsletter_subscribers ADD COLUMN unsubscribed_at TEXT`);
+  } catch {
+    // already exists — fine
+  }
   await db.execute(`
     CREATE TABLE IF NOT EXISTS merch_orders (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
