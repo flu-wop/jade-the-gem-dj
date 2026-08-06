@@ -1,42 +1,65 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 
 export default function DeleteOrderButton({
   table, id,
 }: { table: "merch" | "playlist" | "merch-build" | "tickets"; id: number | string }) {
-  const [loading, setLoading] = useState(false);
+  const [state, setState] = useState<"idle" | "confirm" | "loading" | "error">("idle");
+  const resetTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  async function handleDelete() {
-    if (!confirm("Remove this order?")) return;
-    setLoading(true);
-    const res = await fetch("/api/admin/orders", {
-      method: "DELETE",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ table, id }),
-    });
-    if (res.ok) {
-      window.location.reload();
-    } else {
-      alert("Failed to delete");
-      setLoading(false);
+  function handleClick() {
+    if (state === "idle" || state === "error") {
+      setState("confirm");
+      if (resetTimer.current) clearTimeout(resetTimer.current);
+      resetTimer.current = setTimeout(() => setState("idle"), 4000);
+      return;
+    }
+    if (state === "confirm") {
+      if (resetTimer.current) clearTimeout(resetTimer.current);
+      doDelete();
     }
   }
 
+  async function doDelete() {
+    setState("loading");
+    try {
+      const res = await fetch("/api/admin/orders", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ table, id }),
+      });
+      if (res.ok) {
+        window.location.reload();
+      } else {
+        setState("error");
+      }
+    } catch {
+      setState("error");
+    }
+  }
+
+  const label =
+    state === "loading" ? "…" : state === "confirm" ? "Confirm?" : state === "error" ? "Failed — retry" : "Remove";
+
   return (
     <button
-      onClick={handleDelete}
-      disabled={loading}
+      type="button"
+      onClick={handleClick}
+      disabled={state === "loading"}
       style={{
-        background: "transparent",
+        background: state === "confirm" ? "#d4af37" : "transparent",
         border: "1px solid #d4af3766",
-        color: "#d4af37",
-        padding: "2px 8px",
+        color: state === "confirm" ? "#111" : "#d4af37",
+        padding: "6px 12px",
         fontSize: 11,
         cursor: "pointer",
+        minHeight: 32,
+        touchAction: "manipulation",
+        WebkitTapHighlightColor: "transparent",
       }}
     >
-      {loading ? "…" : "Remove"}
+      {label}
     </button>
   );
 }
