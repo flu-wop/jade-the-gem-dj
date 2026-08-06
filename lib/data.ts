@@ -18,6 +18,10 @@ export interface Event {
   rsvpRequired?: boolean;
   /** Max total guests (summed across all RSVPs) before the event shows as sold out */
   rsvpCapacity?: number;
+  /** Paid-ticket event: price in whole dollars */
+  ticketPrice?: number;
+  /** Max tickets sold before the event shows as sold out */
+  ticketCapacity?: number;
 }
 
 export interface Track {
@@ -49,6 +53,18 @@ export const upcomingEvents: Event[] = [
     time: "10:00 PM",
     rsvpRequired: true,
     rsvpCapacity: 40,
+  },
+  {
+    id: "dirty-laundry-aug-2026",
+    title: "Dirty Laundry",
+    date: "2026-08-08",
+    venue: "530 S Norman C Francis Pkwy",
+    city: "New Orleans",
+    state: "LA",
+    flyerImage: "/images/flyer-aug-2026-dirty-laundry.jpg",
+    time: "10:00 PM",
+    ticketPrice: 10,
+    ticketCapacity: 20,
   },
 ];
 

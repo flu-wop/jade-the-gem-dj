@@ -17,10 +17,32 @@ const MONTH_SHORT = [
 
 export default function EventCard({ event, soldOut }: Props) {
   const [rsvpOpen, setRsvpOpen] = useState(false);
+  const [buying, setBuying] = useState(false);
   const d = new Date(`${event.date}T12:00:00`);
   const month = MONTH_SHORT[d.getMonth()];
   const day = String(d.getDate()).padStart(2, "0");
   const year = d.getFullYear();
+
+  async function handleBuyTicket() {
+    setBuying(true);
+    try {
+      const res = await fetch("/api/tickets/checkout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ eventId: event.id }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (data.url) {
+        window.location.href = data.url;
+      } else {
+        alert(data.error || "Something went wrong starting checkout — try again.");
+        setBuying(false);
+      }
+    } catch {
+      alert("Something went wrong starting checkout — try again.");
+      setBuying(false);
+    }
+  }
 
   return (
     <article className="card overflow-hidden hover:border-neon-green/30 transition-colors group">
@@ -101,6 +123,21 @@ export default function EventCard({ event, soldOut }: Props) {
                   className="btn-primary w-full text-xs py-2.5"
                 >
                   RSVP for Address
+                </button>
+              )
+            ) : event.ticketPrice ? (
+              soldOut ? (
+                <button disabled className="btn-ghost w-full text-xs py-2.5 opacity-50 cursor-not-allowed">
+                  Sold Out
+                </button>
+              ) : (
+                <button
+                  onClick={handleBuyTicket}
+                  disabled={buying}
+                  className="btn-primary w-full text-xs py-2.5"
+                >
+                  <Ticket size={13} />
+                  {buying ? "Loading…" : `Buy Ticket — $${event.ticketPrice}`}
                 </button>
               )
             ) : event.ticketLink ? (

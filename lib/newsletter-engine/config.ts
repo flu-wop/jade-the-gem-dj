@@ -30,6 +30,8 @@ export const newsletterConfig = {
     plum: '#4a3f8f',
     gold: '#d4af37',
     cream: '#f0ebe8',
+    beige: '#f0ebe8',
+    sage: '#2a7a6f',
   },
 
   approverEmail: process.env.APPROVER_EMAIL ?? 'flu.wop@gmail.com',

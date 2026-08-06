@@ -14,6 +14,7 @@ const TABLES = {
   merch: "merch_orders",
   playlist: "playlist_orders",
   "merch-build": "merch_build_orders",
+  tickets: "event_tickets",
 } as const;
 type TableKey = keyof typeof TABLES;
 

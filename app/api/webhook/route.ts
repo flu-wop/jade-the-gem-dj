@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { stripe } from "@/lib/stripe";
 import { db, initDb } from "@/lib/db";
-import { sendBookingConfirmation, sendMerchEmails, sendPlaylistEmails, sendMerchBuildEmails } from "@/lib/resend";
+import { sendBookingConfirmation, sendMerchEmails, sendPlaylistEmails, sendMerchBuildEmails, sendTicketEmails } from "@/lib/resend";
+import { upcomingEvents } from "@/lib/data";
 import {
   printifyConfigured,
   createOrder,
@@ -35,6 +36,8 @@ export async function POST(req: NextRequest) {
       await handlePlaylist(session.id);
     } else if (meta.kind === "merch-build") {
       await handleMerchBuild(session.id);
+    } else if (meta.kind === "event-ticket") {
+      await handleEventTicket(session.id);
     } else {
       await handleBooking(session, meta);
     }
@@ -222,6 +225,54 @@ async function handlePlaylist(sessionId: string) {
     await sendPlaylistEmails({ name, email, tier, total, discountApplied });
   } catch (e) {
     console.error("Playlist email error:", e);
+  }
+}
+
+// ── Event tickets: paid RSVP-style tickets with a capacity cap ──
+async function handleEventTicket(sessionId: string) {
+  await initDb();
+
+  const row = (await db.execute({
+    sql: `SELECT * FROM event_tickets WHERE stripe_session_id=?`,
+    args: [sessionId],
+  })).rows[0] as Record<string, unknown> | undefined;
+  if (!row) {
+    console.error("event_tickets row not found for", sessionId);
+    return;
+  }
+  // IDEMPOTENCY: don't re-email a ticket already marked paid
+  if (row.status !== "pending") return;
+
+  const full = await stripe.checkout.sessions.retrieve(sessionId);
+  const cust = full.customer_details;
+  const name = cust?.name || "Guest";
+  const email = cust?.email || "";
+  const phone = full.customer_details?.phone || "";
+  const amount = (full.amount_total ?? Number(row.amount_cents)) / 100;
+  const eventId = String(row.event_id || "");
+  const eventTitle = String(row.event_title || "");
+  const event = upcomingEvents.find((e) => e.id === eventId);
+
+  await db.execute({
+    sql: `UPDATE event_tickets SET status='paid', name=?, email=?, phone=? WHERE stripe_session_id=?`,
+    args: [name, email, phone, sessionId],
+  });
+
+  try {
+    await sendTicketEmails({
+      eventTitle,
+      name,
+      email,
+      phone,
+      amount,
+      venue: event?.venue || "",
+      city: event?.city || "",
+      state: event?.state || "",
+      date: event?.date || "",
+      time: event?.time,
+    });
+  } catch (e) {
+    console.error("Ticket email error:", e);
   }
 }
 

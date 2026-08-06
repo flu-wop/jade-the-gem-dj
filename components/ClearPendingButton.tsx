@@ -4,7 +4,7 @@ import { useState } from "react";
 
 export default function ClearPendingButton({
   table, count,
-}: { table: "merch" | "playlist" | "merch-build"; count: number }) {
+}: { table: "merch" | "playlist" | "merch-build" | "tickets"; count: number }) {
   const [loading, setLoading] = useState(false);
 
   async function handleClear() {

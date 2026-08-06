@@ -87,6 +87,20 @@ export async function initDb() {
     )
   `);
   await db.execute(`
+    CREATE TABLE IF NOT EXISTS event_tickets (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      event_id TEXT NOT NULL,
+      event_title TEXT NOT NULL,
+      name TEXT,
+      email TEXT,
+      phone TEXT,
+      amount_cents INTEGER NOT NULL,
+      stripe_session_id TEXT,
+      status TEXT DEFAULT 'pending',  -- pending | paid
+      created_at TEXT DEFAULT (datetime('now'))
+    )
+  `);
+  await db.execute(`
     CREATE TABLE IF NOT EXISTS playlist_orders (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       tier TEXT NOT NULL,

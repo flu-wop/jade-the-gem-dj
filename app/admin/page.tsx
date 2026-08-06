@@ -48,6 +48,7 @@ export default async function AdminPage() {
   const orders = (await db.execute("SELECT * FROM merch_orders ORDER BY created_at DESC")).rows as Row[];
   const playlists = (await db.execute("SELECT * FROM playlist_orders ORDER BY created_at DESC")).rows as Row[];
   const merchBuilds = (await db.execute("SELECT * FROM merch_build_orders ORDER BY created_at DESC")).rows as Row[];
+  const tickets = (await db.execute("SELECT * FROM event_tickets ORDER BY created_at DESC")).rows as Row[];
   const rsvps = (await db.execute("SELECT * FROM rsvps ORDER BY created_at DESC")).rows as Row[];
 
   const th: React.CSSProperties = { textAlign: "left", padding: "8px 10px", color: "#A89880", fontWeight: 400, fontSize: 12, textTransform: "uppercase", letterSpacing: "0.08em" };
@@ -219,6 +220,41 @@ export default async function AdminPage() {
           </table>
         </div>
       </section>
+      {/* Event tickets */}
+      <section style={{ marginTop: 48 }}>
+        <h2 style={{ color: "#3aa898" }}>
+          Event Tickets ({tickets.length})
+          <ClearPendingButton table="tickets" count={tickets.filter((r) => r.status === "pending").length} />
+        </h2>
+        <div style={{ overflowX: "auto" }}>
+          <table style={{ width: "100%", borderCollapse: "collapse", marginTop: 12, minWidth: 680 }}>
+            <thead>
+              <tr>
+                <th style={th}>When</th><th style={th}>Event</th><th style={th}>Name</th>
+                <th style={th}>Email</th><th style={th}>Phone</th><th style={th}>Paid</th>
+                <th style={th}>Status</th><th style={th}>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {tickets.length === 0 ? (
+                <tr><td style={td} colSpan={8}>No tickets sold yet.</td></tr>
+              ) : tickets.map((r) => (
+                <tr key={String(r.id)}>
+                  <td style={td}>{String(r.created_at || "")}</td>
+                  <td style={td}>{String(r.event_title || "")}</td>
+                  <td style={td}>{String(r.name || "")}</td>
+                  <td style={td}>{String(r.email || "")}</td>
+                  <td style={td}>{String(r.phone || "—")}</td>
+                  <td style={td}>{money(r.amount_cents)}</td>
+                  <td style={td}><StatusPill status={r.status} /></td>
+                  <td style={td}><DeleteOrderButton table="tickets" id={r.id as number} /></td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </section>
+
       {/* RSVPs */}
       <section style={{ marginTop: 48 }}>
         <h2 style={{ color: "#3aa898" }}>

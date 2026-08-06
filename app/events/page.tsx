@@ -18,13 +18,21 @@ export default async function EventsPage() {
 
   const soldOutIds = new Set<string>();
   for (const event of sortedUpcoming) {
-    if (!event.rsvpRequired || typeof event.rsvpCapacity !== "number") continue;
-    const r = await db.execute({
-      sql: "SELECT COALESCE(SUM(guests), 0) AS total FROM rsvps WHERE event_id = ?",
-      args: [event.id],
-    });
-    const total = Number(r.rows[0]?.total ?? 0);
-    if (total >= event.rsvpCapacity) soldOutIds.add(event.id);
+    if (event.rsvpRequired && typeof event.rsvpCapacity === "number") {
+      const r = await db.execute({
+        sql: "SELECT COALESCE(SUM(guests), 0) AS total FROM rsvps WHERE event_id = ?",
+        args: [event.id],
+      });
+      const total = Number(r.rows[0]?.total ?? 0);
+      if (total >= event.rsvpCapacity) soldOutIds.add(event.id);
+    } else if (event.ticketPrice && typeof event.ticketCapacity === "number") {
+      const r = await db.execute({
+        sql: "SELECT COUNT(*) AS total FROM event_tickets WHERE event_id = ? AND status = 'paid'",
+        args: [event.id],
+      });
+      const total = Number(r.rows[0]?.total ?? 0);
+      if (total >= event.ticketCapacity) soldOutIds.add(event.id);
+    }
   }
 
   return (

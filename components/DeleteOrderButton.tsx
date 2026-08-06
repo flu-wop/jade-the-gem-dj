@@ -4,7 +4,7 @@ import { useState } from "react";
 
 export default function DeleteOrderButton({
   table, id,
-}: { table: "merch" | "playlist" | "merch-build"; id: number | string }) {
+}: { table: "merch" | "playlist" | "merch-build" | "tickets"; id: number | string }) {
   const [loading, setLoading] = useState(false);
 
   async function handleDelete() {

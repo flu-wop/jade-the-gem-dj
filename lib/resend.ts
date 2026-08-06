@@ -194,6 +194,57 @@ export async function sendRsvpBroadcast({
   });
 }
 
+export async function sendTicketEmails({
+  eventTitle, name, email, phone, amount, venue, city, state, date, time,
+}: {
+  eventTitle: string; name: string; email: string; phone: string;
+  amount: number; venue: string; city: string; state: string; date: string; time?: string;
+}) {
+  const from = process.env.RESEND_FROM_EMAIL ?? "onboarding@resend.dev";
+  const to_jade = process.env.RESEND_TO_EMAIL ?? "jadedwheeler8@gmail.com";
+  const when = `${date}${time ? ` · ${time}` : ""}`;
+  const where = `${venue}, ${city}, ${state}`;
+
+  await resend.emails.send({
+    from, to: email,
+    subject: `Ticket confirmed — ${eventTitle}`,
+    text: `You're confirmed for ${eventTitle}.
+
+Hi ${name}, this confirms your ticket purchase ($${amount.toFixed(2)}).
+
+When: ${when}
+Where: ${where}
+
+Questions? Reply to this email or reach out at ${to_jade}.`,
+    html: `<div style="font-family:Arial,Helvetica,sans-serif;color:#111;padding:32px;max-width:560px;margin:0 auto;line-height:1.5;">
+      <h1 style="font-size:22px;margin-bottom:4px;">You're confirmed for ${eventTitle}</h1>
+      <p style="color:#666;margin-bottom:24px;">Hi ${name}, this confirms your ticket purchase — $${amount.toFixed(2)}.</p>
+      <div style="margin-top:12px;padding:16px 20px;background:#f6f6f6;border:1px solid #ddd;border-radius:6px;">
+        <p style="color:#666;margin:0 0 4px;font-size:12px;letter-spacing:0.04em;text-transform:uppercase;">When</p>
+        <p style="color:#111;margin:0 0 12px;font-size:15px;">${when}</p>
+        <p style="color:#666;margin:0 0 4px;font-size:12px;letter-spacing:0.04em;text-transform:uppercase;">Where</p>
+        <p style="color:#111;margin:0;font-size:15px;">${where}</p>
+      </div>
+      <p style="margin-top:28px;color:#666;font-size:14px;">Questions? Reach out at <a href="mailto:${to_jade}" style="color:#3aa898;">${to_jade}</a></p>
+    </div>`,
+  });
+
+  await resend.emails.send({
+    from, to: to_jade,
+    subject: `New ticket sold — ${eventTitle}`,
+    text: `${name} bought a ticket for ${eventTitle}.
+Email: ${email}
+Phone: ${phone}
+Paid: $${amount.toFixed(2)}`,
+    html: `<div style="font-family:sans-serif;">
+      <p><strong>${name}</strong> bought a ticket for <strong>${eventTitle}</strong></p>
+      <p>Email: ${email}</p>
+      <p>Phone: ${phone}</p>
+      <p>Paid: $${amount.toFixed(2)}</p>
+    </div>`,
+  });
+}
+
 export async function sendRsvpEmails({
   eventTitle, name, email, phone, guests, message, address,
 }: {
