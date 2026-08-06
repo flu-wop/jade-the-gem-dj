@@ -17,17 +17,28 @@ export async function POST(req: NextRequest) {
 
   const body = (await req.json().catch(() => ({}))) as {
     eventId?: string; subject?: string; heading?: string; message?: string;
+    videoUrl?: string; videoThumbnailUrl?: string;
   };
   if (!body.eventId || !body.subject || !body.message) {
     return NextResponse.json({ error: "Missing eventId, subject, or message" }, { status: 400 });
   }
 
   await initDb();
-  const r = await db.execute({
+  const rsvpRows = await db.execute({
     sql: "SELECT DISTINCT name, email FROM rsvps WHERE event_id = ?",
     args: [body.eventId],
   });
-  const recipients = r.rows as unknown as { name: string; email: string }[];
+  const ticketRows = await db.execute({
+    sql: "SELECT DISTINCT name, email FROM event_tickets WHERE event_id = ? AND status = 'paid'",
+    args: [body.eventId],
+  });
+
+  // Merge + dedupe by email across both sources (an event might use either flow).
+  const byEmail = new Map<string, { name: string; email: string }>();
+  for (const row of [...rsvpRows.rows, ...ticketRows.rows] as unknown as { name: string; email: string }[]) {
+    if (row.email) byEmail.set(row.email.toLowerCase(), row);
+  }
+  const recipients = [...byEmail.values()];
 
   let sent = 0;
   for (const guest of recipients) {
@@ -38,6 +49,8 @@ export async function POST(req: NextRequest) {
         subject: body.subject,
         heading: body.heading || body.subject,
         message: body.message,
+        videoUrl: body.videoUrl,
+        videoThumbnailUrl: body.videoThumbnailUrl,
       });
       sent++;
     } catch (e) {

@@ -172,9 +172,13 @@ export async function sendNewsletterWelcome(email: string) {
 }
 
 export async function sendRsvpBroadcast({
-  to, name, subject, heading, message,
-}: { to: string; name: string; subject: string; heading: string; message: string }) {
+  to, name, subject, heading, message, videoUrl, videoThumbnailUrl,
+}: {
+  to: string; name: string; subject: string; heading: string; message: string;
+  videoUrl?: string; videoThumbnailUrl?: string;
+}) {
   const from = process.env.RESEND_FROM_EMAIL ?? "onboarding@resend.dev";
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://www.dahiddengem.com";
 
   // message may contain simple line breaks — convert to <p> tags for HTML
   const htmlBody = message
@@ -182,14 +186,34 @@ export async function sendRsvpBroadcast({
     .map((para) => `<p style="margin:0 0 14px;">${para.replace(/\n/g, "<br/>")}</p>`)
     .join("");
 
+  const videoBlock = videoUrl
+    ? `<a href="${videoUrl}" style="display:block;text-decoration:none;margin:0 0 20px;">
+         ${
+           videoThumbnailUrl
+             ? `<img src="${videoThumbnailUrl}" width="100%" alt="Watch the video" style="display:block;width:100%;max-width:496px;border-radius:8px;" />`
+             : ""
+         }
+         <p style="text-align:center;color:#3aa898;font-weight:bold;font-size:13px;letter-spacing:0.04em;margin:10px 0 0;">▶ WATCH THE VIDEO</p>
+       </a>`
+    : "";
+
+  const videoText = videoUrl ? `\nWatch the video: ${videoUrl}\n` : "";
+
   await resend.emails.send({
     from, to,
     subject,
-    text: `${heading}\n\nHi ${name},\n\n${message}`,
-    html: `<div style="font-family:Arial,Helvetica,sans-serif;color:#111;padding:32px;max-width:560px;margin:0 auto;line-height:1.5;">
-      <h1 style="font-size:20px;margin-bottom:16px;">${heading}</h1>
-      <p style="margin:0 0 14px;">Hi ${name},</p>
-      ${htmlBody}
+    text: `${heading}\n\nHi ${name},\n\n${message}${videoText}`,
+    html: `<div style="font-family:Arial,Helvetica,sans-serif;max-width:560px;margin:0 auto;">
+      <div style="background:#0e0b14;padding:20px 32px;border-radius:8px 8px 0 0;">
+        <p style="color:#3aa898;font-family:Arial,Helvetica,sans-serif;font-weight:bold;letter-spacing:0.12em;font-size:13px;margin:0;">HIDDEN GEM</p>
+      </div>
+      <div style="background:#ffffff;color:#111;padding:32px;border:1px solid #eee;border-top:none;border-radius:0 0 8px 8px;line-height:1.5;">
+        <h1 style="font-size:20px;margin:0 0 16px;">${heading}</h1>
+        <p style="margin:0 0 14px;">Hi ${name},</p>
+        ${htmlBody}
+        ${videoBlock}
+      </div>
+      <p style="text-align:center;color:#999;font-size:11px;margin-top:16px;"><a href="${siteUrl}" style="color:#999;">dahiddengem.com</a></p>
     </div>`,
   });
 }
