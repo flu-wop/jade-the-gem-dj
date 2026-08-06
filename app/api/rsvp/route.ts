@@ -4,20 +4,10 @@ import { sendRsvpEmails } from "@/lib/resend";
 import { rateLimit, clientIp } from "@/lib/rate-limit";
 import { upcomingEvents } from "@/lib/data";
 import { domainCanReceiveMail } from "@/lib/mx-check";
+import { privateAddressForEvent } from "@/lib/addresses";
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const MAX_GUESTS_PER_RSVP = 1; // No plus-ones — every RSVP is for one person only.
-
-// Addresses are private and never committed to the (public) repo.
-// Set RSVP_ADDRESSES in Vercel as JSON: {"event-id": "123 Main St, New Orleans, LA"}
-function addressForEvent(eventId: string): string | undefined {
-  try {
-    const map = JSON.parse(process.env.RSVP_ADDRESSES ?? "{}") as Record<string, string>;
-    return map[eventId];
-  } catch {
-    return undefined;
-  }
-}
 
 export async function POST(req: NextRequest) {
   try {
@@ -73,7 +63,7 @@ export async function POST(req: NextRequest) {
     });
 
     try {
-      await sendRsvpEmails({ eventTitle, name, email, phone, guests, message, address: addressForEvent(eventId) });
+      await sendRsvpEmails({ eventTitle, name, email, phone, guests, message, address: privateAddressForEvent(eventId) });
     } catch (emailErr) {
       // RSVP is saved even if email delivery fails
       console.error("RSVP email error:", emailErr);

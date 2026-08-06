@@ -195,15 +195,14 @@ export async function sendRsvpBroadcast({
 }
 
 export async function sendTicketEmails({
-  eventTitle, name, email, phone, amount, venue, city, state, date, time,
+  eventTitle, name, email, phone, amount, where, date, time,
 }: {
   eventTitle: string; name: string; email: string; phone: string;
-  amount: number; venue: string; city: string; state: string; date: string; time?: string;
+  amount: number; where: string; date: string; time?: string;
 }) {
   const from = process.env.RESEND_FROM_EMAIL ?? "onboarding@resend.dev";
   const to_jade = process.env.RESEND_TO_EMAIL ?? "jadedwheeler8@gmail.com";
   const when = `${date}${time ? ` · ${time}` : ""}`;
-  const where = `${venue}, ${city}, ${state}`;
 
   await resend.emails.send({
     from, to: email,

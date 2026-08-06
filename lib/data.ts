@@ -43,22 +43,10 @@ export interface SocialLink {
 /* ── Upcoming events ─────────────────────────────────── */
 export const upcomingEvents: Event[] = [
   {
-    id: "after-white-linen-aug-2026",
-    title: "After White Linen",
-    date: "2026-08-01",
-    venue: "RSVP for Address",
-    city: "New Orleans",
-    state: "LA",
-    flyerImage: "/images/flyer-aug-2026-after-white-linen.jpg",
-    time: "10:00 PM",
-    rsvpRequired: true,
-    rsvpCapacity: 40,
-  },
-  {
     id: "dirty-laundry-aug-2026",
     title: "Dirty Laundry",
     date: "2026-08-08",
-    venue: "530 S Norman C Francis Pkwy",
+    venue: "Address provided after ticket purchase",
     city: "New Orleans",
     state: "LA",
     flyerImage: "/images/flyer-aug-2026-dirty-laundry.jpg",
@@ -70,6 +58,17 @@ export const upcomingEvents: Event[] = [
 
 /* ── Past events ─────────────────────────────────────── */
 export const pastEvents: Event[] = [
+  {
+    id: "after-white-linen-aug-2026",
+    title: "After White Linen",
+    date: "2026-08-01",
+    venue: "RSVP for Address",
+    city: "New Orleans",
+    state: "LA",
+    flyerImage: "/images/flyer-aug-2026-after-white-linen.jpg",
+    time: "10:00 PM",
+    isPast: true,
+  },
   {
     id: "p2",
     title: "Hidden Gem",

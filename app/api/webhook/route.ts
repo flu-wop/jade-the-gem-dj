@@ -3,6 +3,7 @@ import { stripe } from "@/lib/stripe";
 import { db, initDb } from "@/lib/db";
 import { sendBookingConfirmation, sendMerchEmails, sendPlaylistEmails, sendMerchBuildEmails, sendTicketEmails } from "@/lib/resend";
 import { upcomingEvents } from "@/lib/data";
+import { privateAddressForEvent } from "@/lib/addresses";
 import {
   printifyConfigured,
   createOrder,
@@ -259,15 +260,18 @@ async function handleEventTicket(sessionId: string) {
   });
 
   try {
+    const address = privateAddressForEvent(eventId);
+    const where = address
+      ? `${address}${event?.city ? `, ${event.city}, ${event.state}` : ""}`
+      : "We'll send the exact address separately before the event.";
+
     await sendTicketEmails({
       eventTitle,
       name,
       email,
       phone,
       amount,
-      venue: event?.venue || "",
-      city: event?.city || "",
-      state: event?.state || "",
+      where,
       date: event?.date || "",
       time: event?.time,
     });
