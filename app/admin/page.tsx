@@ -1,10 +1,12 @@
 import { cookies } from "next/headers";
+import Link from "next/link";
 import { db, initDb } from "@/lib/db";
 import { ADMIN_COOKIE, sessionToken } from "@/lib/admin-auth";
 import AdminLoginForm from "@/components/AdminLoginForm";
 import DeleteRsvpButton from "@/components/DeleteRsvpButton";
 import DeleteOrderButton from "@/components/DeleteOrderButton";
 import ClearPendingButton from "@/components/ClearPendingButton";
+import Accordion from "@/components/Accordion";
 
 export const dynamic = "force-dynamic";
 
@@ -25,6 +27,14 @@ function StatusPill({ status }: { status: unknown }) {
   return (
     <span style={{ color, border: `1px solid ${color}55`, padding: "2px 8px", fontSize: 11, textTransform: "uppercase", letterSpacing: "0.1em" }}>
       {s || "—"}
+    </span>
+  );
+}
+
+function CountBadge({ n, label }: { n: number; label?: string }) {
+  return (
+    <span style={{ color: "#6b6478", fontSize: 12 }}>
+      {n} {label || (n === 1 ? "item" : "items")}
     </span>
   );
 }
@@ -54,13 +64,126 @@ export default async function AdminPage() {
   const th: React.CSSProperties = { textAlign: "left", padding: "8px 10px", color: "#A89880", fontWeight: 400, fontSize: 12, textTransform: "uppercase", letterSpacing: "0.08em" };
   const td: React.CSSProperties = { padding: "8px 10px", borderTop: "1px solid #2a2336", fontSize: 13, verticalAlign: "top" };
 
+  // Group RSVPs + tickets by event so guest lists read as "who's coming to
+  // what" instead of two long flat tables mixing every event together.
+  type EventGroup = { eventId: string; eventTitle: string; rsvps: Row[]; tickets: Row[]; lastActivity: string };
+  const eventGroups = new Map<string, EventGroup>();
+  for (const r of rsvps) {
+    const key = String(r.event_id || r.event_title || "unknown");
+    const g = eventGroups.get(key) ?? { eventId: key, eventTitle: String(r.event_title || key), rsvps: [], tickets: [], lastActivity: "" };
+    g.rsvps.push(r);
+    g.lastActivity = g.lastActivity > String(r.created_at || "") ? g.lastActivity : String(r.created_at || "");
+    eventGroups.set(key, g);
+  }
+  for (const r of tickets) {
+    const key = String(r.event_id || r.event_title || "unknown");
+    const g = eventGroups.get(key) ?? { eventId: key, eventTitle: String(r.event_title || key), rsvps: [], tickets: [], lastActivity: "" };
+    g.tickets.push(r);
+    g.lastActivity = g.lastActivity > String(r.created_at || "") ? g.lastActivity : String(r.created_at || "");
+    eventGroups.set(key, g);
+  }
+  const sortedEventGroups = [...eventGroups.values()].sort((a, b) => (a.lastActivity < b.lastActivity ? 1 : -1));
+
   return (
     <main style={{ minHeight: "100vh", background: "#0e0b14", color: "#f0ebe8", fontFamily: "system-ui", padding: "48px 32px" }}>
-      <h1 style={{ color: "#d4af37", letterSpacing: "0.1em" }}>Jade — Admin</h1>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 12 }}>
+        <h1 style={{ color: "#d4af37", letterSpacing: "0.1em" }}>Jade — Admin</h1>
+        <Link href="/admin/system/" style={{ color: "#3aa898", fontSize: 13 }}>
+          System Health →
+        </Link>
+      </div>
+
+      {/* Guest lists — grouped by event */}
+      <h2 style={{ color: "#d4af37", fontSize: 16, marginTop: 36, letterSpacing: "0.06em", display: "flex", alignItems: "center" }}>
+        Guest Lists
+        <ClearPendingButton table="tickets" count={tickets.filter((r) => r.status === "pending").length} />
+      </h2>
+      {sortedEventGroups.length === 0 && (
+        <p style={{ color: "#6b6478", fontSize: 13, marginTop: 8 }}>No RSVPs or ticket sales yet.</p>
+      )}
+      {sortedEventGroups.map((g) => {
+        const guestCount = g.tickets.length + g.rsvps.reduce((sum, r) => sum + Number(r.guests || 1), 0);
+        return (
+          <Accordion
+            key={g.eventId}
+            title={g.eventTitle}
+            defaultOpen={sortedEventGroups.length === 1}
+            badge={
+              <CountBadge
+                n={guestCount}
+                label={`${guestCount === 1 ? "guest" : "guests"} · ${g.tickets.length} ticket${g.tickets.length === 1 ? "" : "s"} · ${g.rsvps.length} RSVP${g.rsvps.length === 1 ? "" : "s"}`}
+              />
+            }
+          >
+            {g.tickets.length > 0 && (
+              <>
+                <h3 style={{ color: "#c4b8e0", fontSize: 12, textTransform: "uppercase", letterSpacing: "0.08em", marginTop: 12 }}>
+                  Tickets ({g.tickets.length})
+                </h3>
+                <div style={{ overflowX: "auto" }}>
+                  <table style={{ width: "100%", borderCollapse: "collapse", marginTop: 8, minWidth: 640 }}>
+                    <thead>
+                      <tr>
+                        <th style={th}>When</th><th style={th}>Name</th><th style={th}>Email</th>
+                        <th style={th}>Phone</th><th style={th}>Paid</th><th style={th}>Status</th><th style={th}>Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {g.tickets.map((r) => (
+                        <tr key={String(r.id)}>
+                          <td style={td}>{String(r.created_at || "")}</td>
+                          <td style={td}>{String(r.name || "")}</td>
+                          <td style={td}>{String(r.email || "")}</td>
+                          <td style={td}>{String(r.phone || "—")}</td>
+                          <td style={td}>{money(r.amount_cents)}</td>
+                          <td style={td}><StatusPill status={r.status} /></td>
+                          <td style={td}><DeleteOrderButton table="tickets" id={r.id as number} /></td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </>
+            )}
+
+            {g.rsvps.length > 0 && (
+              <>
+                <h3 style={{ color: "#c4b8e0", fontSize: 12, textTransform: "uppercase", letterSpacing: "0.08em", marginTop: 20 }}>
+                  RSVPs ({g.rsvps.length})
+                </h3>
+                <div style={{ overflowX: "auto" }}>
+                  <table style={{ width: "100%", borderCollapse: "collapse", marginTop: 8, minWidth: 680 }}>
+                    <thead>
+                      <tr>
+                        <th style={th}>When</th><th style={th}>Name</th><th style={th}>Email</th>
+                        <th style={th}>Phone</th><th style={th}>Guests</th><th style={th}>Message</th><th style={th}>Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {g.rsvps.map((r) => (
+                        <tr key={String(r.id)}>
+                          <td style={td}>{String(r.created_at || "")}</td>
+                          <td style={td}>{String(r.name || "")}</td>
+                          <td style={td}>{String(r.email || "")}</td>
+                          <td style={td}>{String(r.phone || "—")}</td>
+                          <td style={td}>{String(r.guests || 1)}</td>
+                          <td style={td}>{String(r.message || "—")}</td>
+                          <td style={td}><DeleteRsvpButton id={r.id as number} /></td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </>
+            )}
+          </Accordion>
+        );
+      })}
+
+      <h2 style={{ color: "#d4af37", fontSize: 16, marginTop: 40, letterSpacing: "0.06em" }}>Orders</h2>
 
       {/* Bookings */}
-      <section style={{ marginTop: 32 }}>
-        <h2 style={{ color: "#3aa898" }}>Bookings ({bookings.length})</h2>
+      <Accordion title="Bookings" badge={<CountBadge n={bookings.length} />}>
         <div style={{ overflowX: "auto" }}>
           <table style={{ width: "100%", borderCollapse: "collapse", marginTop: 12, minWidth: 760 }}>
             <thead>
@@ -92,14 +215,18 @@ export default async function AdminPage() {
             </tbody>
           </table>
         </div>
-      </section>
+      </Accordion>
 
       {/* Merch orders */}
-      <section style={{ marginTop: 48 }}>
-        <h2 style={{ color: "#3aa898" }}>
-          Merch Orders ({orders.length})
-          <ClearPendingButton table="merch" count={orders.filter((r) => r.status === "pending").length} />
-        </h2>
+      <Accordion
+        title="Merch Orders"
+        badge={
+          <>
+            <CountBadge n={orders.length} />
+            <ClearPendingButton table="merch" count={orders.filter((r) => r.status === "pending").length} />
+          </>
+        }
+      >
         <div style={{ overflowX: "auto" }}>
           <table style={{ width: "100%", borderCollapse: "collapse", marginTop: 12, minWidth: 760 }}>
             <thead>
@@ -150,14 +277,18 @@ export default async function AdminPage() {
             </tbody>
           </table>
         </div>
-      </section>
+      </Accordion>
 
       {/* Playlist orders */}
-      <section style={{ marginTop: 48 }}>
-        <h2 style={{ color: "#3aa898" }}>
-          Playlist Orders ({playlists.length})
-          <ClearPendingButton table="playlist" count={playlists.filter((r) => r.status === "pending").length} />
-        </h2>
+      <Accordion
+        title="Playlist Orders"
+        badge={
+          <>
+            <CountBadge n={playlists.length} />
+            <ClearPendingButton table="playlist" count={playlists.filter((r) => r.status === "pending").length} />
+          </>
+        }
+      >
         <div style={{ overflowX: "auto" }}>
           <table style={{ width: "100%", borderCollapse: "collapse", marginTop: 12, minWidth: 600 }}>
             <thead>
@@ -184,14 +315,18 @@ export default async function AdminPage() {
             </tbody>
           </table>
         </div>
-      </section>
+      </Accordion>
 
       {/* Merch build orders */}
-      <section style={{ marginTop: 48 }}>
-        <h2 style={{ color: "#3aa898" }}>
-          Merch Build Orders ({merchBuilds.length})
-          <ClearPendingButton table="merch-build" count={merchBuilds.filter((r) => r.status === "pending").length} />
-        </h2>
+      <Accordion
+        title="Merch Build Orders"
+        badge={
+          <>
+            <CountBadge n={merchBuilds.length} />
+            <ClearPendingButton table="merch-build" count={merchBuilds.filter((r) => r.status === "pending").length} />
+          </>
+        }
+      >
         <div style={{ overflowX: "auto" }}>
           <table style={{ width: "100%", borderCollapse: "collapse", marginTop: 12, minWidth: 640 }}>
             <thead>
@@ -219,75 +354,7 @@ export default async function AdminPage() {
             </tbody>
           </table>
         </div>
-      </section>
-      {/* Event tickets */}
-      <section style={{ marginTop: 48 }}>
-        <h2 style={{ color: "#3aa898" }}>
-          Event Tickets ({tickets.length})
-          <ClearPendingButton table="tickets" count={tickets.filter((r) => r.status === "pending").length} />
-        </h2>
-        <div style={{ overflowX: "auto" }}>
-          <table style={{ width: "100%", borderCollapse: "collapse", marginTop: 12, minWidth: 680 }}>
-            <thead>
-              <tr>
-                <th style={th}>When</th><th style={th}>Event</th><th style={th}>Name</th>
-                <th style={th}>Email</th><th style={th}>Phone</th><th style={th}>Paid</th>
-                <th style={th}>Status</th><th style={th}>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {tickets.length === 0 ? (
-                <tr><td style={td} colSpan={8}>No tickets sold yet.</td></tr>
-              ) : tickets.map((r) => (
-                <tr key={String(r.id)}>
-                  <td style={td}>{String(r.created_at || "")}</td>
-                  <td style={td}>{String(r.event_title || "")}</td>
-                  <td style={td}>{String(r.name || "")}</td>
-                  <td style={td}>{String(r.email || "")}</td>
-                  <td style={td}>{String(r.phone || "—")}</td>
-                  <td style={td}>{money(r.amount_cents)}</td>
-                  <td style={td}><StatusPill status={r.status} /></td>
-                  <td style={td}><DeleteOrderButton table="tickets" id={r.id as number} /></td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </section>
-
-      {/* RSVPs */}
-      <section style={{ marginTop: 48 }}>
-        <h2 style={{ color: "#3aa898" }}>
-          RSVPs ({rsvps.length}, {rsvps.reduce((sum, r) => sum + Number(r.guests || 1), 0)} guests total)
-        </h2>
-        <div style={{ overflowX: "auto" }}>
-          <table style={{ width: "100%", borderCollapse: "collapse", marginTop: 12, minWidth: 720 }}>
-            <thead>
-              <tr>
-                <th style={th}>When</th><th style={th}>Event</th><th style={th}>Name</th>
-                <th style={th}>Email</th><th style={th}>Phone</th><th style={th}>Guests</th>
-                <th style={th}>Message</th><th style={th}>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {rsvps.length === 0 ? (
-                <tr><td style={td} colSpan={8}>No RSVPs yet.</td></tr>
-              ) : rsvps.map((r) => (
-                <tr key={String(r.id)}>
-                  <td style={td}>{String(r.created_at || "")}</td>
-                  <td style={td}>{String(r.event_title || "")}</td>
-                  <td style={td}>{String(r.name || "")}</td>
-                  <td style={td}>{String(r.email || "")}</td>
-                  <td style={td}>{String(r.phone || "—")}</td>
-                  <td style={td}>{String(r.guests || 1)}</td>
-                  <td style={td}>{String(r.message || "—")}</td>
-                  <td style={td}><DeleteRsvpButton id={r.id as number} /></td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </section>
+      </Accordion>
     </main>
   );
 }
