@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { usePathname } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import CartButton from "@/components/CartButton";
@@ -17,12 +18,17 @@ const links = [
 export default function Navbar() {
   const [scrolled, setScrolled] = useState(false);
   const [open, setOpen]         = useState(false);
+  const pathname = usePathname();
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 40);
     window.addEventListener("scroll", onScroll);
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
+
+  // Internal admin tool — the customer-facing nav (and its fixed-position
+  // cart/hamburger) has no business here, and was overlapping admin UI.
+  if (pathname?.startsWith("/admin")) return null;
 
   return (
     <header
