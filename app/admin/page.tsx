@@ -6,6 +6,7 @@ import AdminLoginForm from "@/components/AdminLoginForm";
 import DeleteRsvpButton from "@/components/DeleteRsvpButton";
 import DeleteOrderButton from "@/components/DeleteOrderButton";
 import ClearPendingButton from "@/components/ClearPendingButton";
+import ReconcileTicketsButton from "@/components/ReconcileTicketsButton";
 import Accordion from "@/components/Accordion";
 
 export const dynamic = "force-dynamic";
@@ -94,9 +95,10 @@ export default async function AdminPage() {
       </div>
 
       {/* Guest lists — grouped by event */}
-      <h2 style={{ color: "#d4af37", fontSize: 16, marginTop: 36, letterSpacing: "0.06em", display: "flex", alignItems: "center" }}>
+      <h2 style={{ color: "#d4af37", fontSize: 16, marginTop: 36, letterSpacing: "0.06em", display: "flex", alignItems: "center", flexWrap: "wrap" }}>
         Guest Lists
         <ClearPendingButton table="tickets" count={tickets.filter((r) => r.status === "pending").length} />
+        <ReconcileTicketsButton />
       </h2>
       {sortedEventGroups.length === 0 && (
         <p style={{ color: "#6b6478", fontSize: 13, marginTop: 8 }}>No RSVPs or ticket sales yet.</p>

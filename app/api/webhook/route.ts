@@ -1,9 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { stripe } from "@/lib/stripe";
 import { db, initDb } from "@/lib/db";
-import { sendBookingConfirmation, sendMerchEmails, sendPlaylistEmails, sendMerchBuildEmails, sendTicketEmails } from "@/lib/resend";
-import { upcomingEvents } from "@/lib/data";
-import { privateAddressForEvent } from "@/lib/addresses";
+import { sendBookingConfirmation, sendMerchEmails, sendPlaylistEmails, sendMerchBuildEmails } from "@/lib/resend";
+import { fulfillEventTicket } from "@/lib/ticket-fulfillment";
 import {
   printifyConfigured,
   createOrder,
@@ -231,73 +230,8 @@ async function handlePlaylist(sessionId: string) {
 
 // ── Event tickets: paid RSVP-style tickets with a capacity cap ──
 async function handleEventTicket(sessionId: string) {
-  await initDb();
-
-  let row = (await db.execute({
-    sql: `SELECT * FROM event_tickets WHERE stripe_session_id=?`,
-    args: [sessionId],
-  })).rows[0] as Record<string, unknown> | undefined;
-
-  const full = await stripe.checkout.sessions.retrieve(sessionId);
-
-  if (!row) {
-    // The row that /api/tickets/checkout should have inserted is missing —
-    // e.g. a transient DB error on that request, or it got swept up by an
-    // admin "clear pending" click while the buyer was mid-checkout. Stripe
-    // already took the payment, so we reconstruct the record from Stripe's
-    // own session data rather than silently losing a paid sale.
-    console.error("event_tickets row not found for", sessionId, "— reconstructing from Stripe session");
-    const meta = full.metadata || {};
-    await db.execute({
-      sql: `INSERT INTO event_tickets (event_id, event_title, amount_cents, stripe_session_id, status)
-            VALUES (?, ?, ?, ?, 'pending')`,
-      args: [meta.eventId || "", meta.eventTitle || "", full.amount_total ?? 0, sessionId],
-    });
-    row = (await db.execute({
-      sql: `SELECT * FROM event_tickets WHERE stripe_session_id=?`,
-      args: [sessionId],
-    })).rows[0] as Record<string, unknown> | undefined;
-    if (!row) {
-      console.error("event_tickets reconstruction failed for", sessionId);
-      return;
-    }
-  }
-  // IDEMPOTENCY: don't re-email a ticket already marked paid
-  if (row.status !== "pending") return;
-
-  const cust = full.customer_details;
-  const name = cust?.name || "Guest";
-  const email = cust?.email || "";
-  const phone = full.customer_details?.phone || "";
-  const amount = (full.amount_total ?? Number(row.amount_cents)) / 100;
-  const eventId = String(row.event_id || "");
-  const eventTitle = String(row.event_title || "");
-  const event = upcomingEvents.find((e) => e.id === eventId);
-
-  await db.execute({
-    sql: `UPDATE event_tickets SET status='paid', name=?, email=?, phone=? WHERE stripe_session_id=?`,
-    args: [name, email, phone, sessionId],
-  });
-
-  try {
-    const address = privateAddressForEvent(eventId);
-    const where = address
-      ? `${address}${event?.city ? `, ${event.city}, ${event.state}` : ""}`
-      : "We'll send the exact address separately before the event.";
-
-    await sendTicketEmails({
-      eventTitle,
-      name,
-      email,
-      phone,
-      amount,
-      where,
-      date: event?.date || "",
-      time: event?.time,
-    });
-  } catch (e) {
-    console.error("Ticket email error:", e);
-  }
+  const result = await fulfillEventTicket(sessionId);
+  if (!result.ok) console.error("handleEventTicket:", sessionId, result.reason);
 }
 
 // ── Merch Build: one-click productized design service purchase ──
