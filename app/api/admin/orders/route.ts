@@ -32,7 +32,11 @@ export async function DELETE(req: NextRequest) {
   await initDb();
 
   if (body.clearPending) {
-    await db.execute(`DELETE FROM ${table} WHERE status = 'pending'`);
+    // Only sweep rows old enough to be genuinely abandoned — a buyer can
+    // legitimately take a few minutes on Stripe's checkout page, and
+    // deleting that row out from under them means the webhook later can't
+    // find it and the sale gets silently lost.
+    await db.execute(`DELETE FROM ${table} WHERE status = 'pending' AND created_at < datetime('now', '-20 minutes')`);
     return NextResponse.json({ ok: true });
   }
 
