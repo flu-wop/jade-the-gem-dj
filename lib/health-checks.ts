@@ -1,6 +1,7 @@
 import { db, getDb, initDb } from "@/lib/db";
 import { stripe } from "@/lib/stripe";
 import { getResend } from "@/lib/resend";
+import { upcomingEvents } from "@/lib/data";
 
 export type CheckResult = { status: "ok" | "warn" | "error"; detail: string };
 
@@ -90,6 +91,29 @@ export async function checkTurso(): Promise<CheckResult> {
   } catch (err) {
     return { status: "error", detail: `Turso connection failed: ${(err as Error).message}` };
   }
+}
+
+// ---- 2b. Private addresses (RSVP_ADDRESSES) ----
+// Confirms the JSON parses and has an entry for every event that needs one —
+// never logs or returns the address itself, just whether it's configured.
+export function checkPrivateAddresses(): CheckResult {
+  const eventsNeedingAddress = upcomingEvents.filter((e) => e.rsvpRequired || e.ticketPrice);
+  if (eventsNeedingAddress.length === 0) {
+    return { status: "ok", detail: "No current events require a private address" };
+  }
+
+  let map: Record<string, string>;
+  try {
+    map = JSON.parse(process.env.RSVP_ADDRESSES ?? "{}");
+  } catch {
+    return { status: "error", detail: "RSVP_ADDRESSES is not valid JSON" };
+  }
+
+  const missing = eventsNeedingAddress.filter((e) => !map[e.id]?.trim()).map((e) => e.id);
+  if (missing.length > 0) {
+    return { status: "error", detail: `Missing address for: ${missing.join(", ")}` };
+  }
+  return { status: "ok", detail: `Configured for: ${eventsNeedingAddress.map((e) => e.id).join(", ")}` };
 }
 
 // ---- 3. API Usage (self-tracked — Resend/Stripe don't expose live quota via API) ----

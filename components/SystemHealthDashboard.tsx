@@ -5,7 +5,7 @@ import { useState, useEffect, useCallback } from "react";
 type CheckResult = { status: "ok" | "warn" | "error"; detail: string };
 type HealthData = {
   envVars: Record<string, CheckResult>;
-  webhookHealth: { stripe: CheckResult; stalePending: CheckResult; resend: CheckResult; turso: CheckResult };
+  webhookHealth: { stripe: CheckResult; stalePending: CheckResult; resend: CheckResult; turso: CheckResult; addresses: CheckResult };
   apiUsage: CheckResult;
   checkedAt: string;
 };
@@ -92,7 +92,7 @@ export default function SystemHealthDashboard() {
               <Pill status={r.status} />
               <span>
                 <span style={{ color: "#f0ebe8", textTransform: "capitalize" }}>
-                  {key === "stalePending" ? "Stuck Orders" : key}
+                  {key === "stalePending" ? "Stuck Orders" : key === "addresses" ? "Private Addresses" : key}
                 </span>
                 <br />
                 <span style={{ color: "#6b6478" }}>{r.detail}</span>
