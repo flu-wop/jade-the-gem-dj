@@ -41,7 +41,10 @@ export interface SocialLink {
 
 
 /* ── Upcoming events ─────────────────────────────────── */
-export const upcomingEvents: Event[] = [
+export const upcomingEvents: Event[] = [];
+
+/* ── Past events ─────────────────────────────────────── */
+export const pastEvents: Event[] = [
   {
     id: "dirty-laundry-aug-2026",
     title: "Dirty Laundry",
@@ -51,13 +54,8 @@ export const upcomingEvents: Event[] = [
     state: "LA",
     flyerImage: "/images/flyer-aug-2026-dirty-laundry.jpg",
     time: "10:00 PM",
-    ticketPrice: 10,
-    ticketCapacity: 20,
+    isPast: true,
   },
-];
-
-/* ── Past events ─────────────────────────────────────── */
-export const pastEvents: Event[] = [
   {
     id: "after-white-linen-aug-2026",
     title: "After White Linen",
