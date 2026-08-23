@@ -71,6 +71,15 @@ export async function checkResend(): Promise<CheckResult> {
   try {
     const domains = await getResend().domains.list();
     const fromDomain = (process.env.RESEND_FROM_EMAIL || "").split("@")[1];
+    // TEMP DIAGNOSTIC — remove once the domain-not-found cause is confirmed.
+    console.log(
+      "checkResend DIAG:",
+      JSON.stringify({
+        fromEnv: process.env.RESEND_FROM_EMAIL,
+        fromDomain,
+        domainsReturned: domains.data?.data?.map((d) => ({ name: d.name, status: d.status })),
+      })
+    );
     if (!fromDomain || fromDomain === "resend.dev") {
       return { status: "warn", detail: "Using resend.dev fallback — real domain not verified" };
     }
