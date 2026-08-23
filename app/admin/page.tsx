@@ -7,6 +7,7 @@ import DeleteRsvpButton from "@/components/DeleteRsvpButton";
 import DeleteOrderButton from "@/components/DeleteOrderButton";
 import ClearPendingButton from "@/components/ClearPendingButton";
 import ReconcileTicketsButton from "@/components/ReconcileTicketsButton";
+import ReconcileMerchButton from "@/components/ReconcileMerchButton";
 import Accordion from "@/components/Accordion";
 
 export const dynamic = "force-dynamic";
@@ -226,6 +227,7 @@ export default async function AdminPage() {
           <>
             <CountBadge n={orders.length} />
             <ClearPendingButton table="merch" count={orders.filter((r) => r.status === "pending").length} />
+            <ReconcileMerchButton />
           </>
         }
       >
