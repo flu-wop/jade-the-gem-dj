@@ -55,5 +55,6 @@ export async function POST() {
   }
 
   const fulfilledCount = results.filter((r) => r.result.startsWith("fulfilled")).length;
+  console.log("reconcile-merch results:", JSON.stringify(results));
   return NextResponse.json({ checked: rows.length, fulfilled: fulfilledCount, results });
 }
