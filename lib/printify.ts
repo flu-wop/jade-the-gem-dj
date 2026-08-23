@@ -80,11 +80,35 @@ export async function createOrder(args: {
   });
 }
 
-/** Push an existing order to production (this is what actually prints it). */
+function sleep(ms: number) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+/** Push an existing order to production (this is what actually prints it).
+ *
+ *  A freshly-created Printify order briefly sits in status "pending" while
+ *  Printify calculates costs / validates it. Calling send_to_production
+ *  before that settles gets rejected with code 8502 ("not allowed to send
+ *  order to production with status pending") even though the order was
+ *  created successfully — createOrder() and sendToProduction() are called
+ *  back-to-back in the webhook with no gap. Retry with backoff on that
+ *  specific error instead of giving up after one try. */
 export async function sendToProduction(orderId: string): Promise<unknown> {
-  return req(`/shops/${shopId()}/orders/${orderId}/send_to_production.json`, {
-    method: "POST",
-  });
+  const delaysMs = [1500, 3000, 6000, 10000]; // ~20s total across 4 retries
+  for (let attempt = 0; attempt <= delaysMs.length; attempt++) {
+    try {
+      return await req(`/shops/${shopId()}/orders/${orderId}/send_to_production.json`, {
+        method: "POST",
+      });
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : String(e);
+      const stillPending = msg.includes("8502") || msg.includes("status pending");
+      if (!stillPending || attempt === delaysMs.length) throw e;
+      await sleep(delaysMs[attempt]);
+    }
+  }
+  // Unreachable — loop always returns or throws.
+  throw new Error("sendToProduction: exhausted retries");
 }
 
 // ── Helpers used by the /api/printify/products admin route ──

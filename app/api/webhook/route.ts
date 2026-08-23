@@ -12,6 +12,10 @@ import {
 import type { CartItem } from "@/lib/cart";
 
 export const runtime = "nodejs";
+// Printify send_to_production can need a few retries with backoff if the
+// order is still settling on their side (see lib/printify.ts) — give the
+// function room for that instead of the platform default.
+export const maxDuration = 60;
 
 export async function POST(req: NextRequest) {
   const body = await req.text(); // RAW body — required for signature verification
