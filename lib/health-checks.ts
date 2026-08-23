@@ -77,11 +77,18 @@ export async function checkResend(): Promise<CheckResult> {
       JSON.stringify({
         fromEnv: process.env.RESEND_FROM_EMAIL,
         fromDomain,
+        error: domains.error,
         domainsReturned: domains.data?.data?.map((d) => ({ name: d.name, status: d.status })),
       })
     );
     if (!fromDomain || fromDomain === "resend.dev") {
       return { status: "warn", detail: "Using resend.dev fallback — real domain not verified" };
+    }
+    // The SDK does NOT throw on API errors — it returns { data: null, error }.
+    // A restricted/sending-only API key can send mail fine but gets rejected
+    // here, which previously looked identical to "domain doesn't exist".
+    if (domains.error) {
+      return { status: "error", detail: `Resend API error: ${domains.error.message}` };
     }
     const match = domains.data?.data?.find((d) => d.name === fromDomain);
     if (!match) return { status: "error", detail: `Domain ${fromDomain} not found in Resend account` };
