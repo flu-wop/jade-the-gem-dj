@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { ADMIN_COOKIE, sessionToken } from "@/lib/admin-auth";
 import { db, initDb } from "@/lib/db";
-import { sendToProduction, findOrderByExternalId, printifyConfigured } from "@/lib/printify";
+import { sendToProduction, findOrderByExternalId, listOrders, printifyConfigured } from "@/lib/printify";
 
 // Retries send_to_production for merch orders stuck in fulfill_failed —
 // e.g. from the transient "order still pending" rejection Printify returns
@@ -22,6 +22,17 @@ export async function POST() {
   const rows = (await db.execute(
     `SELECT stripe_session_id, printify_order_id FROM merch_orders WHERE status = 'fulfill_failed'`
   )).rows as unknown as { stripe_session_id: string; printify_order_id: string | null }[];
+
+  // TEMP DIAGNOSTIC — remove once the external_id lookup is confirmed working.
+  try {
+    const raw = await listOrders(1);
+    console.log(
+      "reconcile-merch DIAG page1 sample:",
+      JSON.stringify(raw.data?.slice(0, 5))
+    );
+  } catch (e) {
+    console.log("reconcile-merch DIAG listOrders threw:", e instanceof Error ? e.message : String(e));
+  }
 
   const results: { sessionId: string; result: string }[] = [];
 
