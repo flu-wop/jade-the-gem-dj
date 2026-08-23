@@ -111,6 +111,28 @@ export async function sendToProduction(orderId: string): Promise<unknown> {
   throw new Error("sendToProduction: exhausted retries");
 }
 
+/** List shop orders (paginated) — used to recover an order id when a
+ *  fulfill_failed row predates persisting printify_order_id on failure. */
+export async function listOrders(
+  page = 1
+): Promise<{ data: Array<{ id: string; external_id: string; status: string }> }> {
+  return req(`/shops/${shopId()}/orders.json?page=${page}&limit=50`);
+}
+
+/** Find a Printify order by the external_id we set at creation time
+ *  (the Stripe checkout session id). */
+export async function findOrderByExternalId(
+  externalId: string
+): Promise<{ id: string; status: string } | null> {
+  for (let page = 1; page <= 5; page++) {
+    const res = await listOrders(page);
+    const match = res.data.find((o) => o.external_id === externalId);
+    if (match) return match;
+    if (!res.data.length) break;
+  }
+  return null;
+}
+
 // ── Helpers used by the /api/printify/products admin route ──
 // They let you read your real product_id + variant_id values directly.
 

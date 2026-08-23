@@ -143,6 +143,10 @@ async function handleMerch(sessionId: string) {
   }));
 
   let fulfilled = false;
+  // Track the Printify order id as soon as it's created — if send_to_production
+  // fails afterward, we still want the id saved so a fulfill_failed row can be
+  // retried later without an external_id lookup.
+  let createdOrderId: string | undefined;
   if (printifyConfigured() && lineItems.length === items.length && addr) {
     try {
       const order = await createOrder({
@@ -162,6 +166,7 @@ async function handleMerch(sessionId: string) {
           zip: addr.postal_code || "",
         },
       });
+      createdOrderId = order.id;
       await sendToProduction(order.id);
       await db.execute({
         sql: `UPDATE merch_orders SET status='fulfilled', printify_order_id=? WHERE stripe_session_id=?`,
@@ -171,8 +176,8 @@ async function handleMerch(sessionId: string) {
     } catch (e) {
       console.error("Printify fulfillment failed:", e);
       await db.execute({
-        sql: `UPDATE merch_orders SET status='fulfill_failed' WHERE stripe_session_id=?`,
-        args: [sessionId],
+        sql: `UPDATE merch_orders SET status='fulfill_failed', printify_order_id=? WHERE stripe_session_id=?`,
+        args: [createdOrderId ?? null, sessionId],
       });
     }
   }
