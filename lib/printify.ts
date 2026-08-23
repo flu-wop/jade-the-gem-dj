@@ -115,18 +115,25 @@ export async function sendToProduction(orderId: string): Promise<unknown> {
  *  fulfill_failed row predates persisting printify_order_id on failure. */
 export async function listOrders(
   page = 1
-): Promise<{ data: Array<{ id: string; external_id: string; status: string }> }> {
+): Promise<{
+  data: Array<{
+    id: string;
+    status: string;
+    metadata?: { shop_order_id?: string };
+  }>;
+}> {
   return req(`/shops/${shopId()}/orders.json?page=${page}&limit=50`);
 }
 
-/** Find a Printify order by the external_id we set at creation time
- *  (the Stripe checkout session id). */
+/** Find a Printify order that was created for a given Stripe checkout
+ *  session. Printify does NOT echo back our externalId as a top-level
+ *  "external_id" field — it shows up as metadata.shop_order_id instead. */
 export async function findOrderByExternalId(
   externalId: string
 ): Promise<{ id: string; status: string } | null> {
   for (let page = 1; page <= 5; page++) {
     const res = await listOrders(page);
-    const match = res.data.find((o) => o.external_id === externalId);
+    const match = res.data.find((o) => o.metadata?.shop_order_id === externalId);
     if (match) return match;
     if (!res.data.length) break;
   }

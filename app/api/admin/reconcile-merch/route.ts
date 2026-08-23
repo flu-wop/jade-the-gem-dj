@@ -2,12 +2,14 @@ import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { ADMIN_COOKIE, sessionToken } from "@/lib/admin-auth";
 import { db, initDb } from "@/lib/db";
-import { sendToProduction, findOrderByExternalId, listOrders, printifyConfigured } from "@/lib/printify";
+import { sendToProduction, findOrderByExternalId, printifyConfigured } from "@/lib/printify";
 
 // Retries send_to_production for merch orders stuck in fulfill_failed —
 // e.g. from the transient "order still pending" rejection Printify returns
 // right after createOrder(). Safe to re-run: never creates a new Printify
-// order, only pushes an existing one to production.
+// order, and never re-sends one that's already past "pending" (Printify
+// itself, or a manual action, can move an order along after our webhook
+// gave up — this just syncs our DB to match reality in that case).
 export async function POST() {
   const cookieStore = await cookies();
   const session = cookieStore.get(ADMIN_COOKIE)?.value;
@@ -23,25 +25,15 @@ export async function POST() {
     `SELECT stripe_session_id, printify_order_id FROM merch_orders WHERE status = 'fulfill_failed'`
   )).rows as unknown as { stripe_session_id: string; printify_order_id: string | null }[];
 
-  // TEMP DIAGNOSTIC — remove once the external_id lookup is confirmed working.
-  try {
-    const raw = await listOrders(1);
-    console.log(
-      "reconcile-merch DIAG page1 sample:",
-      JSON.stringify(raw.data?.slice(0, 5))
-    );
-  } catch (e) {
-    console.log("reconcile-merch DIAG listOrders threw:", e instanceof Error ? e.message : String(e));
-  }
-
   const results: { sessionId: string; result: string }[] = [];
 
   for (const row of rows) {
     const sessionId = row.stripe_session_id;
     try {
       let orderId = row.printify_order_id;
+      let knownStatus: string | undefined;
       // Older failed rows (before this webhook persisted the id on failure)
-      // won't have printify_order_id saved — recover it via external_id.
+      // won't have printify_order_id saved — recover it via metadata lookup.
       if (!orderId) {
         const match = await findOrderByExternalId(sessionId);
         if (!match) {
@@ -49,11 +41,26 @@ export async function POST() {
           continue;
         }
         orderId = match.id;
+        knownStatus = match.status;
         await db.execute({
           sql: `UPDATE merch_orders SET printify_order_id=? WHERE stripe_session_id=?`,
           args: [orderId, sessionId],
         });
       }
+
+      // If the order already moved past "pending" on Printify's side —
+      // whether from our own earlier retry, Printify's own auto-retry, or a
+      // manual push — don't call send_to_production again (it'll just
+      // reject as already-in-production). Just sync our DB.
+      if (knownStatus && knownStatus !== "pending") {
+        await db.execute({
+          sql: `UPDATE merch_orders SET status='fulfilled', printify_order_id=? WHERE stripe_session_id=?`,
+          args: [orderId, sessionId],
+        });
+        results.push({ sessionId, result: `already ${knownStatus} on Printify — synced (${orderId})` });
+        continue;
+      }
+
       await sendToProduction(orderId);
       await db.execute({
         sql: `UPDATE merch_orders SET status='fulfilled', printify_order_id=? WHERE stripe_session_id=?`,
@@ -65,7 +72,8 @@ export async function POST() {
     }
   }
 
-  const fulfilledCount = results.filter((r) => r.result.startsWith("fulfilled")).length;
-  console.log("reconcile-merch results:", JSON.stringify(results));
+  const fulfilledCount = results.filter(
+    (r) => r.result.startsWith("fulfilled") || r.result.includes("synced")
+  ).length;
   return NextResponse.json({ checked: rows.length, fulfilled: fulfilledCount, results });
 }
