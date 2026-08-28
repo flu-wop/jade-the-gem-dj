@@ -333,8 +333,8 @@ async function pfGetCached(path: string) {
 // store. Ask Jade to clean up/unpublish the extras in the Printify
 // dashboard when she gets a chance; this list is the safety net either way.
 const STOREFRONT_PRODUCT_IDS = new Set([
-  "6a71305259aeae90dd0d21a3", // HIDDEN GEM AIR BRUSH (replaces 6a402761b38ebb906e0692b5, deleted from Printify Aug 2026)
-  "6a145e8298c5cbc2170dcf1a", // HIDDEN GEM TEE (replaces 6a1535ec69e138f54905134e, deleted from Printify Aug 2026)
+  "6a8ce5fd9eaf6f88150f1f09", // HIDDEN GEM AIR BRUSH (replaces 6a71305259aeae90dd0d21a3, deleted from Printify Aug 2026)
+  "6a908f1ec02f64346d09f519", // HIDDEN GEM TEE (replaces 6a145e8298c5cbc2170dcf1a, deleted from Printify Aug 2026)
   "6a145e8598c5cbc2170dcf1b", // HIDDEN VINTAGE TRUCKER
   "6a41717777569fc62a0efa06", // HIDDEN POSTER
 ]);
