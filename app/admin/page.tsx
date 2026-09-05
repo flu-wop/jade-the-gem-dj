@@ -1,7 +1,5 @@
-import { cookies } from "next/headers";
-import Link from "next/link";
 import { db, initDb } from "@/lib/db";
-import { ADMIN_COOKIE, sessionToken } from "@/lib/admin-auth";
+import { isAuthed } from "@/lib/admin-auth";
 import AdminLoginForm from "@/components/AdminLoginForm";
 import DeleteRsvpButton from "@/components/DeleteRsvpButton";
 import DeleteOrderButton from "@/components/DeleteOrderButton";
@@ -42,10 +40,7 @@ function CountBadge({ n, label }: { n: number; label?: string }) {
 }
 
 export default async function AdminPage() {
-  const cookieStore = await cookies();
-  const session = cookieStore.get(ADMIN_COOKIE)?.value;
-
-  if (!session || session !== sessionToken()) {
+  if (!(await isAuthed())) {
     return (
       <main style={{ minHeight: "100vh", background: "#0e0b14", color: "#f0ebe8", fontFamily: "system-ui", padding: 48 }}>
         <h1 style={{ color: "#d4af37" }}>Admin Login</h1>
@@ -88,12 +83,7 @@ export default async function AdminPage() {
 
   return (
     <main style={{ minHeight: "100vh", background: "#0e0b14", color: "#f0ebe8", fontFamily: "system-ui", padding: "48px 32px" }}>
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 12 }}>
-        <h1 style={{ color: "#d4af37", letterSpacing: "0.1em" }}>Jade — Admin</h1>
-        <Link href="/admin/system/" style={{ color: "#3aa898", fontSize: 13 }}>
-          System Health →
-        </Link>
-      </div>
+      <h1 style={{ color: "#d4af37", letterSpacing: "0.1em" }}>Jade — Admin</h1>
 
       {/* Guest lists — grouped by event */}
       <h2 style={{ color: "#d4af37", fontSize: 16, marginTop: 36, letterSpacing: "0.06em", display: "flex", alignItems: "center", flexWrap: "wrap" }}>
