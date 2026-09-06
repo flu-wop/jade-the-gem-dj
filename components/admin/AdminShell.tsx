@@ -28,7 +28,7 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
       >
         <div
           style={{
-            maxWidth: 960, margin: "0 auto", padding: "12px 32px",
+            maxWidth: 960, margin: "0 auto", padding: "12px clamp(16px, 5vw, 32px)",
             display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16,
           }}
         >
