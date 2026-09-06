@@ -1,7 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { stripe } from "@/lib/stripe";
 import { db, initDb } from "@/lib/db";
-import { sendBookingConfirmation, sendMerchEmails, sendPlaylistEmails, sendMerchBuildEmails } from "@/lib/resend";
+import {
+  sendBookingConfirmation, sendMerchEmails, sendPlaylistEmails, sendMerchBuildEmails,
+  sendWebhookFailureAlert,
+} from "@/lib/resend";
 import { fulfillEventTicket } from "@/lib/ticket-fulfillment";
 import {
   printifyConfigured,
@@ -34,27 +37,49 @@ export async function POST(req: NextRequest) {
     const session = event.data.object as { id: string; metadata?: Record<string, string>; amount_total?: number };
     const meta = session.metadata ?? {};
 
-    if (meta.kind === "merch") {
-      await handleMerch(session.id);
-    } else if (meta.kind === "playlist") {
-      await handlePlaylist(session.id);
-    } else if (meta.kind === "merch-build") {
-      await handleMerchBuild(session.id);
-    } else if (meta.kind === "event-ticket") {
-      await handleEventTicket(session.id);
-    } else {
-      await handleBooking(session, meta);
+    // Each handler below already had its OWN internal isolation for
+    // non-fatal sub-failures (Printify, email) — that's unchanged. What
+    // was missing site-wide: a genuine DB-write failure (or, for merch/
+    // playlist/merch-build, a missing pending-order row) had no alerting
+    // at all. Every path below now reports success/failure so a real
+    // failure gets an admin alert AND a 500 (Stripe retry), instead of
+    // silently vanishing into a console.error nobody's watching.
+    let ok = true;
+    try {
+      if (meta.kind === "merch") {
+        ok = await handleMerch(session.id);
+      } else if (meta.kind === "playlist") {
+        ok = await handlePlaylist(session.id);
+      } else if (meta.kind === "merch-build") {
+        ok = await handleMerchBuild(session.id);
+      } else if (meta.kind === "event-ticket") {
+        ok = await handleEventTicket(session.id);
+      } else {
+        ok = await handleBooking(session, meta);
+      }
+    } catch (err: any) {
+      console.error(`[webhook] Unhandled error in ${meta.kind || "booking"} handler:`, err);
+      await sendWebhookFailureAlert({
+        sessionId: session.id,
+        kind: meta.kind || "booking",
+        error: err?.message || String(err),
+      });
+      ok = false;
+    }
+
+    if (!ok) {
+      return NextResponse.json({ received: true, error: "Processing failed, will retry" }, { status: 500 });
     }
   }
 
   return NextResponse.json({ received: true });
 }
 
-// ── Booking (unchanged behavior) ──────────────────────────────
+// ── Booking (unchanged behavior, now reports success/failure) ──────────
 async function handleBooking(
   session: { id: string; amount_total?: number },
   meta: Record<string, string>
-) {
+): Promise<boolean> {
   await initDb();
   // IDEMPOTENCY: only proceed if this session hasn't already been confirmed
   // (Stripe retries webhook delivery — without this, a retry re-sends the
@@ -63,7 +88,7 @@ async function handleBooking(
     sql: `SELECT status FROM bookings WHERE stripe_session_id=?`,
     args: [session.id],
   })).rows[0] as Record<string, unknown> | undefined;
-  if (!existing || existing.status === "confirmed") return;
+  if (!existing || existing.status === "confirmed") return true;
 
   await db.execute({
     sql: `UPDATE bookings SET status='confirmed' WHERE stripe_session_id=?`,
@@ -79,10 +104,11 @@ async function handleBooking(
   } catch (e) {
     console.error("Booking email error:", e);
   }
+  return true;
 }
 
 // ── Merch: fulfill via Printify after payment ─────────────────
-async function handleMerch(sessionId: string) {
+async function handleMerch(sessionId: string): Promise<boolean> {
   await initDb();
 
   // Load the cart we saved at checkout
@@ -91,11 +117,18 @@ async function handleMerch(sessionId: string) {
     args: [sessionId],
   })).rows[0] as Record<string, unknown> | undefined;
   if (!row) {
+    // Payment succeeded but the pending row from checkout is missing —
+    // there is nothing here to mark "stuck", it's just gone. This needs
+    // a human's eyes immediately, not just a console.error.
     console.error("merch_orders row not found for", sessionId);
-    return;
+    await sendWebhookFailureAlert({
+      sessionId, kind: "merch",
+      error: "No pending merch_orders row found at webhook time — payment succeeded with no order record at all.",
+    });
+    return false;
   }
   // IDEMPOTENCY: don't re-fulfill or re-email an order already processed
-  if (row.status !== "pending") return;
+  if (row.status !== "pending") return true;
 
   const items = JSON.parse(String(row.items)) as CartItem[];
   const discountCode = String(row.discount_code || "");
@@ -174,6 +207,10 @@ async function handleMerch(sessionId: string) {
       });
       fulfilled = true;
     } catch (e) {
+      // Deliberately NOT alerted the same way as a lost order — this is
+      // already tracked via status='fulfill_failed' and has its own
+      // manual retry route (/api/admin/reconcile-merch), matching the
+      // MCS reference pattern for this exact situation.
       console.error("Printify fulfillment failed:", e);
       await db.execute({
         sql: `UPDATE merch_orders SET status='fulfill_failed', printify_order_id=? WHERE stripe_session_id=?`,
@@ -199,10 +236,12 @@ async function handleMerch(sessionId: string) {
   } catch (e) {
     console.error("Merch email error:", e);
   }
+
+  return true;
 }
 
 // ── Playlist: one-click digital service purchase ──────────────
-async function handlePlaylist(sessionId: string) {
+async function handlePlaylist(sessionId: string): Promise<boolean> {
   await initDb();
 
   const row = (await db.execute({
@@ -211,10 +250,14 @@ async function handlePlaylist(sessionId: string) {
   })).rows[0] as Record<string, unknown> | undefined;
   if (!row) {
     console.error("playlist_orders row not found for", sessionId);
-    return;
+    await sendWebhookFailureAlert({
+      sessionId, kind: "playlist",
+      error: "No pending playlist_orders row found at webhook time — payment succeeded with no order record at all.",
+    });
+    return false;
   }
   // IDEMPOTENCY: don't re-email an order already marked paid
-  if (row.status !== "pending") return;
+  if (row.status !== "pending") return true;
 
   const full = await stripe.checkout.sessions.retrieve(sessionId);
   const cust = full.customer_details;
@@ -235,16 +278,32 @@ async function handlePlaylist(sessionId: string) {
   } catch (e) {
     console.error("Playlist email error:", e);
   }
+
+  return true;
 }
 
 // ── Event tickets: paid RSVP-style tickets with a capacity cap ──
-async function handleEventTicket(sessionId: string) {
+async function handleEventTicket(sessionId: string): Promise<boolean> {
   const result = await fulfillEventTicket(sessionId);
-  if (!result.ok) console.error("handleEventTicket:", sessionId, result.reason);
+  if (!result.ok) {
+    console.error("handleEventTicket:", sessionId, result.reason);
+    // "already {status}" is Stripe re-delivering an event we've already
+    // processed — expected, not a failure. Anything else (right now just
+    // "reconstruction failed") means the DB row is genuinely missing and
+    // couldn't even be rebuilt from Stripe's own session data.
+    if (result.reason && !result.reason.startsWith("already ")) {
+      await sendWebhookFailureAlert({
+        sessionId, kind: "event-ticket",
+        error: result.reason,
+      });
+      return false;
+    }
+  }
+  return true;
 }
 
 // ── Merch Build: one-click productized design service purchase ──
-async function handleMerchBuild(sessionId: string) {
+async function handleMerchBuild(sessionId: string): Promise<boolean> {
   await initDb();
 
   const row = (await db.execute({
@@ -253,10 +312,14 @@ async function handleMerchBuild(sessionId: string) {
   })).rows[0] as Record<string, unknown> | undefined;
   if (!row) {
     console.error("merch_build_orders row not found for", sessionId);
-    return;
+    await sendWebhookFailureAlert({
+      sessionId, kind: "merch-build",
+      error: "No pending merch_build_orders row found at webhook time — payment succeeded with no order record at all.",
+    });
+    return false;
   }
   // IDEMPOTENCY: don't re-email an order already marked paid
-  if (row.status !== "pending") return;
+  if (row.status !== "pending") return true;
 
   const full = await stripe.checkout.sessions.retrieve(sessionId);
   const cust = full.customer_details;
@@ -276,4 +339,6 @@ async function handleMerchBuild(sessionId: string) {
   } catch (e) {
     console.error("Merch build email error:", e);
   }
+
+  return true;
 }
