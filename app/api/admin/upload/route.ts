@@ -27,11 +27,33 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "No file provided" }, { status: 400 });
   }
 
-  const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, "-");
-  const blob = await put(`${folder}/${Date.now()}-${safeName}`, file, {
-    access: "public",
-    addRandomSuffix: false,
-  });
+  const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, "-") || "upload";
+  const pathname = `${folder}/${Date.now()}-${safeName}`;
 
-  return NextResponse.json({ url: blob.url });
+  try {
+    const blob = await put(pathname, file, {
+      access: "public",
+      addRandomSuffix: false,
+      // Some mobile browsers hand File objects with an empty or unusual
+      // .type; pass it through explicitly and fall back to a generic
+      // binary type rather than let an empty string reach the Blob API.
+      contentType: file.type || "application/octet-stream",
+    });
+    return NextResponse.json({ url: blob.url });
+  } catch (err) {
+    // [upload-diag] prefix: grep Vercel runtime logs for this to see the
+    // real name/message/stack behind any upload failure, since Blob SDK
+    // errors (e.g. pathname/content-type validation on Vercel's end) can
+    // surface as generic-sounding messages that don't say what tripped.
+    console.error("[upload-diag] Blob put() failed", {
+      pathname,
+      fileName: file.name,
+      fileType: file.type,
+      fileSize: file.size,
+      errorName: err instanceof Error ? err.name : typeof err,
+      errorMessage: err instanceof Error ? err.message : String(err),
+    });
+    const message = err instanceof Error ? err.message : "Upload failed";
+    return NextResponse.json({ error: message }, { status: 500 });
+  }
 }
