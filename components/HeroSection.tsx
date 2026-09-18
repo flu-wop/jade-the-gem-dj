@@ -7,18 +7,18 @@ import { Music, Headphones } from 'lucide-react';
 const HeroCanvas = dynamic(() => import('./HeroCanvas'), { ssr: false });
 
 // ── Hero background media ──────────────────────────────────────
-// Drop in real media here. To use a video, put the file at
-// public/videos/hero.mp4 and set HERO_VIDEO to '/videos/hero.mp4'.
-// To use a photo, just replace public/images/hero-bg.jpg.
-// The galaxy starfield is layered on top of whichever you use.
-const HERO_VIDEO = ''; // e.g. '/videos/hero.mp4' — leave '' to use the image
+// Video is admin-editable (uploaded to Vercel Blob via /admin/settings)
+// and passed in as heroVideoUrl. Falls back to the static photo below
+// when no video has been set. The galaxy starfield layers on top of
+// whichever media is showing.
 const HERO_IMAGE = '/images/hero-bg.jpg';
 
 // How dark the scrim over the media is (0–100). Higher = media darker,
 // stars pop more; lower = media more visible.
 const SCRIM = 'bg-background/60';
 
-export default function HeroSection() {
+export default function HeroSection({ heroVideoUrl }: { heroVideoUrl?: string | null }) {
+  const HERO_VIDEO = heroVideoUrl || '';
   return (
     <section className="relative min-h-screen flex flex-col items-center justify-center overflow-hidden bg-background px-6 pt-24 pb-20">
 

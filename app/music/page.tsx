@@ -2,7 +2,9 @@ import type { Metadata } from "next";
 import { Music } from "lucide-react";
 import SoundCloudEmbed from "@/components/SoundCloudEmbed";
 import NewsletterForm from "@/components/NewsletterForm";
-import { featuredTrack, tracks } from "@/lib/data";
+import { getTracks } from "@/lib/data";
+
+export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: "Music & Mixes",
@@ -10,7 +12,9 @@ export const metadata: Metadata = {
     "Stream DJ Jade the Gem's fire mixes and club sets on SoundCloud. New drops dropping soon.",
 };
 
-export default function MusicPage() {
+export default async function MusicPage() {
+  const { featured, tracks } = await getTracks();
+  const featuredTrack = featured ?? { id: "none", title: "New mix coming soon", embedSrc: "" };
   return (
     <div className="min-h-screen pt-24 pb-24 px-4">
       <div className="max-w-5xl mx-auto">
@@ -38,11 +42,15 @@ export default function MusicPage() {
                 {featuredTrack.title}
               </h2>
             </div>
-            <SoundCloudEmbed
-              src={featuredTrack.embedSrc}
-              visual={true}
-              title={featuredTrack.title}
-            />
+            {featuredTrack.embedSrc ? (
+              <SoundCloudEmbed
+                src={featuredTrack.embedSrc}
+                visual={true}
+                title={featuredTrack.title}
+              />
+            ) : (
+              <p className="text-center text-white/40 text-sm py-10">{featuredTrack.title}</p>
+            )}
           </div>
         </section>
 

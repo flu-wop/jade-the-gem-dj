@@ -8,7 +8,10 @@ import EventCard from "@/components/EventCard";
 import MerchSection from "@/components/MerchSection";
 import VideoSection from "@/components/VideoSection";
 import Reveal from "@/components/Reveal";
-import { featuredTrack, upcomingEvents } from "@/lib/data";
+import { getEvents, getTracks } from "@/lib/data";
+import { getSetting } from "@/lib/db";
+
+export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: "DJ Jade the Gem | 504 Creative | Fire Mixes & Live Energy",
@@ -16,13 +19,19 @@ export const metadata: Metadata = {
     "New Orleans DJ bringing fire mixes and electrifying live energy to clubs, festivals, and private events.",
 };
 
-export default function HomePage() {
-  const nextThree = upcomingEvents.slice(0, 3);
+export default async function HomePage() {
+  const [{ upcoming }, { featured }, heroVideoUrl] = await Promise.all([
+    getEvents(),
+    getTracks(),
+    getSetting("hero_video_url"),
+  ]);
+  const nextThree = [...upcoming].sort((a, b) => a.date.localeCompare(b.date)).slice(0, 3);
+  const featuredTrack = featured ?? { id: "none", title: "New mix coming soon", embedSrc: "" };
 
   return (
     <>
       {/* ══════════════ HERO ══════════════ */}
-      <HeroSection />
+      <HeroSection heroVideoUrl={heroVideoUrl} />
 
       {/* ══════════════ FEATURED IN ══════════════ */}
       <Reveal>
@@ -38,11 +47,15 @@ export default function HomePage() {
               Latest <span className="text-holo">Mix</span>
             </h2>
 
-            <SoundCloudEmbed
-              src={featuredTrack.embedSrc}
-              visual={true}
-              title={featuredTrack.title}
-            />
+            {featuredTrack.embedSrc ? (
+              <SoundCloudEmbed
+                src={featuredTrack.embedSrc}
+                visual={true}
+                title={featuredTrack.title}
+              />
+            ) : (
+              <p className="text-center text-mist/40 text-sm py-10">{featuredTrack.title}</p>
+            )}
 
             <div className="mt-6 text-center">
               <a

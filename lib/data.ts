@@ -40,10 +40,45 @@ export interface SocialLink {
 }
 
 
-/* ── Upcoming events ─────────────────────────────────── */
+/* ── Live events (Sep 2026) ──────────────────────────────
+   Events now live in the `events` table (admin-editable, flyer images in
+   Vercel Blob) instead of being hand-coded here. Upcoming vs. past is
+   computed from `date` vs. today — no manual flag to keep in sync.
+   getEvents() is what app/events/page.tsx uses; the arrays below are kept
+   only as the one-time seed source for lib/db.ts's migration. ────────── */
+export async function getEvents(): Promise<{ upcoming: Event[]; past: Event[] }> {
+  const { getAllEvents, initDb } = await import("./db");
+  await initDb();
+  const rows = await getAllEvents();
+  const todayStr = new Date().toISOString().slice(0, 10);
+  const upcoming: Event[] = [];
+  const past: Event[] = [];
+  for (const r of rows) {
+    const e: Event = {
+      id: r.id,
+      title: r.title,
+      date: r.date,
+      time: r.time ?? undefined,
+      venue: r.venue,
+      city: r.city,
+      state: r.state,
+      flyerImage: r.flyer_url,
+      ticketLink: r.ticket_link ?? undefined,
+      rsvpRequired: !!r.rsvp_required,
+      rsvpCapacity: r.rsvp_capacity ?? undefined,
+      ticketPrice: r.ticket_price ?? undefined,
+      ticketCapacity: r.ticket_capacity ?? undefined,
+      isPast: r.date < todayStr,
+    };
+    (e.isPast ? past : upcoming).push(e);
+  }
+  return { upcoming, past };
+}
+
+/* ── Upcoming events (seed source only — see getEvents() above) ── */
 export const upcomingEvents: Event[] = [];
 
-/* ── Past events ─────────────────────────────────────── */
+/* ── Past events (seed source only — see getEvents() above) ── */
 export const pastEvents: Event[] = [
   {
     id: "dirty-laundry-aug-2026",
@@ -119,6 +154,22 @@ export const tracks: Track[] = [
       "https://w.soundcloud.com/player/?url=https%3A//api.soundcloud.com/playlists/1982508040&color=%2300ff9d&auto_play=false&hide_related=false&show_comments=true&show_user=true&show_reposts=false&show_teaser=true",
   },
 ];
+
+/* ── Live tracks (Sep 2026) — admin-editable, DB-backed.
+   featuredTrack/tracks above are the one-time seed source only. ── */
+export async function getTracks(): Promise<{ featured: Track | null; tracks: Track[] }> {
+  const { getAllTracks, initDb } = await import("./db");
+  await initDb();
+  const rows = await getAllTracks();
+  const mapped: Track[] = rows.map((r) => ({
+    id: r.id,
+    title: r.title,
+    embedSrc: r.embed_src,
+    visual: !!r.is_featured,
+  }));
+  const featured = mapped.find((t) => t.visual) ?? mapped[0] ?? null;
+  return { featured, tracks: mapped };
+}
 
 
 /* ── Social links ────────────────────────────────────── */

@@ -9,8 +9,11 @@ import Link from "next/link"
 import { LogoutButton } from "./LogoutButton"
 
 const SECTIONS = [
-  { href: "/admin",        label: "Admin" },
-  { href: "/admin/system", label: "System Health" },
+  { href: "/admin",          label: "Admin" },
+  { href: "/admin/events",   label: "Events" },
+  { href: "/admin/tracks",   label: "Releases" },
+  { href: "/admin/settings", label: "Settings" },
+  { href: "/admin/system",   label: "System Health" },
 ]
 
 export function AdminShell({ children }: { children: React.ReactNode }) {

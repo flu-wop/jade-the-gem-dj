@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import EventCard from "@/components/EventCard";
-import { upcomingEvents, pastEvents } from "@/lib/data";
+import { getEvents } from "@/lib/data";
 import { db, initDb } from "@/lib/db";
 
 export const dynamic = "force-dynamic";
@@ -13,8 +13,9 @@ export const metadata: Metadata = {
 
 export default async function EventsPage() {
   await initDb();
-  const sortedUpcoming = [...upcomingEvents].sort((a, b) => a.date.localeCompare(b.date));
-  const sortedPast = [...pastEvents].sort((a, b) => b.date.localeCompare(a.date));
+  const { upcoming, past } = await getEvents();
+  const sortedUpcoming = [...upcoming].sort((a, b) => a.date.localeCompare(b.date));
+  const sortedPast = [...past].sort((a, b) => b.date.localeCompare(a.date));
 
   const soldOutIds = new Set<string>();
   for (const event of sortedUpcoming) {

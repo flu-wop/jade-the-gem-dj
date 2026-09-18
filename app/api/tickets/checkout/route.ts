@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { stripe } from "@/lib/stripe";
 import { db, initDb } from "@/lib/db";
 import { rateLimit, clientIp } from "@/lib/rate-limit";
-import { upcomingEvents } from "@/lib/data";
+import { getEvents } from "@/lib/data";
 
 export async function POST(req: NextRequest) {
   try {
@@ -10,7 +10,8 @@ export async function POST(req: NextRequest) {
     if (!ok) return NextResponse.json({ error: "Too many requests" }, { status: 429 });
 
     const { eventId } = await req.json();
-    const event = upcomingEvents.find((e) => e.id === eventId);
+    const { upcoming } = await getEvents();
+    const event = upcoming.find((e) => e.id === eventId);
     if (!event || !event.ticketPrice) {
       return NextResponse.json({ error: "Invalid event" }, { status: 400 });
     }

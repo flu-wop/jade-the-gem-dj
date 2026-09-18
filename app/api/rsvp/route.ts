@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { db, initDb } from "@/lib/db";
 import { sendRsvpEmails } from "@/lib/resend";
 import { rateLimit, clientIp } from "@/lib/rate-limit";
-import { upcomingEvents } from "@/lib/data";
+import { getEvents } from "@/lib/data";
 import { domainCanReceiveMail } from "@/lib/mx-check";
 import { privateAddressForEvent } from "@/lib/addresses";
 
@@ -38,7 +38,8 @@ export async function POST(req: NextRequest) {
 
     await initDb();
 
-    const capacity = upcomingEvents.find((e) => e.id === eventId)?.rsvpCapacity;
+    const { upcoming } = await getEvents();
+    const capacity = upcoming.find((e) => e.id === eventId)?.rsvpCapacity;
     if (typeof capacity === "number") {
       const r = await db.execute({
         sql: "SELECT COALESCE(SUM(guests), 0) AS total FROM rsvps WHERE event_id = ?",

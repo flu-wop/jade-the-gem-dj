@@ -150,4 +150,123 @@ export async function initDb() {
   } catch {
     // Column already exists — fine.
   }
+
+  // ── Content tables (Sep 2026): events, tracks, and hero video are now
+  // admin-editable instead of hardcoded in lib/data.ts. `date` on events
+  // decides upcoming vs. past automatically — no manual flag to maintain.
+  await db.execute(`
+    CREATE TABLE IF NOT EXISTS events (
+      id TEXT PRIMARY KEY,
+      title TEXT NOT NULL,
+      date TEXT NOT NULL,           -- ISO YYYY-MM-DD
+      time TEXT,
+      venue TEXT NOT NULL,
+      city TEXT NOT NULL,
+      state TEXT NOT NULL,
+      flyer_url TEXT NOT NULL,
+      ticket_link TEXT,
+      rsvp_required INTEGER DEFAULT 0,
+      rsvp_capacity INTEGER,
+      ticket_price INTEGER,
+      ticket_capacity INTEGER,
+      featured INTEGER DEFAULT 0,
+      created_at TEXT DEFAULT (datetime('now'))
+    )
+  `);
+  await db.execute(`
+    CREATE TABLE IF NOT EXISTS tracks (
+      id TEXT PRIMARY KEY,
+      title TEXT NOT NULL,
+      embed_src TEXT NOT NULL,
+      is_featured INTEGER DEFAULT 0,
+      sort_order INTEGER DEFAULT 0,
+      created_at TEXT DEFAULT (datetime('now'))
+    )
+  `);
+  await db.execute(`
+    CREATE TABLE IF NOT EXISTS site_settings (
+      key TEXT PRIMARY KEY,
+      value TEXT
+    )
+  `);
+
+  // One-time seed: if events/tracks are still empty, carry over what was
+  // previously hardcoded in lib/data.ts so the migration doesn't lose data.
+  // Safe to run repeatedly — it only fires while the tables are empty.
+  const eventCount = await db.execute(`SELECT COUNT(*) AS n FROM events`);
+  if (Number(eventCount.rows[0]?.n ?? 0) === 0) {
+    const { pastEvents, upcomingEvents } = await import("./data");
+    for (const e of [...upcomingEvents, ...pastEvents]) {
+      await db.execute({
+        sql: `INSERT INTO events (id, title, date, time, venue, city, state, flyer_url, ticket_link, rsvp_required, rsvp_capacity, ticket_price, ticket_capacity)
+              VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        args: [
+          e.id, e.title, e.date, e.time ?? null, e.venue, e.city, e.state,
+          e.flyerImage, e.ticketLink ?? null,
+          e.rsvpRequired ? 1 : 0, e.rsvpCapacity ?? null,
+          e.ticketPrice ?? null, e.ticketCapacity ?? null,
+        ],
+      });
+    }
+  }
+  const trackCount = await db.execute(`SELECT COUNT(*) AS n FROM tracks`);
+  if (Number(trackCount.rows[0]?.n ?? 0) === 0) {
+    const { tracks: seedTracks } = await import("./data");
+    for (let i = 0; i < seedTracks.length; i++) {
+      const t = seedTracks[i];
+      await db.execute({
+        sql: `INSERT INTO tracks (id, title, embed_src, is_featured, sort_order) VALUES (?, ?, ?, ?, ?)`,
+        args: [t.id, t.title, t.embedSrc, t.visual ? 1 : 0, i],
+      });
+    }
+  }
+}
+
+// ── Content helpers ──────────────────────────────────────────
+
+export interface DbEvent {
+  id: string;
+  title: string;
+  date: string;
+  time: string | null;
+  venue: string;
+  city: string;
+  state: string;
+  flyer_url: string;
+  ticket_link: string | null;
+  rsvp_required: number;
+  rsvp_capacity: number | null;
+  ticket_price: number | null;
+  ticket_capacity: number | null;
+  featured: number;
+}
+
+export async function getAllEvents(): Promise<DbEvent[]> {
+  const r = await db.execute(`SELECT * FROM events ORDER BY date DESC`);
+  return r.rows as unknown as DbEvent[];
+}
+
+export interface DbTrack {
+  id: string;
+  title: string;
+  embed_src: string;
+  is_featured: number;
+  sort_order: number;
+}
+
+export async function getAllTracks(): Promise<DbTrack[]> {
+  const r = await db.execute(`SELECT * FROM tracks ORDER BY sort_order ASC`);
+  return r.rows as unknown as DbTrack[];
+}
+
+export async function getSetting(key: string): Promise<string | null> {
+  const r = await db.execute({ sql: `SELECT value FROM site_settings WHERE key = ?`, args: [key] });
+  return (r.rows[0]?.value as string | undefined) ?? null;
+}
+
+export async function setSetting(key: string, value: string) {
+  await db.execute({
+    sql: `INSERT INTO site_settings (key, value) VALUES (?, ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value`,
+    args: [key, value],
+  });
 }
