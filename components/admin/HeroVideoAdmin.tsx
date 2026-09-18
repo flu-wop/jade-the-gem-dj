@@ -1,6 +1,7 @@
 "use client";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { upload } from "@vercel/blob/client";
 
 export default function HeroVideoAdmin({ initialUrl }: { initialUrl: string | null }) {
   const router = useRouter();
@@ -14,21 +15,22 @@ export default function HeroVideoAdmin({ initialUrl }: { initialUrl: string | nu
     setError("");
     setSaved(false);
     try {
-      const fd = new FormData();
-      fd.append("file", file);
-      fd.append("folder", "hero-video");
-      const uploadRes = await fetch("/api/admin/upload", { method: "POST", body: fd });
-      const uploadData = await uploadRes.json();
-      if (!uploadRes.ok) throw new Error(uploadData.error || "Upload failed");
+      const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, "-") || "hero.mp4";
+      const blob = await upload(`hero-video/${Date.now()}-${safeName}`, file, {
+        access: "public",
+        handleUploadUrl: "/api/admin/upload",
+        contentType: file.type || "video/mp4",
+        multipart: true, // video files are large enough to benefit from chunked upload
+      });
 
       const saveRes = await fetch("/api/admin/settings", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ key: "hero_video_url", value: uploadData.url }),
+        body: JSON.stringify({ key: "hero_video_url", value: blob.url }),
       });
-      if (!saveRes.ok) throw new Error("Saved the file but failed to update the setting.");
+      if (!saveRes.ok) throw new Error("Uploaded but failed to update the setting.");
 
-      setUrl(uploadData.url);
+      setUrl(blob.url);
       setSaved(true);
       router.refresh();
     } catch (e) {

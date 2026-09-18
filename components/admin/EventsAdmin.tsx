@@ -1,6 +1,7 @@
 "use client";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { upload } from "@vercel/blob/client";
 
 export interface AdminEvent {
   id: string;
@@ -94,13 +95,13 @@ export default function EventsAdmin({ initialEvents }: { initialEvents: AdminEve
     setUploading(true);
     setUploadError("");
     try {
-      const fd = new FormData();
-      fd.append("file", file);
-      fd.append("folder", "flyers");
-      const res = await fetch("/api/admin/upload", { method: "POST", body: fd });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Upload failed");
-      setForm((f) => ({ ...f, flyerUrl: data.url }));
+      const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, "-") || "flyer";
+      const blob = await upload(`flyers/${Date.now()}-${safeName}`, file, {
+        access: "public",
+        handleUploadUrl: "/api/admin/upload",
+        contentType: file.type || "application/octet-stream",
+      });
+      setForm((f) => ({ ...f, flyerUrl: blob.url }));
     } catch (e) {
       setUploadError(e instanceof Error ? e.message : "Upload failed");
     } finally {
