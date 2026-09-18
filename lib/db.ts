@@ -260,11 +260,18 @@ export async function getAllTracks(): Promise<DbTrack[]> {
 }
 
 export async function getSetting(key: string): Promise<string | null> {
+  // initDb() is idempotent (CREATE TABLE IF NOT EXISTS) and cheap once the
+  // schema exists, so it's safe to call on every read. Without this,
+  // getSetting() called in parallel with getEvents()/getTracks() (which do
+  // call initDb() themselves) can race ahead of table creation on a cold
+  // start and throw "no such table: site_settings".
+  await initDb();
   const r = await db.execute({ sql: `SELECT value FROM site_settings WHERE key = ?`, args: [key] });
   return (r.rows[0]?.value as string | undefined) ?? null;
 }
 
 export async function setSetting(key: string, value: string) {
+  await initDb();
   await db.execute({
     sql: `INSERT INTO site_settings (key, value) VALUES (?, ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value`,
     args: [key, value],

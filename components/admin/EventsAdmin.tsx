@@ -61,6 +61,7 @@ export default function EventsAdmin({ initialEvents }: { initialEvents: AdminEve
   const [editingId, setEditingId] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [uploadError, setUploadError] = useState("");
   const [error, setError] = useState("");
 
   function startEdit(e: AdminEvent) {
@@ -91,7 +92,7 @@ export default function EventsAdmin({ initialEvents }: { initialEvents: AdminEve
 
   async function handleUpload(file: File) {
     setUploading(true);
-    setError("");
+    setUploadError("");
     try {
       const fd = new FormData();
       fd.append("file", file);
@@ -101,7 +102,7 @@ export default function EventsAdmin({ initialEvents }: { initialEvents: AdminEve
       if (!res.ok) throw new Error(data.error || "Upload failed");
       setForm((f) => ({ ...f, flyerUrl: data.url }));
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Upload failed");
+      setUploadError(e instanceof Error ? e.message : "Upload failed");
     } finally {
       setUploading(false);
     }
@@ -236,6 +237,7 @@ export default function EventsAdmin({ initialEvents }: { initialEvents: AdminEve
               <img src={form.flyerUrl} alt="Flyer preview" style={{ height: 48, borderRadius: 4 }} />
             )}
           </div>
+          {uploadError && <p style={{ color: "#d4756b", fontSize: 12, marginTop: 6 }}>{uploadError}</p>}
         </div>
 
         <div style={{ display: "grid", gap: 12, gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", marginTop: 12 }}>
