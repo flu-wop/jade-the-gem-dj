@@ -204,7 +204,11 @@ export async function initDb() {
           e.id, e.title, e.date, e.time ?? null, e.venue, e.city, e.state,
           e.flyerImage, e.ticketLink ?? null,
           e.rsvpRequired ? 1 : 0, e.rsvpCapacity ?? null,
-          e.ticketPrice ?? null, e.ticketCapacity ?? null,
+          // Seed source (lib/data.ts) stores ticketPrice in whole dollars;
+          // the DB column is cents, matching every other amount_cents
+          // column in the app.
+          e.ticketPrice != null ? Math.round(e.ticketPrice * 100) : null,
+          e.ticketCapacity ?? null,
         ],
       });
     }

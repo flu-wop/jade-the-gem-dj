@@ -64,9 +64,17 @@ export default function EventsAdmin({ initialEvents }: { initialEvents: AdminEve
   const [saving, setSaving] = useState(false);
   const [uploadError, setUploadError] = useState("");
   const [error, setError] = useState("");
+  // Bumped on every resetForm() so the file <input> below remounts —
+  // it's an uncontrolled DOM element, so clearing form.flyerUrl in React
+  // state does NOT clear the browser's own displayed filename. Without
+  // this, the input still visually shows the last-chosen file after a
+  // save/cancel, even though flyerUrl is genuinely empty — which is what
+  // made a second "Add Event" silently fail the required-fields check.
+  const [fileInputKey, setFileInputKey] = useState(0);
 
   function startEdit(e: AdminEvent) {
     setEditingId(e.id);
+    setFileInputKey((k) => k + 1);
     setForm({
       id: e.id,
       title: e.title,
@@ -89,6 +97,8 @@ export default function EventsAdmin({ initialEvents }: { initialEvents: AdminEve
     setEditingId(null);
     setForm(BLANK);
     setError("");
+    setUploadError("");
+    setFileInputKey((k) => k + 1);
   }
 
   async function handleUpload(file: File) {
@@ -227,6 +237,7 @@ export default function EventsAdmin({ initialEvents }: { initialEvents: AdminEve
           <label style={labelStyle}>Flyer image *</label>
           <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
             <input
+              key={fileInputKey}
               type="file"
               accept="image/*"
               onChange={(e) => e.target.files?.[0] && handleUpload(e.target.files[0])}

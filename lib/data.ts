@@ -66,7 +66,11 @@ export async function getEvents(): Promise<{ upcoming: Event[]; past: Event[] }>
       ticketLink: r.ticket_link ?? undefined,
       rsvpRequired: !!r.rsvp_required,
       rsvpCapacity: r.rsvp_capacity ?? undefined,
-      ticketPrice: r.ticket_price ?? undefined,
+      // ticket_price is stored in the DB as cents (matching every other
+      // amount_cents column in the app), but the public Event type and
+      // its consumers (Stripe checkout, EventCard's $ display) expect
+      // whole dollars — convert here, once, at the DB boundary.
+      ticketPrice: r.ticket_price != null ? r.ticket_price / 100 : undefined,
       ticketCapacity: r.ticket_capacity ?? undefined,
       isPast: r.date < todayStr,
     };
