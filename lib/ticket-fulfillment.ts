@@ -1,7 +1,7 @@
 import { db, initDb } from "@/lib/db";
 import { stripe } from "@/lib/stripe";
 import { sendTicketEmails } from "@/lib/resend";
-import { upcomingEvents } from "@/lib/data";
+import { getEvents } from "@/lib/data";
 import { privateAddressForEvent } from "@/lib/addresses";
 
 /**
@@ -25,10 +25,11 @@ export async function fulfillEventTicket(sessionId: string): Promise<{ ok: boole
   if (!row) {
     console.error("event_tickets row not found for", sessionId, "— reconstructing from Stripe session");
     const meta = full.metadata || {};
+    const quantity = Number(meta.quantity) || 1;
     await db.execute({
-      sql: `INSERT INTO event_tickets (event_id, event_title, amount_cents, stripe_session_id, status)
-            VALUES (?, ?, ?, ?, 'pending')`,
-      args: [meta.eventId || "", meta.eventTitle || "", full.amount_total ?? 0, sessionId],
+      sql: `INSERT INTO event_tickets (event_id, event_title, amount_cents, quantity, stripe_session_id, status)
+            VALUES (?, ?, ?, ?, ?, 'pending')`,
+      args: [meta.eventId || "", meta.eventTitle || "", full.amount_total ?? 0, quantity, sessionId],
     });
     row = (await db.execute({
       sql: `SELECT * FROM event_tickets WHERE stripe_session_id=?`,
@@ -44,9 +45,17 @@ export async function fulfillEventTicket(sessionId: string): Promise<{ ok: boole
   const email = cust?.email || "";
   const phone = full.customer_details?.phone || "";
   const amount = (full.amount_total ?? Number(row.amount_cents)) / 100;
+  const quantity = Number(row.quantity) || 1;
   const eventId = String(row.event_id || "");
   const eventTitle = String(row.event_title || "");
-  const event = upcomingEvents.find((e) => e.id === eventId);
+  // Was reading from the old hardcoded `upcomingEvents` array, which is
+  // permanently empty now that events live in the DB — every confirmation
+  // email since the events migration would have shipped with a blank
+  // date/time/city/state. getEvents() covers both lists since a ticket
+  // bought right before showtime could tip an event into "past" by the
+  // time fulfillment runs.
+  const { upcoming, past } = await getEvents();
+  const event = [...upcoming, ...past].find((e) => e.id === eventId);
 
   await db.execute({
     sql: `UPDATE event_tickets SET status='paid', name=?, email=?, phone=? WHERE stripe_session_id=?`,
@@ -60,7 +69,7 @@ export async function fulfillEventTicket(sessionId: string): Promise<{ ok: boole
       : "We'll send the exact address separately before the event.";
 
     await sendTicketEmails({
-      eventTitle, name, email, phone, amount, where,
+      eventTitle, name, email, phone, amount, where, quantity,
       date: event?.date || "",
       time: event?.time,
     });

@@ -100,6 +100,11 @@ export async function initDb() {
       created_at TEXT DEFAULT (datetime('now'))
     )
   `);
+  try {
+    await db.execute(`ALTER TABLE event_tickets ADD COLUMN quantity INTEGER DEFAULT 1`);
+  } catch {
+    // already exists — fine
+  }
   await db.execute(`
     CREATE TABLE IF NOT EXISTS playlist_orders (
       id INTEGER PRIMARY KEY AUTOINCREMENT,

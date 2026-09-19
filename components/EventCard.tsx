@@ -8,16 +8,22 @@ import RSVPForm from "@/components/RSVPForm";
 interface Props {
   event: Event;
   soldOut?: boolean;
+  /** Caps the quantity selector — e.g. remaining ticket capacity. Defaults to 5. */
+  maxQuantity?: number;
 }
+
+const HARD_MAX_QUANTITY = 5;
 
 const MONTH_SHORT = [
   "JAN","FEB","MAR","APR","MAY","JUN",
   "JUL","AUG","SEP","OCT","NOV","DEC",
 ];
 
-export default function EventCard({ event, soldOut }: Props) {
+export default function EventCard({ event, soldOut, maxQuantity }: Props) {
   const [rsvpOpen, setRsvpOpen] = useState(false);
   const [buying, setBuying] = useState(false);
+  const [quantity, setQuantity] = useState(1);
+  const quantityOptions = Math.max(1, Math.min(HARD_MAX_QUANTITY, maxQuantity ?? HARD_MAX_QUANTITY));
   const d = new Date(`${event.date}T12:00:00`);
   const month = MONTH_SHORT[d.getMonth()];
   const day = String(d.getDate()).padStart(2, "0");
@@ -29,7 +35,7 @@ export default function EventCard({ event, soldOut }: Props) {
       const res = await fetch("/api/tickets/checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ eventId: event.id }),
+        body: JSON.stringify({ eventId: event.id, quantity }),
       });
       const data = await res.json().catch(() => ({}));
       if (data.url) {
@@ -131,14 +137,30 @@ export default function EventCard({ event, soldOut }: Props) {
                   Sold Out
                 </button>
               ) : (
-                <button
-                  onClick={handleBuyTicket}
-                  disabled={buying}
-                  className="btn-primary w-full text-xs py-2.5"
-                >
-                  <Ticket size={13} />
-                  {buying ? "Loading…" : `Buy Ticket — $${event.ticketPrice}`}
-                </button>
+                <div className="space-y-2">
+                  {quantityOptions > 1 && (
+                    <label className="flex items-center justify-between text-xs text-white/50">
+                      Qty
+                      <select
+                        value={quantity}
+                        onChange={(e) => setQuantity(Number(e.target.value))}
+                        className="bg-surface-2 border border-white/10 rounded px-2 py-1 text-white text-xs"
+                      >
+                        {Array.from({ length: quantityOptions }, (_, i) => i + 1).map((n) => (
+                          <option key={n} value={n}>{n}</option>
+                        ))}
+                      </select>
+                    </label>
+                  )}
+                  <button
+                    onClick={handleBuyTicket}
+                    disabled={buying}
+                    className="btn-primary w-full text-xs py-2.5"
+                  >
+                    <Ticket size={13} />
+                    {buying ? "Loading…" : `Buy ${quantity > 1 ? `${quantity} Tickets` : "Ticket"} — $${(event.ticketPrice * quantity).toFixed(2)}`}
+                  </button>
+                </div>
               )
             ) : event.ticketLink ? (
               <a

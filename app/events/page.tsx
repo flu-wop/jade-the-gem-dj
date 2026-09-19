@@ -18,6 +18,7 @@ export default async function EventsPage() {
   const sortedPast = [...past].sort((a, b) => b.date.localeCompare(a.date));
 
   const soldOutIds = new Set<string>();
+  const remainingTicketsById = new Map<string, number>();
   for (const event of sortedUpcoming) {
     if (event.rsvpRequired && typeof event.rsvpCapacity === "number") {
       const r = await db.execute({
@@ -28,11 +29,12 @@ export default async function EventsPage() {
       if (total >= event.rsvpCapacity) soldOutIds.add(event.id);
     } else if (event.ticketPrice && typeof event.ticketCapacity === "number") {
       const r = await db.execute({
-        sql: "SELECT COUNT(*) AS total FROM event_tickets WHERE event_id = ? AND status = 'paid'",
+        sql: "SELECT COALESCE(SUM(quantity), 0) AS total FROM event_tickets WHERE event_id = ? AND status = 'paid'",
         args: [event.id],
       });
       const total = Number(r.rows[0]?.total ?? 0);
       if (total >= event.ticketCapacity) soldOutIds.add(event.id);
+      remainingTicketsById.set(event.id, Math.max(0, event.ticketCapacity - total));
     }
   }
 
@@ -66,7 +68,12 @@ export default async function EventsPage() {
           {sortedUpcoming.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {sortedUpcoming.map((event) => (
-                <EventCard key={event.id} event={event} soldOut={soldOutIds.has(event.id)} />
+                <EventCard
+                  key={event.id}
+                  event={event}
+                  soldOut={soldOutIds.has(event.id)}
+                  maxQuantity={remainingTicketsById.get(event.id)}
+                />
               ))}
             </div>
           ) : (
