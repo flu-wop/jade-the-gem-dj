@@ -195,7 +195,10 @@ export default function EventsAdmin({ initialEvents }: { initialEvents: AdminEve
     }
   }
 
-  const today = new Date().toISOString().slice(0, 10);
+  // New Orleans local date, not UTC — see todayLocalDateStr() in
+  // lib/data.ts for why (same fix, duplicated here since importing
+  // lib/data.ts client-side would pull in its server-only DB import).
+  const today = new Intl.DateTimeFormat("en-CA", { timeZone: "America/Chicago" }).format(new Date());
   const upcoming = events.filter((e) => e.date >= today).sort((a, b) => a.date.localeCompare(b.date));
   const past = events.filter((e) => e.date < today).sort((a, b) => b.date.localeCompare(a.date));
 

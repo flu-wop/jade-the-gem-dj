@@ -2,6 +2,19 @@
    Site content — edit this file to update events, mixes, etc.
    ───────────────────────────────────────────────────────── */
 
+// "Today" for upcoming/past bucketing, in New Orleans local time rather
+// than the server's UTC clock. Vercel functions run in UTC, so
+// new Date().toISOString() rolls to the next calendar date while it's
+// still evening in New Orleans (UTC-5/-6) — an event dated *today*
+// would silently flip to "past" hours before the show actually
+// happens, hiding its buy button on the night it matters most. This
+// isn't perfect for out-of-town gigs (uses NOLA time regardless of the
+// event's own city/state), but it's right for the common case and
+// vastly better than UTC.
+export function todayLocalDateStr(): string {
+  return new Intl.DateTimeFormat("en-CA", { timeZone: "America/Chicago" }).format(new Date());
+}
+
 export interface Event {
   id: string;
   title: string;
@@ -50,7 +63,7 @@ export async function getEvents(): Promise<{ upcoming: Event[]; past: Event[] }>
   const { getAllEvents, initDb } = await import("./db");
   await initDb();
   const rows = await getAllEvents();
-  const todayStr = new Date().toISOString().slice(0, 10);
+  const todayStr = todayLocalDateStr();
   const upcoming: Event[] = [];
   const past: Event[] = [];
   for (const r of rows) {
