@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 import { Montserrat, Bebas_Neue, Bungee, Anton } from "next/font/google";
+import "@flu-wop/design-system/core.css";
+import "@flu-wop/design-system/themes/jade.css";
 import "./globals.css";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
@@ -94,7 +96,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html
+    <html data-theme="jade"
       lang="en"
       className={`${montserrat.variable} ${bebas.variable} ${bungee.variable} ${anton.variable}`}
     >

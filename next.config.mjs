@@ -1,5 +1,6 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  transpilePackages: ["@flu-wop/design-system"],
   images: {
     unoptimized: true,
   },
