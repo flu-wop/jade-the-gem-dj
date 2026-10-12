@@ -1,3 +1,4 @@
+import { SiteAnalytics } from "@/components/analytics/SiteAnalytics"
 import type { Metadata } from "next";
 import { Montserrat, Bebas_Neue, Bungee, Anton } from "next/font/google";
 import "@flu-wop/design-system/core.css";
@@ -102,6 +103,7 @@ export default function RootLayout({
     >
       <head />
       <body className="text-white antialiased">
+        <SiteAnalytics />
         <AmbientBackdrop />
         <CartProvider>
           <Navbar />

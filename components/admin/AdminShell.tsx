@@ -11,6 +11,7 @@ import { LogoutButton } from "./LogoutButton"
 const SECTIONS = [
   { href: "/admin",          label: "Admin" },
   { href: "/admin/events",   label: "Events" },
+  { href: "/admin/insights", label: "Insights" },
   { href: "/admin/tracks",   label: "Releases" },
   { href: "/admin/settings", label: "Settings" },
   { href: "/admin/system",   label: "System Health" },

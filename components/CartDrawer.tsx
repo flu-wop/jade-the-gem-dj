@@ -1,4 +1,5 @@
 "use client";
+import { beacon } from "@/lib/beacon"
 
 import Image from "next/image";
 import { useState } from "react";
@@ -41,6 +42,7 @@ export default function CartDrawer() {
     setLoading(true);
     setError("");
     try {
+      beacon("checkout_click")
       const res = await fetch("/api/merch/checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },

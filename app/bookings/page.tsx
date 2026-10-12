@@ -1,4 +1,5 @@
 "use client";
+import { beacon } from "@/lib/beacon"
 import { useState } from "react";
 import { CheckCircle, Tag, Clock, DollarSign, Shield, Music2, Star, Users, Building, ListMusic } from "lucide-react";
 
@@ -29,6 +30,7 @@ export default function BookingsPage() {
   async function buyPlaylist(tierId: string) {
     setPlaylistLoading(tierId);
     try {
+      beacon("checkout_click")
       const res = await fetch("/api/playlist/checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -72,6 +74,7 @@ export default function BookingsPage() {
     }
     setLoading(true); setError("");
     try {
+      beacon("checkout_click")
       const res  = await fetch("/api/checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },

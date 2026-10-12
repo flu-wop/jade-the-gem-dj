@@ -1,4 +1,5 @@
 "use client";
+import { beacon } from "@/lib/beacon"
 
 import { useState } from "react";
 import { Calendar, MapPin, Ticket } from "lucide-react";
@@ -32,6 +33,7 @@ export default function EventCard({ event, soldOut, maxQuantity }: Props) {
   async function handleBuyTicket() {
     setBuying(true);
     try {
+      beacon("checkout_click")
       const res = await fetch("/api/tickets/checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },

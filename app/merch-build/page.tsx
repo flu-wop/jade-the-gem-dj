@@ -1,4 +1,5 @@
 "use client";
+import { beacon } from "@/lib/beacon"
 import { useState, useMemo } from "react";
 import { ShoppingBag, Sparkles, Palette } from "lucide-react";
 
@@ -23,6 +24,7 @@ export default function MerchBuildPage() {
   async function buy() {
     setLoading(true);
     try {
+      beacon("checkout_click")
       const res = await fetch("/api/merch-build/checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
