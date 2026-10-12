@@ -1,354 +1,190 @@
-import { db, initDb } from "@/lib/db";
-import { isAuthed } from "@/lib/admin-auth";
-import AdminLoginForm from "@/components/AdminLoginForm";
-import DeleteRsvpButton from "@/components/DeleteRsvpButton";
-import DeleteOrderButton from "@/components/DeleteOrderButton";
-import ClearPendingButton from "@/components/ClearPendingButton";
-import ReconcileTicketsButton from "@/components/ReconcileTicketsButton";
-import ReconcileMerchButton from "@/components/ReconcileMerchButton";
-import Accordion from "@/components/Accordion";
+// app/admin/page.tsx
+// Admin home — a quick read on the last 30 days, what's coming up, and
+// shortcuts to every section. Same layout as the other sites' admin home
+// (Epoch Skin, MCS); the bookings/orders tables live at /admin/orders.
+import Link from "next/link"
+import { ArrowRight, Plus } from "lucide-react"
+import { isAuthed } from "@/lib/admin-auth"
+import { db, initDb } from "@/lib/db"
+import { getDB } from "@/lib/insights/db"
+import { getInsights } from "@/lib/insights/core"
+import { insightsConfig } from "@/lib/insights/config"
+import type { Insights } from "@/lib/insights/types"
+import AdminLoginForm from "@/components/AdminLoginForm"
+import { ADMIN_SECTIONS } from "@/components/admin/sections"
+import { Stat, money, longDate } from "@/components/admin/insights-ui"
 
-export const dynamic = "force-dynamic";
+export const dynamic = "force-dynamic"
+export const metadata = { title: "Admin", robots: { index: false } }
 
-type Row = Record<string, unknown>;
-
-function money(cents: unknown) {
-  return `$${(Number(cents || 0) / 100).toFixed(2)}`;
+const DESCRIPTIONS: Record<string, string> = {
+  "/admin/insights": "Sales, visitors & the booking funnel",
+  "/admin/orders": "Bookings, tickets, RSVPs & merch",
+  "/admin/events": "Add and edit events",
+  "/admin/tracks": "Mixes & releases",
+  "/admin/settings": "Hero video & site content",
+  "/admin/system": "Env vars, webhooks & integrations",
 }
 
-function StatusPill({ status }: { status: unknown }) {
-  const s = String(status || "");
-  const color =
-    s === "confirmed" || s === "fulfilled"
-      ? "#3aa898"
-      : s === "fulfill_failed"
-      ? "#d4af37"
-      : "#6355b8";
-  return (
-    <span style={{ color, border: `1px solid ${color}55`, padding: "2px 8px", fontSize: 11, textTransform: "uppercase", letterSpacing: "0.1em" }}>
-      {s || "—"}
-    </span>
-  );
+type Upcoming = { key: string; date: string; time: string; title: string; sub: string; kind: "Booking" | "Event" }
+
+const TZ = "America/Chicago"
+
+function greeting() {
+  const h = Number(new Intl.DateTimeFormat("en-US", { hour: "numeric", hourCycle: "h23", timeZone: TZ }).format(new Date()))
+  return h < 12 ? "Good morning" : h < 17 ? "Good afternoon" : "Good evening"
 }
 
-function CountBadge({ n, label }: { n: number; label?: string }) {
-  return (
-    <span style={{ color: "#6b6478", fontSize: 12 }}>
-      {n} {label || (n === 1 ? "item" : "items")}
-    </span>
-  );
+function time12(t: string) {
+  const m = /^(\d{1,2}):(\d{2})/.exec(t || "")
+  if (!m) return t || ""
+  const h = Number(m[1])
+  return `${h % 12 || 12}:${m[2]} ${h < 12 ? "AM" : "PM"}`
 }
 
-export default async function AdminPage() {
+export default async function AdminHomePage() {
   if (!(await isAuthed())) {
     return (
       <main style={{ minHeight: "100vh", background: "#0e0b14", color: "#f0ebe8", fontFamily: "system-ui", padding: 48 }}>
         <h1 style={{ color: "#d4af37" }}>Admin Login</h1>
-        <p style={{ color: "#c4b8e0" }}>Enter the admin password to view bookings and orders.</p>
+        <p style={{ color: "#c4b8e0" }}>Enter the admin password.</p>
         <AdminLoginForm />
       </main>
-    );
+    )
   }
 
-  await initDb();
-  const bookings = (await db.execute("SELECT * FROM bookings ORDER BY created_at DESC")).rows as Row[];
-  const orders = (await db.execute("SELECT * FROM merch_orders ORDER BY created_at DESC")).rows as Row[];
-  const playlists = (await db.execute("SELECT * FROM playlist_orders ORDER BY created_at DESC")).rows as Row[];
-  const merchBuilds = (await db.execute("SELECT * FROM merch_build_orders ORDER BY created_at DESC")).rows as Row[];
-  const tickets = (await db.execute("SELECT * FROM event_tickets ORDER BY created_at DESC")).rows as Row[];
-  const rsvps = (await db.execute("SELECT * FROM rsvps ORDER BY created_at DESC")).rows as Row[];
+  const today = new Intl.DateTimeFormat("en-CA", { timeZone: TZ }).format(new Date())
 
-  const th: React.CSSProperties = { textAlign: "left", padding: "8px 10px", color: "#A89880", fontWeight: 400, fontSize: 12, textTransform: "uppercase", letterSpacing: "0.08em" };
-  const td: React.CSSProperties = { padding: "8px 10px", borderTop: "1px solid #2a2336", fontSize: 13, verticalAlign: "top" };
+  // Make sure every table exists before Insights queries them (a no-op once created).
+  try { await initDb() } catch (err) { console.error("[admin home] initDb", err) }
 
-  // Group RSVPs + tickets by event so guest lists read as "who's coming to
-  // what" instead of two long flat tables mixing every event together.
-  type EventGroup = { eventId: string; eventTitle: string; rsvps: Row[]; tickets: Row[]; lastActivity: string };
-  const eventGroups = new Map<string, EventGroup>();
-  for (const r of rsvps) {
-    const key = String(r.event_id || r.event_title || "unknown");
-    const g = eventGroups.get(key) ?? { eventId: key, eventTitle: String(r.event_title || key), rsvps: [], tickets: [], lastActivity: "" };
-    g.rsvps.push(r);
-    g.lastActivity = g.lastActivity > String(r.created_at || "") ? g.lastActivity : String(r.created_at || "");
-    eventGroups.set(key, g);
+  let data: Insights | null = null
+  let failed = false
+  const idb = getDB()
+  if (idb) {
+    try { data = await getInsights(idb, insightsConfig, 30) } catch (err) { console.error("[admin home]", err); failed = true }
   }
-  for (const r of tickets) {
-    const key = String(r.event_id || r.event_title || "unknown");
-    const g = eventGroups.get(key) ?? { eventId: key, eventTitle: String(r.event_title || key), rsvps: [], tickets: [], lastActivity: "" };
-    g.tickets.push(r);
-    g.lastActivity = g.lastActivity > String(r.created_at || "") ? g.lastActivity : String(r.created_at || "");
-    eventGroups.set(key, g);
+
+  let upcoming: Upcoming[] = []
+  try {
+    const [b, e] = await Promise.all([
+      db.execute({ sql: "SELECT id, name, event_date, event_type, hours, location FROM bookings WHERE status IN ('paid','fulfilled') AND event_date >= ? ORDER BY event_date ASC LIMIT 6", args: [today] }),
+      db.execute({ sql: "SELECT id, title, date, time, venue, city FROM events WHERE date >= ? ORDER BY date ASC LIMIT 6", args: [today] }),
+    ])
+    upcoming = [
+      ...b.rows.map((r): Upcoming => ({
+        key: `b${r.id}`, date: String(r.event_date), time: "", kind: "Booking",
+        title: String(r.name), sub: `${r.event_type} · ${r.hours} hr · ${r.location}`,
+      })),
+      ...e.rows.map((r): Upcoming => ({
+        key: `e${r.id}`, date: String(r.date), time: String(r.time || ""), kind: "Event",
+        title: String(r.title), sub: `${r.venue}, ${r.city}`,
+      })),
+    ].sort((a, b) => (a.date < b.date ? -1 : a.date > b.date ? 1 : 0)).slice(0, 6)
+  } catch (err) {
+    console.error("[admin home] upcoming", err)
   }
-  const sortedEventGroups = [...eventGroups.values()].sort((a, b) => (a.lastActivity < b.lastActivity ? 1 : -1));
+
+  const rev = data?.sources.find((s) => s.key === "revenue")
+  const sales = data?.sources.find((s) => s.key === "sales")
+  const needsAttention = data?.attention.filter((a) => a.value > 0) ?? []
 
   return (
-    <main style={{ minHeight: "100vh", background: "#0e0b14", color: "#f0ebe8", fontFamily: "system-ui", padding: "32px clamp(16px, 5vw, 32px)" }}>
-      <h1 style={{ color: "#d4af37", letterSpacing: "0.1em" }}>Jade — Admin</h1>
+    <main className="mx-auto max-w-5xl px-4 sm:px-6 py-6 sm:py-10">
+      <div className="mb-6 sm:mb-8">
+        <p className="text-[10px] tracking-[0.26em] uppercase text-gold mb-1.5">{longDate(today)}</p>
+        <h1 className="font-display text-3xl sm:text-4xl text-cream leading-tight">{greeting()}, Jade</h1>
+      </div>
 
-      {/* Guest lists — grouped by event */}
-      <h2 style={{ color: "#d4af37", fontSize: 16, marginTop: 36, letterSpacing: "0.06em", display: "flex", alignItems: "center", flexWrap: "wrap" }}>
-        Guest Lists
-        <ClearPendingButton table="tickets" count={tickets.filter((r) => r.status === "pending").length} />
-        <ReconcileTicketsButton />
-      </h2>
-      {sortedEventGroups.length === 0 && (
-        <p style={{ color: "#6b6478", fontSize: 13, marginTop: 8 }}>No RSVPs or ticket sales yet.</p>
-      )}
-      {sortedEventGroups.map((g) => {
-        const guestCount = g.tickets.length + g.rsvps.reduce((sum, r) => sum + Number(r.guests || 1), 0);
-        return (
-          <Accordion
-            key={g.eventId}
-            title={g.eventTitle}
-            defaultOpen={sortedEventGroups.length === 1}
-            badge={
-              <CountBadge
-                n={guestCount}
-                label={`${guestCount === 1 ? "guest" : "guests"} · ${g.tickets.length} ticket${g.tickets.length === 1 ? "" : "s"} · ${g.rsvps.length} RSVP${g.rsvps.length === 1 ? "" : "s"}`}
-              />
-            }
-          >
-            {g.tickets.length > 0 && (
-              <>
-                <h3 style={{ color: "#c4b8e0", fontSize: 12, textTransform: "uppercase", letterSpacing: "0.08em", marginTop: 12 }}>
-                  Tickets ({g.tickets.length})
-                </h3>
-                <div style={{ overflowX: "auto" }}>
-                  <table style={{ width: "100%", borderCollapse: "collapse", marginTop: 8, minWidth: 640 }}>
-                    <thead>
-                      <tr>
-                        <th style={th}>When</th><th style={th}>Name</th><th style={th}>Email</th>
-                        <th style={th}>Phone</th><th style={th}>Paid</th><th style={th}>Status</th><th style={th}>Actions</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {g.tickets.map((r) => (
-                        <tr key={String(r.id)}>
-                          <td style={td}>{String(r.created_at || "")}</td>
-                          <td style={td}>{String(r.name || "")}</td>
-                          <td style={td}>{String(r.email || "")}</td>
-                          <td style={td}>{String(r.phone || "—")}</td>
-                          <td style={td}>{money(r.amount_cents)}</td>
-                          <td style={td}><StatusPill status={r.status} /></td>
-                          <td style={td}><DeleteOrderButton table="tickets" id={r.id as number} /></td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </>
+      {needsAttention.map((a) => (
+        <p key={a.label} className="mb-4 text-sm text-red-300 border border-red-400/30 bg-red-400/5 px-4 py-3">
+          {a.value} {a.label}. <Link href="/admin/orders" className="underline">Review</Link>
+        </p>
+      ))}
+
+      <section aria-label="Last 30 days" className="mb-8">
+        <div className="flex items-baseline justify-between mb-3">
+          <h2 className="text-[11px] tracking-[0.2em] uppercase text-mist">Last 30 days</h2>
+          <Link href="/admin/insights" className="text-xs text-gold hover:underline inline-flex items-center gap-1">
+            All insights <ArrowRight className="w-3 h-3" />
+          </Link>
+        </div>
+        {data && rev && sales ? (
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+            <Stat label="Revenue" value={money(rev.total)} cur={rev.total} prev={rev.prev} />
+            <Stat label="Bookings & orders" value={String(sales.total)} cur={sales.total} prev={sales.prev} />
+            <Stat label="Visitors" value={data.visitors.cur.toLocaleString("en-US")} cur={data.visitors.cur} prev={data.visitors.prev} />
+            <Stat label="Page views" value={data.pageviews.cur.toLocaleString("en-US")} cur={data.pageviews.cur} prev={data.pageviews.prev} />
+          </div>
+        ) : (
+          <p className="text-sm text-mist bg-surface border border-[#2a2336] p-4">
+            {failed || idb ? "Couldn’t load numbers right now. Sections below still work." : "Numbers need a database connection. Sections below still work."}
+          </p>
+        )}
+      </section>
+
+      <div className="grid gap-8 lg:gap-6 lg:grid-cols-[1.1fr_1fr]">
+        <section aria-label="Coming up">
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="text-[11px] tracking-[0.2em] uppercase text-mist">Coming up</h2>
+            <Link href="/admin/events" className="text-xs text-gold hover:underline inline-flex items-center gap-1">
+              <Plus className="w-3 h-3" /> Add event
+            </Link>
+          </div>
+          <div className="bg-surface border border-[#2a2336]">
+            {upcoming.length === 0 ? (
+              <div className="p-6 text-center">
+                <p className="font-display text-lg text-cream mb-1">Nothing coming up yet</p>
+                <p className="text-sm text-mist">Paid bookings and upcoming events will show up here.</p>
+              </div>
+            ) : (
+              <ul className="divide-y divide-[#2a2336]">
+                {upcoming.map((u) => (
+                  <li key={u.key} className="flex gap-4 px-4 sm:px-5 py-3.5">
+                    <div className="w-16 shrink-0">
+                      <p className={`text-[10px] tracking-[0.14em] uppercase ${u.date === today ? "text-gold font-medium" : "text-mist"}`}>
+                        {u.date === today ? "Today" : longDate(u.date).split(",")[0]}
+                      </p>
+                      <p className="text-sm text-cream tabular-nums whitespace-nowrap">{u.time ? time12(u.time) : u.kind}</p>
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm text-cream font-medium truncate">{u.title}</p>
+                      <p className="text-xs text-mist truncate">{u.sub}</p>
+                      <p className="text-[11px] text-mist/60 truncate">{longDate(u.date)}</p>
+                    </div>
+                  </li>
+                ))}
+              </ul>
             )}
+            <Link href="/admin/orders" className="flex items-center justify-between px-4 sm:px-5 py-3 border-t border-[#2a2336] text-xs text-mist hover:text-cream">
+              All bookings & orders <ArrowRight className="w-3.5 h-3.5" />
+            </Link>
+          </div>
+        </section>
 
-            {g.rsvps.length > 0 && (
-              <>
-                <h3 style={{ color: "#c4b8e0", fontSize: 12, textTransform: "uppercase", letterSpacing: "0.08em", marginTop: 20 }}>
-                  RSVPs ({g.rsvps.length})
-                </h3>
-                <div style={{ overflowX: "auto" }}>
-                  <table style={{ width: "100%", borderCollapse: "collapse", marginTop: 8, minWidth: 680 }}>
-                    <thead>
-                      <tr>
-                        <th style={th}>When</th><th style={th}>Name</th><th style={th}>Email</th>
-                        <th style={th}>Phone</th><th style={th}>Guests</th><th style={th}>Message</th><th style={th}>Actions</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {g.rsvps.map((r) => (
-                        <tr key={String(r.id)}>
-                          <td style={td}>{String(r.created_at || "")}</td>
-                          <td style={td}>{String(r.name || "")}</td>
-                          <td style={td}>{String(r.email || "")}</td>
-                          <td style={td}>{String(r.phone || "—")}</td>
-                          <td style={td}>{String(r.guests || 1)}</td>
-                          <td style={td}>{String(r.message || "—")}</td>
-                          <td style={td}><DeleteRsvpButton id={r.id as number} /></td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </>
-            )}
-          </Accordion>
-        );
-      })}
-
-      <h2 style={{ color: "#d4af37", fontSize: 16, marginTop: 40, letterSpacing: "0.06em" }}>Orders</h2>
-
-      {/* Bookings */}
-      <Accordion title="Bookings" badge={<CountBadge n={bookings.length} />}>
-        <div style={{ overflowX: "auto" }}>
-          <table style={{ width: "100%", borderCollapse: "collapse", marginTop: 12, minWidth: 760 }}>
-            <thead>
-              <tr>
-                <th style={th}>Date</th><th style={th}>Type</th><th style={th}>Hrs</th>
-                <th style={th}>Name</th><th style={th}>Email</th><th style={th}>Phone</th>
-                <th style={th}>Location</th><th style={th}>Paid</th><th style={th}>Code</th>
-                <th style={th}>Status</th><th style={th}>Booked</th>
-              </tr>
-            </thead>
-            <tbody>
-              {bookings.length === 0 ? (
-                <tr><td style={td} colSpan={11}>No bookings yet.</td></tr>
-              ) : bookings.map((r) => (
-                <tr key={String(r.id)}>
-                  <td style={td}>{String(r.event_date || "")}</td>
-                  <td style={td}>{String(r.event_type || "")}</td>
-                  <td style={td}>{String(r.hours || "")}</td>
-                  <td style={td}>{String(r.name || "")}</td>
-                  <td style={td}>{String(r.email || "")}</td>
-                  <td style={td}>{String(r.phone || "")}</td>
-                  <td style={td}>{String(r.location || "")}</td>
-                  <td style={td}>{money(r.amount_cents)}</td>
-                  <td style={td}>{String(r.discount_code || "")}</td>
-                  <td style={td}><StatusPill status={r.status} /></td>
-                  <td style={td}>{String(r.created_at || "")}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </Accordion>
-
-      {/* Merch orders */}
-      <Accordion
-        title="Merch Orders"
-        badge={
-          <>
-            <CountBadge n={orders.length} />
-            <ClearPendingButton table="merch" count={orders.filter((r) => r.status === "pending").length} />
-            <ReconcileMerchButton />
-          </>
-        }
-      >
-        <div style={{ overflowX: "auto" }}>
-          <table style={{ width: "100%", borderCollapse: "collapse", marginTop: 12, minWidth: 760 }}>
-            <thead>
-              <tr>
-                <th style={th}>When</th><th style={th}>Name</th><th style={th}>Email</th>
-                <th style={th}>Items</th><th style={th}>Paid</th><th style={th}>Code</th>
-                <th style={th}>Ship To</th><th style={th}>Printify</th><th style={th}>Status</th>
-                <th style={th}>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {orders.length === 0 ? (
-                <tr><td style={td} colSpan={10}>No orders yet.</td></tr>
-              ) : orders.map((r) => {
-                let items = "";
-                try {
-                  const parsed = JSON.parse(String(r.items || "[]")) as Array<Record<string, unknown>>;
-                  items = parsed
-                    .map((l) => {
-                      // New shape: {name, variantName, qty}. Old orders placed
-                      // before the live-Printify rebuild used {name, style, size, qty} —
-                      // handle both so historical rows still render.
-                      const variant = String(l.variantName ?? [l.style, l.size].filter(Boolean).join(" "));
-                      return `${l.name} (${variant}) ×${l.qty}`;
-                    })
-                    .join("; ");
-                } catch { items = String(r.items || ""); }
-                let ship = "";
-                try {
-                  const a = JSON.parse(String(r.shipping_json || "{}")) as Record<string, string>;
-                  ship = [a.line1, a.line2, a.city, a.state, a.postal_code, a.country].filter(Boolean).join(", ");
-                } catch { /* ignore */ }
-                return (
-                  <tr key={String(r.id)}>
-                    <td style={td}>{String(r.created_at || "")}</td>
-                    <td style={td}>{String(r.name || "")}</td>
-                    <td style={td}>{String(r.email || "")}</td>
-                    <td style={td}>{items}</td>
-                    <td style={td}>{money(r.amount_cents)}</td>
-                    <td style={td}>{String(r.discount_code || "")}</td>
-                    <td style={td}>{ship}</td>
-                    <td style={td}>{String(r.printify_order_id || "—")}</td>
-                    <td style={td}><StatusPill status={r.status} /></td>
-                    <td style={td}><DeleteOrderButton table="merch" id={r.id as number} /></td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
-      </Accordion>
-
-      {/* Playlist orders */}
-      <Accordion
-        title="Playlist Orders"
-        badge={
-          <>
-            <CountBadge n={playlists.length} />
-            <ClearPendingButton table="playlist" count={playlists.filter((r) => r.status === "pending").length} />
-          </>
-        }
-      >
-        <div style={{ overflowX: "auto" }}>
-          <table style={{ width: "100%", borderCollapse: "collapse", marginTop: 12, minWidth: 600 }}>
-            <thead>
-              <tr>
-                <th style={th}>When</th><th style={th}>Tier</th><th style={th}>Name</th>
-                <th style={th}>Email</th><th style={th}>Paid</th><th style={th}>Status</th>
-                <th style={th}>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {playlists.length === 0 ? (
-                <tr><td style={td} colSpan={7}>No playlist orders yet.</td></tr>
-              ) : playlists.map((r) => (
-                <tr key={String(r.id)}>
-                  <td style={td}>{String(r.created_at || "")}</td>
-                  <td style={td}>{String(r.tier || "")}</td>
-                  <td style={td}>{String(r.name || "")}</td>
-                  <td style={td}>{String(r.email || "")}</td>
-                  <td style={td}>{money(r.amount_cents)}</td>
-                  <td style={td}><StatusPill status={r.status} /></td>
-                  <td style={td}><DeleteOrderButton table="playlist" id={r.id as number} /></td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </Accordion>
-
-      {/* Merch build orders */}
-      <Accordion
-        title="Merch Build Orders"
-        badge={
-          <>
-            <CountBadge n={merchBuilds.length} />
-            <ClearPendingButton table="merch-build" count={merchBuilds.filter((r) => r.status === "pending").length} />
-          </>
-        }
-      >
-        <div style={{ overflowX: "auto" }}>
-          <table style={{ width: "100%", borderCollapse: "collapse", marginTop: 12, minWidth: 640 }}>
-            <thead>
-              <tr>
-                <th style={th}>When</th><th style={th}>Tier</th><th style={th}>Items</th>
-                <th style={th}>Name</th><th style={th}>Email</th><th style={th}>Paid</th><th style={th}>Status</th>
-                <th style={th}>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {merchBuilds.length === 0 ? (
-                <tr><td style={td} colSpan={8}>No merch build orders yet.</td></tr>
-              ) : merchBuilds.map((r) => (
-                <tr key={String(r.id)}>
-                  <td style={td}>{String(r.created_at || "")}</td>
-                  <td style={td}>{String(r.tier || "")}</td>
-                  <td style={td}>{String(r.item_count || "")}</td>
-                  <td style={td}>{String(r.name || "")}</td>
-                  <td style={td}>{String(r.email || "")}</td>
-                  <td style={td}>{money(r.amount_cents)}</td>
-                  <td style={td}><StatusPill status={r.status} /></td>
-                  <td style={td}><DeleteOrderButton table="merch-build" id={r.id as number} /></td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </Accordion>
+        <section aria-label="Sections">
+          <h2 className="text-[11px] tracking-[0.2em] uppercase text-mist mb-3">Go to</h2>
+          <div className="grid grid-cols-2 gap-3">
+            {ADMIN_SECTIONS.filter((s) => s.href !== "/admin").map(({ href, label, icon: Icon }) => {
+              const hero = href === "/admin/insights"
+              return (
+                <Link
+                  key={href}
+                  href={href}
+                  className={`group border p-4 transition-colors min-w-0 hover:border-gold ${hero ? "col-span-2 bg-[#2a2336] border-[#2a2336]" : "bg-surface border-[#2a2336]"}`}
+                >
+                  <Icon className="w-4 h-4 mb-3 text-gold" strokeWidth={1.6} />
+                  <p className="font-display text-lg leading-tight text-cream">{label}</p>
+                  <p className="text-xs mt-1 leading-snug text-mist">{DESCRIPTIONS[href]}</p>
+                </Link>
+              )
+            })}
+          </div>
+          <Link href="/bookings" className="mt-3 flex w-full items-center justify-center h-10 text-[11px] tracking-[0.16em] uppercase border border-[#2a2336] bg-surface text-mist hover:border-gold hover:text-cream transition-colors">
+            Open the booking page
+          </Link>
+        </section>
+      </div>
     </main>
-  );
+  )
 }
