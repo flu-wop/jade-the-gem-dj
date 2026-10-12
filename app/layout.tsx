@@ -6,6 +6,7 @@ import "@flu-wop/design-system/themes/jade.css";
 import "./globals.css";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import HideOnAdmin from "@/components/HideOnAdmin";
 import { CartProvider } from "@/lib/cart";
 import AmbientBackdrop from "@/components/AmbientBackdrop";
 import CartDrawer from "@/components/CartDrawer";
@@ -108,7 +109,7 @@ export default function RootLayout({
         <CartProvider>
           <Navbar />
           <main>{children}</main>
-          <Footer />
+          <HideOnAdmin><Footer /></HideOnAdmin>
           <CartDrawer />
         </CartProvider>
       </body>
