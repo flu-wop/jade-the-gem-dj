@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef } from "react";
+import { smallBtn, smallDangerBtn } from "./admin/form-styles";
 
 export default function ClearPendingButton({
   table, count,
@@ -53,14 +54,9 @@ export default function ClearPendingButton({
       onClick={handleClick}
       disabled={state === "loading"}
       style={{
-        background: state === "confirm" ? "#a89ae0" : "transparent",
-        border: "1px solid #6355b866",
-        color: state === "confirm" ? "#111" : "#a89ae0",
-        padding: "6px 12px",
-        fontSize: 11,
-        cursor: "pointer",
-        marginLeft: 12,
-        minHeight: 32,
+        ...smallDangerBtn,
+        background: state === "confirm" ? "#e8637a" : "transparent",
+        color: state === "confirm" ? "#0e0b14" : "#e8637a",
         touchAction: "manipulation",
         WebkitTapHighlightColor: "transparent",
       }}

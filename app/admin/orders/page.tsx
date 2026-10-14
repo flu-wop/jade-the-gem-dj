@@ -1,6 +1,6 @@
 import { db, initDb } from "@/lib/db";
 import { isAuthed } from "@/lib/admin-auth";
-import AdminLoginForm from "@/components/AdminLoginForm";
+import { AdminPage, AdminPageHeader, AdminLogin } from "@/components/admin/page-frame";
 import DeleteRsvpButton from "@/components/DeleteRsvpButton";
 import DeleteOrderButton from "@/components/DeleteOrderButton";
 import ClearPendingButton from "@/components/ClearPendingButton";
@@ -26,7 +26,7 @@ function StatusPill({ status }: { status: unknown }) {
       ? "#d4af37"
       : "#6355b8";
   return (
-    <span style={{ color, border: `1px solid ${color}55`, padding: "2px 8px", fontSize: 11, textTransform: "uppercase", letterSpacing: "0.1em" }}>
+    <span style={{ color, border: `1px solid ${color}55`, padding: "2px 8px", fontSize: 10, textTransform: "uppercase", letterSpacing: "0.14em", whiteSpace: "nowrap" }}>
       {s || "—"}
     </span>
   );
@@ -34,22 +34,14 @@ function StatusPill({ status }: { status: unknown }) {
 
 function CountBadge({ n, label }: { n: number; label?: string }) {
   return (
-    <span style={{ color: "#6b6478", fontSize: 12 }}>
+    <span style={{ color: "#c4b8e0", opacity: 0.6, fontSize: 12 }}>
       {n} {label || (n === 1 ? "item" : "items")}
     </span>
   );
 }
 
 export default async function AdminOrdersPage() {
-  if (!(await isAuthed())) {
-    return (
-      <main style={{ minHeight: "100vh", background: "#0e0b14", color: "#f0ebe8", fontFamily: "system-ui", padding: 48 }}>
-        <h1 style={{ color: "#d4af37" }}>Admin Login</h1>
-        <p style={{ color: "#c4b8e0" }}>Enter the admin password to view bookings and orders.</p>
-        <AdminLoginForm />
-      </main>
-    );
-  }
+  if (!(await isAuthed())) return <AdminLogin message="Enter the admin password to view bookings and orders." />;
 
   await initDb();
   const bookings = (await db.execute("SELECT * FROM bookings ORDER BY created_at DESC")).rows as Row[];
@@ -59,8 +51,8 @@ export default async function AdminOrdersPage() {
   const tickets = (await db.execute("SELECT * FROM event_tickets ORDER BY created_at DESC")).rows as Row[];
   const rsvps = (await db.execute("SELECT * FROM rsvps ORDER BY created_at DESC")).rows as Row[];
 
-  const th: React.CSSProperties = { textAlign: "left", padding: "8px 10px", color: "#A89880", fontWeight: 400, fontSize: 12, textTransform: "uppercase", letterSpacing: "0.08em" };
-  const td: React.CSSProperties = { padding: "8px 10px", borderTop: "1px solid #2a2336", fontSize: 13, verticalAlign: "top" };
+  const th: React.CSSProperties = { textAlign: "left", padding: "10px 12px", color: "#c4b8e0", opacity: 0.7, fontWeight: 400, fontSize: 10, textTransform: "uppercase", letterSpacing: "0.18em", whiteSpace: "nowrap" };
+  const td: React.CSSProperties = { padding: "10px 12px", borderTop: "1px solid #2a2336", fontSize: 13, verticalAlign: "top", color: "#f0ebe8" };
 
   // Group RSVPs + tickets by event so guest lists read as "who's coming to
   // what" instead of two long flat tables mixing every event together.
@@ -83,17 +75,17 @@ export default async function AdminOrdersPage() {
   const sortedEventGroups = [...eventGroups.values()].sort((a, b) => (a.lastActivity < b.lastActivity ? 1 : -1));
 
   return (
-    <main style={{ minHeight: "100vh", background: "#0e0b14", color: "#f0ebe8", fontFamily: "system-ui", padding: "32px clamp(16px, 5vw, 32px)" }}>
-      <h1 style={{ color: "#d4af37", letterSpacing: "0.1em" }}>Bookings &amp; Orders</h1>
+    <AdminPage>
+      <AdminPageHeader eyebrow="Orders" title="Bookings & Orders" description="Guest lists, bookings, merch, playlists and merch builds." />
 
       {/* Guest lists — grouped by event */}
-      <h2 style={{ color: "#d4af37", fontSize: 16, marginTop: 36, letterSpacing: "0.06em", display: "flex", alignItems: "center", flexWrap: "wrap" }}>
+      <h2 className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] tracking-[0.2em] uppercase text-mist/80">
         Guest Lists
         <ClearPendingButton table="tickets" count={tickets.filter((r) => r.status === "pending").length} />
         <ReconcileTicketsButton />
       </h2>
       {sortedEventGroups.length === 0 && (
-        <p style={{ color: "#6b6478", fontSize: 13, marginTop: 8 }}>No RSVPs or ticket sales yet.</p>
+        <p className="mt-3 text-sm text-mist/60 bg-surface border border-[#2a2336] p-6 text-center">No RSVPs or ticket sales yet.</p>
       )}
       {sortedEventGroups.map((g) => {
         const guestCount = g.tickets.length + g.rsvps.reduce((sum, r) => sum + Number(r.guests || 1), 0);
@@ -111,7 +103,7 @@ export default async function AdminOrdersPage() {
           >
             {g.tickets.length > 0 && (
               <>
-                <h3 style={{ color: "#c4b8e0", fontSize: 12, textTransform: "uppercase", letterSpacing: "0.08em", marginTop: 12 }}>
+                <h3 style={{ color: "#c4b8e0", fontSize: 11, textTransform: "uppercase", letterSpacing: "0.2em", marginTop: 16 }}>
                   Tickets ({g.tickets.length})
                 </h3>
                 <div style={{ overflowX: "auto" }}>
@@ -142,7 +134,7 @@ export default async function AdminOrdersPage() {
 
             {g.rsvps.length > 0 && (
               <>
-                <h3 style={{ color: "#c4b8e0", fontSize: 12, textTransform: "uppercase", letterSpacing: "0.08em", marginTop: 20 }}>
+                <h3 style={{ color: "#c4b8e0", fontSize: 11, textTransform: "uppercase", letterSpacing: "0.2em", marginTop: 24 }}>
                   RSVPs ({g.rsvps.length})
                 </h3>
                 <div style={{ overflowX: "auto" }}>
@@ -174,7 +166,7 @@ export default async function AdminOrdersPage() {
         );
       })}
 
-      <h2 style={{ color: "#d4af37", fontSize: 16, marginTop: 40, letterSpacing: "0.06em" }}>Orders</h2>
+      <h2 className="mt-10 text-[11px] tracking-[0.2em] uppercase text-mist/80">Orders</h2>
 
       {/* Bookings */}
       <Accordion title="Bookings" badge={<CountBadge n={bookings.length} />}>
@@ -350,6 +342,6 @@ export default async function AdminOrdersPage() {
           </table>
         </div>
       </Accordion>
-    </main>
+    </AdminPage>
   );
 }

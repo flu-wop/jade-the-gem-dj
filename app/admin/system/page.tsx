@@ -1,26 +1,17 @@
 import { isAuthed } from "@/lib/admin-auth";
-import AdminLoginForm from "@/components/AdminLoginForm";
 import SystemHealthDashboard from "@/components/SystemHealthDashboard";
+import { AdminPage, AdminPageHeader, AdminLogin } from "@/components/admin/page-frame";
 
 export const dynamic = "force-dynamic";
+export const metadata = { title: "System · Admin", robots: { index: false } };
 
 export default async function SystemPage() {
-  if (!(await isAuthed())) {
-    return (
-      <main style={{ minHeight: "100vh", background: "#0e0b14", color: "#f0ebe8", fontFamily: "system-ui", padding: 48 }}>
-        <h1 style={{ color: "#d4af37" }}>Admin Login</h1>
-        <p style={{ color: "#c4b8e0" }}>Enter the admin password to view system health.</p>
-        <AdminLoginForm />
-      </main>
-    );
-  }
+  if (!(await isAuthed())) return <AdminLogin message="Enter the admin password to view system health." />;
 
   return (
-    <main style={{ minHeight: "100vh", background: "#0e0b14", color: "#f0ebe8", fontFamily: "system-ui", padding: "32px clamp(16px, 5vw, 32px)" }}>
-      <h1 style={{ color: "#d4af37", letterSpacing: "0.1em" }}>System Health</h1>
-      <div style={{ marginTop: 24 }}>
-        <SystemHealthDashboard />
-      </div>
-    </main>
+    <AdminPage>
+      <AdminPageHeader eyebrow="Admin" title="System" description="Env vars, webhooks and integrations — is everything actually working." />
+      <SystemHealthDashboard />
+    </AdminPage>
   );
 }

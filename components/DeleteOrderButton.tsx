@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef } from "react";
+import { smallBtn, smallDangerBtn } from "./admin/form-styles";
 
 export default function DeleteOrderButton({
   table, id,
@@ -48,13 +49,9 @@ export default function DeleteOrderButton({
       onClick={handleClick}
       disabled={state === "loading"}
       style={{
-        background: state === "confirm" ? "#d4af37" : "transparent",
-        border: "1px solid #d4af3766",
-        color: state === "confirm" ? "#111" : "#d4af37",
-        padding: "6px 12px",
-        fontSize: 11,
-        cursor: "pointer",
-        minHeight: 32,
+        ...smallDangerBtn,
+        background: state === "confirm" ? "#e8637a" : "transparent",
+        color: state === "confirm" ? "#0e0b14" : "#e8637a",
         touchAction: "manipulation",
         WebkitTapHighlightColor: "transparent",
       }}

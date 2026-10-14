@@ -12,13 +12,7 @@ export function LogoutButton() {
   }
 
   return (
-    <button
-      onClick={handleLogout}
-      style={{
-        background: "none", border: "none", cursor: "pointer",
-        color: "#6b6478", fontSize: 13, letterSpacing: "0.04em",
-      }}
-    >
+    <button onClick={handleLogout} className="text-xs text-mist/70 hover:text-cream transition-colors">
       Log out
     </button>
   )

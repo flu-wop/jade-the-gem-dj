@@ -1,73 +1,66 @@
 "use client"
 // components/admin/AdminShell.tsx
 // Persistent nav shell for /admin/* — sticky top bar with a brand row and a
-// section row (Home, Insights, Orders, ...) + logout. Same structure as the
-// other sites' admin (Epoch Skin, MCS); only the colours are Jade's.
+// section row (Home, Insights, Orders, ...) + logout. Same structure and
+// behaviour as Epoch Skin's admin (filled active tab, scrolls the active tab
+// into view on phones, fade hint at the edge); only the colours are Jade's.
 
+import { useEffect, useRef } from "react"
 import { usePathname } from "next/navigation"
 import Link from "next/link"
 import { ExternalLink } from "lucide-react"
 import { ADMIN_SECTIONS } from "./sections"
 import { LogoutButton } from "./LogoutButton"
 
-
 export function AdminShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
+  const navRef = useRef<HTMLElement>(null)
+
+  // Keep the active tab visible when the row scrolls sideways on phones.
+  useEffect(() => {
+    const nav = navRef.current
+    const el = nav?.querySelector<HTMLElement>('[aria-current="page"]')
+    if (nav && el) nav.scrollLeft = el.offsetLeft - nav.clientWidth / 2 + el.clientWidth / 2
+  }, [pathname])
 
   return (
-    <div style={{ minHeight: "100vh", background: "#0e0b14" }}>
-      <header
-        style={{
-          position: "sticky", top: 0, zIndex: 20,
-          borderBottom: "1px solid #2a2336",
-          background: "rgba(14,11,20,0.95)",
-          backdropFilter: "blur(8px)",
-        }}
-      >
-        <div
-          style={{
-            maxWidth: 1024, margin: "0 auto", padding: "0 clamp(16px, 5vw, 32px)", height: 56,
-            display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12,
-          }}
-        >
-          <Link href="/admin" style={{ display: "flex", alignItems: "baseline", gap: 8, textDecoration: "none", minWidth: 0 }}>
-            <span style={{ color: "#d4af37", fontSize: 14 }} aria-hidden>✦</span>
-            <span style={{ color: "#f0ebe8", fontSize: 18, whiteSpace: "nowrap" }}>Jade the Gem</span>
-            <span style={{ color: "#6b6478", fontSize: 10, letterSpacing: "0.22em", textTransform: "uppercase" }}>Admin</span>
+    <div className="admin-root min-h-screen bg-background text-cream">
+      <header className="sticky top-0 z-30 bg-background/95 backdrop-blur border-b border-[#2a2336]">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 h-14 flex items-center justify-between gap-3">
+          <Link href="/admin" className="flex items-baseline gap-2 min-w-0">
+            <span className="text-gold text-sm" aria-hidden>✦</span>
+            <span className="font-display text-xl tracking-wide text-cream whitespace-nowrap">Jade the Gem</span>
+            <span className="text-[10px] tracking-[0.22em] uppercase text-mist/60">Admin</span>
           </Link>
-          <div style={{ display: "flex", alignItems: "center", gap: 16, flexShrink: 0 }}>
-            <Link href="/" aria-label="View site" style={{ display: "inline-flex", alignItems: "center", gap: 6, fontSize: 12, color: "#c4b8e0", textDecoration: "none" }}>
-              <ExternalLink size={14} />
+          <div className="flex items-center gap-4 shrink-0">
+            <Link href="/" aria-label="View site" className="inline-flex items-center gap-1.5 text-xs text-mist hover:text-gold transition-colors">
+              <ExternalLink className="w-3.5 h-3.5" />
               <span className="hidden sm:inline">View site</span>
             </Link>
             <LogoutButton />
           </div>
         </div>
-        <nav
-          aria-label="Admin sections"
-          style={{ maxWidth: 1024, margin: "0 auto", padding: "0 clamp(12px, 4vw, 28px) 8px", display: "flex", gap: 4, overflowX: "auto" }}
-        >
-          {ADMIN_SECTIONS.map(({ href, label, icon: Icon }) => {
-            const active = href === "/admin" ? pathname === "/admin" : pathname?.startsWith(href)
-            return (
-              <Link
-                key={href}
-                href={href}
-                aria-current={active ? "page" : undefined}
-                style={{
-                  display: "inline-flex", alignItems: "center", gap: 6, flexShrink: 0,
-                  height: 36, padding: "0 12px", fontSize: 12, letterSpacing: "0.04em", whiteSpace: "nowrap",
-                  borderRadius: 2, textDecoration: "none",
-                  color: active ? "#d4af37" : "#c4b8e0",
-                  background: active ? "#d4af3722" : "transparent",
-                }}
-              >
-                <Icon size={14} strokeWidth={1.8} aria-hidden />
-                {label}
-              </Link>
-            )
-          })}
-        </nav>
+        <div className="relative max-w-6xl mx-auto">
+          <nav ref={navRef} aria-label="Admin sections" className="relative flex gap-1 overflow-x-auto no-scrollbar px-3 sm:px-5 pb-2">
+            {ADMIN_SECTIONS.map(({ href, label, icon: Icon }) => {
+              const active = href === "/admin" ? pathname === "/admin" : pathname?.startsWith(href)
+              return (
+                <Link
+                  key={href}
+                  href={href}
+                  aria-current={active ? "page" : undefined}
+                  className={`inline-flex items-center gap-1.5 px-3 h-9 text-xs tracking-wide whitespace-nowrap shrink-0 transition-colors ${
+                    active ? "bg-gold text-background font-semibold" : "text-mist hover:text-cream hover:bg-surface-2"
+                  }`}
+                >
+                  <Icon className="w-3.5 h-3.5" strokeWidth={1.8} aria-hidden />
+                  {label}
+                </Link>
+              )
+            })}
+          </nav>
+          <div className="pointer-events-none absolute right-0 top-0 bottom-2 w-8 bg-gradient-to-l from-background to-transparent md:hidden" aria-hidden />
+        </div>
       </header>
       {children}
     </div>

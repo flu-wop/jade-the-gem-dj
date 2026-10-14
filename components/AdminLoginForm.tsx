@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { adminBtn } from "@/components/admin/admin-btn";
 
 export default function AdminLoginForm() {
   const [password, setPassword] = useState("");
@@ -26,40 +27,23 @@ export default function AdminLoginForm() {
   }
 
   return (
-    <form
-      onSubmit={handleSubmit}
-      style={{ display: "flex", flexDirection: "column", gap: 12, maxWidth: 320, marginTop: 20 }}
-    >
+    <form onSubmit={handleSubmit} className="flex flex-col gap-3 bg-surface border border-[#2a2336] p-4 sm:p-5">
+      <label htmlFor="admin-password" className="text-[10px] tracking-[0.18em] uppercase text-mist/70">
+        Password
+      </label>
       <input
+        id="admin-password"
         type="password"
         value={password}
         onChange={(e) => setPassword(e.target.value)}
-        placeholder="Admin password"
         autoFocus
-        style={{
-          background: "#1a1626",
-          border: "1px solid #4a3f8f55",
-          color: "#f0ebe8",
-          padding: "10px 12px",
-          fontSize: 14,
-        }}
+        autoComplete="current-password"
+        className="bg-background border border-[#2a2336] text-cream px-3 h-11 text-sm focus:outline-none focus:border-gold"
       />
-      <button
-        type="submit"
-        disabled={loading}
-        style={{
-          background: "#d4af37",
-          color: "#0e0b14",
-          border: "none",
-          padding: "10px 12px",
-          fontSize: 14,
-          fontWeight: 600,
-          cursor: "pointer",
-        }}
-      >
+      <button type="submit" disabled={loading} className={`${adminBtn.primary} w-full`}>
         {loading ? "Checking…" : "Log in"}
       </button>
-      {error && <p style={{ color: "#e07a7a", fontSize: 13, margin: 0 }}>{error}</p>}
+      {error && <p role="alert" className="text-sm text-[#e8637a]">{error}</p>}
     </form>
   );
 }

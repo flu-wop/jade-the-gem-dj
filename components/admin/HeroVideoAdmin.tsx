@@ -2,6 +2,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { upload } from "@vercel/blob/client";
+import { panelStyle, smallDangerBtn } from "./form-styles";
 
 export default function HeroVideoAdmin({ initialUrl }: { initialUrl: string | null }) {
   const router = useRouter();
@@ -55,14 +56,14 @@ export default function HeroVideoAdmin({ initialUrl }: { initialUrl: string | nu
   }
 
   return (
-    <div style={{ border: "1px solid #2a2336", borderRadius: 8, padding: 20, maxWidth: 480 }}>
-      <h3 style={{ color: "#d4af37", fontSize: 16, marginBottom: 8 }}>Hero Video</h3>
-      <p style={{ color: "#6b6478", fontSize: 12, marginBottom: 16 }}>
+    <div style={{ ...panelStyle, maxWidth: 520 }}>
+      <h3 className="font-display text-xl tracking-wide text-cream mb-2">Hero Video</h3>
+      <p style={{ color: "#c4b8e0", opacity: 0.7, fontSize: 13, marginBottom: 16 }}>
         Replaces the homepage background photo with a looping video. Leave empty to use the static photo.
       </p>
 
       {url && (
-        <video src={url} muted loop autoPlay playsInline style={{ width: "100%", borderRadius: 6, marginBottom: 12, maxHeight: 200, objectFit: "cover" }} />
+        <video src={url} muted loop autoPlay playsInline style={{ width: "100%", marginBottom: 12, maxHeight: 220, objectFit: "cover" }} />
       )}
 
       <input
@@ -78,7 +79,7 @@ export default function HeroVideoAdmin({ initialUrl }: { initialUrl: string | nu
       {url && (
         <button
           onClick={handleClear}
-          style={{ marginTop: 12, background: "none", border: "1px solid #d4756b55", color: "#d4756b", borderRadius: 4, padding: "6px 12px", fontSize: 12, cursor: "pointer" }}
+          style={{ ...smallDangerBtn, marginTop: 12 }}
         >
           Remove video
         </button>

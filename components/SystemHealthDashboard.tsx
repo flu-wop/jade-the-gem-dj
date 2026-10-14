@@ -32,13 +32,12 @@ function Card({ title, children }: { title: string; children: React.ReactNode })
   return (
     <div
       style={{
-        background: "#16111f",
+        background: "#16121f",
         border: "1px solid #2a2336",
-        borderRadius: 4,
         padding: 20,
       }}
     >
-      <h3 style={{ color: "#3aa898", fontSize: 13, letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 14 }}>
+      <h3 style={{ color: "#c4b8e0", opacity: 0.8, fontSize: 11, letterSpacing: "0.2em", textTransform: "uppercase", marginBottom: 14 }}>
         {title}
       </h3>
       {children}
@@ -72,7 +71,7 @@ export default function SystemHealthDashboard() {
 
   return (
     <div>
-      <p style={{ color: "#c4b8e0", fontSize: 12, marginBottom: 20 }}>
+      <p style={{ color: "#c4b8e0", opacity: 0.7, fontSize: 12, marginBottom: 16 }}>
         Last checked {new Date(data.checkedAt).toLocaleTimeString()} — refreshes every 60s
       </p>
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))", gap: 16 }}>

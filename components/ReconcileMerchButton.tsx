@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { smallBtn, smallDangerBtn } from "./admin/form-styles";
 
 export default function ReconcileMerchButton() {
   const [state, setState] = useState<"idle" | "loading" | "done">("idle");
@@ -29,24 +30,16 @@ export default function ReconcileMerchButton() {
   }
 
   return (
-    <span style={{ marginLeft: 12, display: "inline-flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+    <span style={{ display: "inline-flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
       <button
         type="button"
         onClick={handleClick}
         disabled={state === "loading"}
-        style={{
-          background: "transparent",
-          border: "1px solid #3aa89866",
-          color: "#3aa898",
-          padding: "6px 12px",
-          fontSize: 11,
-          cursor: "pointer",
-          minHeight: 32,
-        }}
+        style={smallBtn}
       >
         {state === "loading" ? "Retrying with Printify…" : "Reconcile failed fulfillment"}
       </button>
-      {state === "done" && <span style={{ color: "#6b6478", fontSize: 12 }}>{summary}</span>}
+      {state === "done" && <span style={{ color: "#c4b8e0", opacity: 0.7, fontSize: 12, textTransform: "none", letterSpacing: 0 }}>{summary}</span>}
       {state === "done" && details.length > 0 && (
         <div style={{ width: "100%", marginTop: 4, fontSize: 11, color: "#8a8098" }}>
           {details.map((d) => (
