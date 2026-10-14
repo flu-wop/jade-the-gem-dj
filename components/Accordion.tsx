@@ -3,6 +3,8 @@
 import { useState } from "react";
 import { ChevronDown } from "lucide-react";
 
+// The title and the chevron are the toggle. The badge (counts, Clear/Reconcile
+// buttons) sits beside them, not inside a button, so it stays valid HTML.
 export default function Accordion({
   title, badge, defaultOpen = false, children,
 }: {
@@ -14,34 +16,28 @@ export default function Accordion({
   const [open, setOpen] = useState(defaultOpen);
 
   return (
-    <section style={{ marginTop: 16, border: "1px solid #2a2336", borderRadius: 4, overflow: "hidden" }}>
-      <button
-        type="button"
-        onClick={() => setOpen((o) => !o)}
-        style={{
-          width: "100%",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          gap: 12,
-          padding: "16px 18px",
-          background: "#16111f",
-          border: "none",
-          cursor: "pointer",
-          textAlign: "left",
-        }}
-      >
-        <span style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
-          <span style={{ color: "#3aa898", fontSize: 15, letterSpacing: "0.04em" }}>{title}</span>
-          {badge}
-        </span>
-        <ChevronDown
-          size={18}
-          color="#6b6478"
-          style={{ transform: open ? "rotate(180deg)" : "none", transition: "transform 0.15s", flexShrink: 0 }}
-        />
-      </button>
-      {open && <div style={{ padding: "0 18px 18px" }}>{children}</div>}
+    <section className="mt-3 bg-surface border border-[#2a2336] overflow-hidden">
+      <div className="flex flex-wrap items-center gap-x-3 gap-y-1 px-4 sm:px-5 py-3.5 hover:bg-surface-2 transition-colors">
+        <button
+          type="button"
+          onClick={() => setOpen((o) => !o)}
+          aria-expanded={open}
+          className="font-display text-lg sm:text-xl tracking-wide text-cream text-left py-1"
+        >
+          {title}
+        </button>
+        {badge && <div className="flex flex-wrap items-center gap-x-3 gap-y-1 min-w-0">{badge}</div>}
+        <button
+          type="button"
+          onClick={() => setOpen((o) => !o)}
+          aria-label={open ? `Collapse ${title}` : `Expand ${title}`}
+          aria-expanded={open}
+          className="ml-auto p-1 text-mist/60 hover:text-cream"
+        >
+          <ChevronDown size={18} className="transition-transform" style={{ transform: open ? "rotate(180deg)" : "none" }} aria-hidden />
+        </button>
+      </div>
+      {open && <div className="px-4 sm:px-5 pb-5 border-t border-[#2a2336]">{children}</div>}
     </section>
   );
 }

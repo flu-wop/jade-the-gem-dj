@@ -10,8 +10,9 @@ import { getDB } from "@/lib/insights/db"
 import { getInsights } from "@/lib/insights/core"
 import { insightsConfig } from "@/lib/insights/config"
 import type { Insights } from "@/lib/insights/types"
-import AdminLoginForm from "@/components/AdminLoginForm"
+import { AdminLogin } from "@/components/admin/page-frame"
 import { ADMIN_SECTIONS } from "@/components/admin/sections"
+import { AdminPage, adminBtn } from "@/components/admin/page-frame"
 import { Stat, money, longDate } from "@/components/admin/insights-ui"
 
 export const dynamic = "force-dynamic"
@@ -43,15 +44,7 @@ function time12(t: string) {
 }
 
 export default async function AdminHomePage() {
-  if (!(await isAuthed())) {
-    return (
-      <main style={{ minHeight: "100vh", background: "#0e0b14", color: "#f0ebe8", fontFamily: "system-ui", padding: 48 }}>
-        <h1 style={{ color: "#d4af37" }}>Admin Login</h1>
-        <p style={{ color: "#c4b8e0" }}>Enter the admin password.</p>
-        <AdminLoginForm />
-      </main>
-    )
-  }
+  if (!(await isAuthed())) return <AdminLogin />
 
   const today = new Intl.DateTimeFormat("en-CA", { timeZone: TZ }).format(new Date())
 
@@ -90,7 +83,7 @@ export default async function AdminHomePage() {
   const needsAttention = data?.attention.filter((a) => a.value > 0) ?? []
 
   return (
-    <main className="mx-auto max-w-5xl px-4 sm:px-6 py-6 sm:py-10">
+    <AdminPage>
       <div className="mb-6 sm:mb-8">
         <p className="text-[10px] tracking-[0.26em] uppercase text-gold mb-1.5">{longDate(today)}</p>
         <h1 className="font-display text-3xl sm:text-4xl text-cream leading-tight">{greeting()}, Jade</h1>
@@ -173,18 +166,18 @@ export default async function AdminHomePage() {
                   href={href}
                   className={`group border p-4 transition-colors min-w-0 hover:border-gold ${hero ? "col-span-2 bg-[#2a2336] border-[#2a2336]" : "bg-surface border-[#2a2336]"}`}
                 >
-                  <Icon className="w-4 h-4 mb-3 text-gold" strokeWidth={1.6} />
+                  <Icon className="w-4 h-4 mb-3 text-gold" strokeWidth={1.6} aria-hidden />
                   <p className="font-display text-lg leading-tight text-cream">{label}</p>
                   <p className="text-xs mt-1 leading-snug text-mist">{DESCRIPTIONS[href]}</p>
                 </Link>
               )
             })}
           </div>
-          <Link href="/bookings" className="mt-3 flex w-full items-center justify-center h-10 text-[11px] tracking-[0.16em] uppercase border border-[#2a2336] bg-surface text-mist hover:border-gold hover:text-cream transition-colors">
+          <Link href="/bookings" className={`${adminBtn.secondary} w-full mt-3`}>
             Open the booking page
           </Link>
         </section>
       </div>
-    </main>
+    </AdminPage>
   )
 }

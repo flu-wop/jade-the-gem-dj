@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { smallBtn, smallDangerBtn } from "./admin/form-styles";
 
 export default function ReconcileTicketsButton() {
   const [state, setState] = useState<"idle" | "loading" | "done">("idle");
@@ -27,24 +28,16 @@ export default function ReconcileTicketsButton() {
   }
 
   return (
-    <span style={{ marginLeft: 12, display: "inline-flex", alignItems: "center", gap: 8 }}>
+    <span style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
       <button
         type="button"
         onClick={handleClick}
         disabled={state === "loading"}
-        style={{
-          background: "transparent",
-          border: "1px solid #3aa89866",
-          color: "#3aa898",
-          padding: "6px 12px",
-          fontSize: 11,
-          cursor: "pointer",
-          minHeight: 32,
-        }}
+        style={smallBtn}
       >
         {state === "loading" ? "Checking with Stripe…" : "Reconcile pending tickets"}
       </button>
-      {state === "done" && <span style={{ color: "#6b6478", fontSize: 12 }}>{summary}</span>}
+      {state === "done" && <span style={{ color: "#c4b8e0", opacity: 0.7, fontSize: 12, textTransform: "none", letterSpacing: 0 }}>{summary}</span>}
     </span>
   );
 }

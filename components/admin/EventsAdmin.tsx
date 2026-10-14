@@ -1,6 +1,7 @@
 "use client";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { inputStyle, labelStyle, panelStyle, rowStyle, primaryBtn, secondaryBtn, smallBtn, smallDangerBtn } from "./form-styles";
 import { upload } from "@vercel/blob/client";
 
 export interface AdminEvent {
@@ -20,23 +21,6 @@ export interface AdminEvent {
   featured: number;
 }
 
-const inputStyle: React.CSSProperties = {
-  width: "100%",
-  background: "#17121f",
-  border: "1px solid #2a2336",
-  borderRadius: 4,
-  color: "#f0ebe8",
-  padding: "8px 10px",
-  fontSize: 13,
-};
-const labelStyle: React.CSSProperties = {
-  display: "block",
-  color: "#6b6478",
-  fontSize: 11,
-  textTransform: "uppercase",
-  letterSpacing: "0.06em",
-  marginBottom: 4,
-};
 
 const BLANK = {
   id: "",
@@ -205,8 +189,8 @@ export default function EventsAdmin({ initialEvents }: { initialEvents: AdminEve
   return (
     <div style={{ display: "grid", gap: 32 }}>
       {/* ── Form ── */}
-      <div style={{ border: "1px solid #2a2336", borderRadius: 8, padding: 20 }}>
-        <h3 style={{ color: "#d4af37", fontSize: 16, marginBottom: 16 }}>
+      <div style={panelStyle}>
+        <h3 className="font-display text-xl tracking-wide text-cream mb-4">
           {editingId ? "Edit Event" : "Add Event"}
         </h3>
         <div style={{ display: "grid", gap: 12, gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))" }}>
@@ -249,7 +233,7 @@ export default function EventsAdmin({ initialEvents }: { initialEvents: AdminEve
             {uploading && <span style={{ color: "#6b6478", fontSize: 12 }}>Uploading…</span>}
             {form.flyerUrl && !uploading && (
               // eslint-disable-next-line @next/next/no-img-element
-              <img src={form.flyerUrl} alt="Flyer preview" style={{ height: 48, borderRadius: 4 }} />
+              <img src={form.flyerUrl} alt="Flyer preview" style={{ height: 48 }} />
             )}
           </div>
           {uploadError && <p style={{ color: "#d4756b", fontSize: 12, marginTop: 6 }}>{uploadError}</p>}
@@ -291,12 +275,12 @@ export default function EventsAdmin({ initialEvents }: { initialEvents: AdminEve
           <button
             onClick={handleSave}
             disabled={saving || uploading}
-            style={{ background: "#d4af37", color: "#0e0b14", border: "none", borderRadius: 4, padding: "8px 16px", fontSize: 13, fontWeight: 600, cursor: "pointer" }}
+            style={primaryBtn}
           >
             {saving ? "Saving…" : editingId ? "Save Changes" : "Add Event"}
           </button>
           {editingId && (
-            <button onClick={resetForm} style={{ background: "none", border: "1px solid #2a2336", color: "#c4b8e0", borderRadius: 4, padding: "8px 16px", fontSize: 13, cursor: "pointer" }}>
+            <button onClick={resetForm} style={secondaryBtn}>
               Cancel
             </button>
           )}
@@ -325,7 +309,7 @@ function EventList({
 }) {
   return (
     <div>
-      <h3 style={{ color: accent, fontSize: 14, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 10 }}>
+      <h3 className="text-[11px] tracking-[0.2em] uppercase mb-3" style={{ color: accent }}>
         {title} ({events.length})
       </h3>
       {events.length === 0 ? (
@@ -335,14 +319,11 @@ function EventList({
           {events.map((e) => (
             <div
               key={e.id}
-              style={{
-                display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12,
-                border: "1px solid #2a2336", borderRadius: 6, padding: "10px 14px",
-              }}
+              style={rowStyle}
             >
               <div style={{ display: "flex", alignItems: "center", gap: 12, minWidth: 0 }}>
                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={e.flyer_url} alt="" style={{ width: 36, height: 36, objectFit: "cover", borderRadius: 4, flexShrink: 0 }} />
+                <img src={e.flyer_url} alt="" style={{ width: 40, height: 40, objectFit: "cover", flexShrink: 0 }} />
                 <div style={{ minWidth: 0 }}>
                   <p style={{ color: "#f0ebe8", fontSize: 13, margin: 0 }}>
                     {e.title} {e.featured ? "★" : ""}
@@ -353,10 +334,10 @@ function EventList({
                 </div>
               </div>
               <div style={{ display: "flex", gap: 8, flexShrink: 0 }}>
-                <button onClick={() => onEdit(e)} style={{ background: "none", border: "1px solid #2a2336", color: "#c4b8e0", borderRadius: 4, padding: "4px 10px", fontSize: 12, cursor: "pointer" }}>
+                <button onClick={() => onEdit(e)} style={smallBtn}>
                   Edit
                 </button>
-                <button onClick={() => onDelete(e.id)} style={{ background: "none", border: "1px solid #d4756b55", color: "#d4756b", borderRadius: 4, padding: "4px 10px", fontSize: 12, cursor: "pointer" }}>
+                <button onClick={() => onDelete(e.id)} style={smallDangerBtn}>
                   Delete
                 </button>
               </div>

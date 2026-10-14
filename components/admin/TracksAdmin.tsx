@@ -1,6 +1,7 @@
 "use client";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { inputStyle, labelStyle, panelStyle, rowStyle, primaryBtn, secondaryBtn, smallBtn, smallDangerBtn } from "./form-styles";
 
 export interface AdminTrack {
   id: string;
@@ -10,23 +11,6 @@ export interface AdminTrack {
   sort_order: number;
 }
 
-const inputStyle: React.CSSProperties = {
-  width: "100%",
-  background: "#17121f",
-  border: "1px solid #2a2336",
-  borderRadius: 4,
-  color: "#f0ebe8",
-  padding: "8px 10px",
-  fontSize: 13,
-};
-const labelStyle: React.CSSProperties = {
-  display: "block",
-  color: "#6b6478",
-  fontSize: 11,
-  textTransform: "uppercase",
-  letterSpacing: "0.06em",
-  marginBottom: 4,
-};
 
 export default function TracksAdmin({ initialTracks }: { initialTracks: AdminTrack[] }) {
   const router = useRouter();
@@ -111,8 +95,8 @@ export default function TracksAdmin({ initialTracks }: { initialTracks: AdminTra
 
   return (
     <div style={{ display: "grid", gap: 32 }}>
-      <div style={{ border: "1px solid #2a2336", borderRadius: 8, padding: 20 }}>
-        <h3 style={{ color: "#d4af37", fontSize: 16, marginBottom: 16 }}>{editingId ? "Edit Track" : "Add Track"}</h3>
+      <div style={panelStyle}>
+        <h3 className="font-display text-xl tracking-wide text-cream mb-4">{editingId ? "Edit Track" : "Add Track"}</h3>
         <div style={{ display: "grid", gap: 12 }}>
           <div>
             <label style={labelStyle}>Title *</label>
@@ -142,12 +126,12 @@ export default function TracksAdmin({ initialTracks }: { initialTracks: AdminTra
           <button
             onClick={handleSave}
             disabled={saving}
-            style={{ background: "#d4af37", color: "#0e0b14", border: "none", borderRadius: 4, padding: "8px 16px", fontSize: 13, fontWeight: 600, cursor: "pointer" }}
+            style={primaryBtn}
           >
             {saving ? "Saving…" : editingId ? "Save Changes" : "Add Track"}
           </button>
           {editingId && (
-            <button onClick={resetForm} style={{ background: "none", border: "1px solid #2a2336", color: "#c4b8e0", borderRadius: 4, padding: "8px 16px", fontSize: 13, cursor: "pointer" }}>
+            <button onClick={resetForm} style={secondaryBtn}>
               Cancel
             </button>
           )}
@@ -155,7 +139,7 @@ export default function TracksAdmin({ initialTracks }: { initialTracks: AdminTra
       </div>
 
       <div>
-        <h3 style={{ color: "#3aa898", fontSize: 14, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 10 }}>
+        <h3 className="text-[11px] tracking-[0.2em] uppercase mb-3 text-[#3aa898]">
           Tracks ({tracks.length})
         </h3>
         {tracks.length === 0 ? (
@@ -165,16 +149,16 @@ export default function TracksAdmin({ initialTracks }: { initialTracks: AdminTra
             {tracks.map((t) => (
               <div
                 key={t.id}
-                style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, border: "1px solid #2a2336", borderRadius: 6, padding: "10px 14px" }}
+                style={rowStyle}
               >
                 <p style={{ color: "#f0ebe8", fontSize: 13, margin: 0 }}>
                   {t.title} {t.is_featured ? "★" : ""}
                 </p>
                 <div style={{ display: "flex", gap: 8 }}>
-                  <button onClick={() => startEdit(t)} style={{ background: "none", border: "1px solid #2a2336", color: "#c4b8e0", borderRadius: 4, padding: "4px 10px", fontSize: 12, cursor: "pointer" }}>
+                  <button onClick={() => startEdit(t)} style={smallBtn}>
                     Edit
                   </button>
-                  <button onClick={() => handleDelete(t.id)} style={{ background: "none", border: "1px solid #d4756b55", color: "#d4756b", borderRadius: 4, padding: "4px 10px", fontSize: 12, cursor: "pointer" }}>
+                  <button onClick={() => handleDelete(t.id)} style={smallDangerBtn}>
                     Delete
                   </button>
                 </div>
